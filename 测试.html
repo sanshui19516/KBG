@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>测试·开场选择</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1e2a3a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            padding: 16px;
+        }
+        .container {
+            max-width: 400px;
+            width: 100%;
+            background: #2a3a4a;
+            border: 1px solid #5a7a9a;
+            border-radius: 24px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        h1 {
+            color: #d4e4f5;
+            font-size: 2rem;
+            font-weight: 300;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+        }
+        .sub {
+            color: #8aaac8;
+            margin-bottom: 30px;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        .choice-box {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .story-btn {
+            background: #3a4a5a;
+            border: 1px solid #7a9aba;
+            border-radius: 40px;
+            padding: 16px 12px;
+            color: #ffffff;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #1a2a3a;
+            transition: all 0.1s ease;
+        }
+        .story-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #1a2a3a;
+        }
+        .btn-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .btn-desc {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        .footer {
+            color: #6a8aaa;
+            margin-top: 25px;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📖 听海</h1>
+    <div class="sub">—— 选择你的故事起点 ——</div>
+
+    <div class="choice-box">
+        <div class="story-btn" onclick="selectGreeting(1)">
+            <div class="btn-title">🌧️ 暴风雨前</div>
+            <div class="btn-desc">推开图书馆的门，她正在等你</div>
+        </div>
+
+        <div class="story-btn" onclick="selectGreeting(2)">
+            <div class="btn-title">🌅 一个月后</div>
+            <div class="btn-desc">黄昏的窗边，她找到了你要的书</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        点击选项，故事直接开始<br>—— 测试角色 · 林知夏 ——
+    </div>
+</div>
+
+<script>
+    function selectGreeting(index) {
+        const command = `/greeting ${index}`;
+        try {
+            if (window.parent && typeof window.parent.sendMessage === 'function') {
+                window.parent.sendMessage(command);
+            } else if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'sendMessage', message: command }, '*');
+            } else {
+                alert('无法连接到酒馆，请确保在酒馆环境中使用。');
+            }
+        } catch (e) {
+            console.error('发送失败', e);
+        }
+    }
+</script>
+</body>
+</html>
