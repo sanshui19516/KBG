@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>藤不语 · 开局调试版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(145deg, #1e1a1e 0%, #2a2328 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            padding: 12px;
+        }
+        .container {
+            max-width: 480px;
+            width: 100%;
+            background: rgba(30, 20, 25, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid #6b4e5e;
+            border-radius: 28px;
+            padding: 24px 16px 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.6), 0 0 0 1px #3f2e38 inset;
+            text-align: center;
+        }
+        h1 {
+            color: #d9c0c9;
+            font-size: 1.8rem;
+            font-weight: 400;
+            letter-spacing: 6px;
+            border-bottom: 1px dashed #7a5f6b;
+            padding-bottom: 14px;
+            margin-bottom: 8px;
+        }
+        .sub {
+            color: #ab8a99;
+            margin-bottom: 20px;
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+        .choice-box {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .story-link {
+            flex: 1;
+            background: #2e1f26;
+            border: 1px solid #8f6b7c;
+            border-radius: 24px;
+            padding: 14px 6px;
+            color: #f3e2e8;
+            text-decoration: none;
+            box-shadow: 0 4px 0 #140d11;
+            transition: all 0.1s ease;
+            text-align: center;
+            display: block;
+            cursor: pointer;
+        }
+        .story-link:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #140d11;
+        }
+        .btn-icon {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 6px;
+        }
+        .btn-title {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #f3e2e8;
+        }
+        .btn-desc {
+            font-size: 0.65rem;
+            color: #bb9aab;
+            line-height: 1.3;
+        }
+        .footer-note {
+            color: #6e5360;
+            font-size: 0.7rem;
+            margin-top: 16px;
+            border-top: 1px solid #4a3540;
+            padding-top: 16px;
+            text-align: center;
+        }
+        .footer-line {
+            display: block;
+        }
+        .wisteria-deco {
+            font-size: 1.8rem;
+            opacity: 0.6;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="wisteria-deco">🟣🌿</div>
+    <h1>藤不语</h1>
+    <div class="sub">—— 紫藤知道，风不知道 ——</div>
+
+    <div class="choice-box">
+        <div class="story-link" onclick="debugSwitch(1)">
+            <span class="btn-icon">🌧️</span>
+            <div class="btn-title">七年前·暴雨夜</div>
+            <div class="btn-desc">车祸、背叛、葬礼…<br>直到推广券出现</div>
+        </div>
+
+        <div class="story-link" onclick="debugSwitch(2)">
+            <span class="btn-icon">🌸</span>
+            <div class="btn-title">两个月后·紫藤依旧</div>
+            <div class="btn-desc">风波平息，第四家分店<br>对视时风铃响了</div>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        <span class="footer-line">🌸 点击选项，查看调试信息</span>
+        <span class="footer-line">—— 佐藤惠与你的共犯物语 ——</span>
+    </div>
+</div>
+
+<script>
+    async function debugSwitch(swipeId) {
+        let debugInfo = `=== 调试信息 ===\n请求切换至滑动条索引: ${swipeId}\n`;
+
+        try {
+            // 步骤1：尝试获取消息
+            debugInfo += `\n[1] 尝试获取消息...`;
+            let messages;
+            try {
+                messages = await getChatMessages?.('0', { include_swipe: true });
+                debugInfo += `\n    通过 getChatMessages 获取成功。`;
+            } catch (e) {
+                debugInfo += `\n    getChatMessages 失败: ${e.message}`;
+                try {
+                    const context = window.SillyTavern?.getContext?.();
+                    messages = context?.chat?.messages;
+                    debugInfo += `\n    通过 SillyTavern.getContext() 获取成功。`;
+                } catch (e2) {
+                    throw new Error('无法获取聊天消息，酒馆 API 不可用。');
+                }
+            }
+
+            if (!messages) {
+                throw new Error('messages 为空。');
+            }
+            debugInfo += `\n    消息总数: ${messages.length}`;
+
+            if (messages.length === 0) {
+                throw new Error('聊天消息数组为空，请确保对话已开始。');
+            }
+
+            // 步骤2：检查第一条消息（用户消息）
+            const userMessage = messages[0];
+            debugInfo += `\n\n[2] 检查第一条消息 (索引 0):`;
+            debugInfo += `\n    消息内容预览: ${String(userMessage?.mes).substring(0, 30)}...`;
+            
+            if (!userMessage.swipes) {
+                throw new Error('第一条消息没有 swipes 属性。');
+            }
+            debugInfo += `\n    滑动条总数: ${userMessage.swipes.length}`;
+
+            // 步骤3：检查目标滑动条
+            debugInfo += `\n\n[3] 检查目标滑动条 (索引 ${swipeId}):`;
+            if (userMessage.swipes.length <= swipeId) {
+                throw new Error(`目标滑动条不存在，当前只有 ${userMessage.swipes.length} 个滑动条。`);
+            }
+            const targetSwipe = userMessage.swipes[swipeId];
+            debugInfo += `\n    目标滑动条内容长度: ${targetSwipe?.length || 0} 字符`;
+            debugInfo += `\n    内容开头: ${String(targetSwipe).substring(0, 50)}...`;
+
+            // 步骤4：尝试切换
+            debugInfo += `\n\n[4] 尝试执行切换:`;
+            const setChatMessage = window.setChatMessage || window.SillyTavern?.getContext?.()?.setChatMessage;
+            if (typeof setChatMessage === 'function') {
+                debugInfo += `\n    使用 setChatMessage 进行切换...`;
+                await setChatMessage(targetSwipe, 0, {
+                    swipe_id: swipeId,
+                    refresh: 'display_and_render_current'
+                });
+                debugInfo += `\n    切换调用成功！`;
+            } else {
+                if (typeof userMessage.setSwipe === 'function') {
+                    debugInfo += `\n    使用消息对象的 setSwipe 进行切换...`;
+                    userMessage.setSwipe(swipeId);
+                    debugInfo += `\n    切换调用成功！`;
+                } else {
+                    throw new Error('找不到任何切换函数。');
+                }
+            }
+
+            debugInfo += `\n\n✅ 调试完成，切换似乎已执行。`;
+            alert(debugInfo);
+
+        } catch (error) {
+            debugInfo += `\n\n❌ 捕获错误: ${error.message}`;
+            alert(debugInfo);
+        }
+    }
+</script>
+</body>
+</html>
