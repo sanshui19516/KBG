@@ -132,7 +132,7 @@
                 // 备用方案：使用 postMessage
                 if (window.parent && window.parent !== window) {
                     window.parent.postMessage({ type: 'sendMessage', message: command }, '*');
-                    showToast(`✅ 服务指令已填入，请发送`);
+                    showToast(`🐈 谢谢游玩🐈🐈💮`);
                     return;
                 }
                 
@@ -141,7 +141,7 @@
                     const ctx = SillyTavern.getContext();
                     if (ctx && typeof ctx.sendMessage === 'function') {
                         ctx.sendMessage(command);
-                        showToast(`✅ 服务指令已填入，请发送`);
+                        showToast(`作者：三年的水`);
                         return;
                     }
                 }
