@@ -16,9 +16,9 @@
         .menu-container {
             background: linear-gradient(145deg, #2a1a2e 0%, #1e1a1e 100%);
             border: 1px solid #8f6b7c;
-            border-radius: 30px;
-            padding: 12px 18px;
-            max-width: 500px;
+            border-radius: 24px;
+            padding: 14px 18px;
+            max-width: 480px;
             width: 100%;
             box-shadow: 0 6px 16px rgba(0,0,0,0.5);
         }
@@ -26,26 +26,29 @@
             color: #d9c0c9;
             font-size: 0.9rem;
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             letter-spacing: 1.5px;
         }
         .menu-options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
         }
         .option-btn {
             background: #2e1f26;
             border: 1px solid #8f6b7c;
-            border-radius: 25px;
-            padding: 6px 12px;
+            border-radius: 30px;
+            padding: 8px 6px;
             color: #f3e2e8;
             font-size: 0.75rem;
+            text-align: center;
             cursor: pointer;
             box-shadow: 0 3px 0 #140d11;
-            transition: all 0.1s;
-            flex: 0 1 auto;
+            transition: all 0.15s;
+            white-space: nowrap;
+            position: relative;
+            overflow: hidden;
         }
         .option-btn:active {
             transform: translateY(2px);
@@ -60,70 +63,112 @@
             color: #ab8a99;
             font-size: 0.65rem;
             text-align: center;
-            margin-top: 10px;
+            margin-top: 8px;
         }
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 20, 25, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid #b5849a;
+            border-radius: 40px;
+            padding: 10px 20px;
+            color: #f3e2e8;
+            font-size: 0.8rem;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            z-index: 9999;
+            white-space: nowrap;
+        }
+        #toast.show { opacity: 1; }
     </style>
 </head>
 <body>
 <div class="menu-container">
-    <div class="menu-title"> 今晚，请选择您想要的方式</div>
+    <div class="menu-title">🌸 今晚，请选择您想要的方式</div>
     <div class="menu-options">
-        <div class="option-btn" onclick="selectService('泡泡浴')"> 泡泡浴</div>
-        <div class="option-btn" onclick="selectService('粉红沙龙')"> 粉红沙龙</div>
-        <div class="option-btn" onclick="selectService('触摸酒吧')"> 触摸酒吧</div>
-        <div class="option-btn" onclick="selectService('陪伴服务')"> 陪伴服务</div>
-        <div class="option-btn" onclick="selectService('角色扮演')"> 角色扮演</div>
-        <div class="option-btn random-btn" onclick="selectRandom()">✨ 让您决定</div>
+        <div class="option-btn" data-text="我要泡泡浴">🌊 泡泡浴</div>
+        <div class="option-btn" data-text="我要粉红沙龙">🌸 粉红沙龙</div>
+        <div class="option-btn" data-text="我要触摸酒吧">🍸 触摸酒吧</div>
+        <div class="option-btn" data-text="我要陪伴服务">🏩 陪伴服务</div>
+        <div class="option-btn" data-text="我要角色扮演">🎭 角色扮演</div>
+        <div class="option-btn random-btn" data-text="你来帮我选吧">✨ 让您决定</div>
     </div>
-    <div class="menu-footer">点击选项，文字将填入输入框</div>
+    <div class="menu-footer">看不惯我去风俗店的母亲,为我提供各种💜风俗服务//</div>
 </div>
 
+<!-- 轻提示 -->
+<div id="toast">📋 已填入输入框，可直接发送</div>
+
 <script>
-    const services = ['泡泡浴', '粉红沙龙', '触摸酒吧', '陪伴服务', '角色扮演'];
-    
-    function selectService(name) {
-        setInputText(`我要${name}`);
-    }
-    
-    function selectRandom() {
-        setInputText(`你来帮我选吧`);
-    }
-    
-    function setInputText(text) {
-        // 方法1：尝试直接调用酒馆的 setInputText 函数
-        try {
-            if (window.parent && typeof window.parent.setInputText === 'function') {
-                window.parent.setInputText(text);
-                return;
+    (function() {
+        const toast = document.getElementById('toast');
+        let toastTimer = null;
+
+        function showToast(message) {
+            toast.textContent = message || '📋 已填入输入框，可直接发送';
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        async function fillInput(text) {
+            // 构造 `/echo` 命令，酒馆会自动将命令执行后的结果填入输入框
+            // 使用 `severity=info` 确保命令执行过程在聊天中不可见，保持界面干净
+            const command = `/echo severity=info ${text}`;
+            
+            try {
+                // 尝试调用酒馆全局的 sendMessage 函数
+                if (window.parent && typeof window.parent.sendMessage === 'function') {
+                    window.parent.sendMessage(command);
+                    showToast(`✅ 服务指令已填入，请发送`);
+                    return;
+                }
+                
+                // 备用方案：使用 postMessage
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'sendMessage', message: command }, '*');
+                    showToast(`✅ 服务指令已填入，请发送`);
+                    return;
+                }
+                
+                // 降级方案：尝试通过 ST 上下文
+                if (typeof SillyTavern !== 'undefined' && SillyTavern.getContext) {
+                    const ctx = SillyTavern.getContext();
+                    if (ctx && typeof ctx.sendMessage === 'function') {
+                        ctx.sendMessage(command);
+                        showToast(`✅ 服务指令已填入，请发送`);
+                        return;
+                    }
+                }
+
+                // 最终降级：如果所有方法都失败，至少复制到剪贴板
+                await navigator.clipboard.writeText(text);
+                showToast('📋 已复制到剪贴板，请粘贴发送');
+            } catch (e) {
+                console.error('填充失败', e);
+                // 剪贴板作为最后的希望
+                try {
+                    await navigator.clipboard.writeText(text);
+                    showToast('📋 已复制到剪贴板，请粘贴发送');
+                } catch (err) {
+                    prompt('📋 请手动复制并发送：', text);
+                }
             }
-        } catch (e) {}
-        
-        // 方法2：通过 postMessage 发送设置输入框的指令
-        try {
-            if (window.parent && window.parent !== window) {
-                window.parent.postMessage({
-                    type: 'setInputText',
-                    text: text
-                }, '*');
-                return;
-            }
-        } catch (e) {}
-        
-        // 方法3：尝试触发酒馆的斜杠命令（模拟输入）
-        try {
-            if (window.parent && typeof window.parent.triggerSlash === 'function') {
-                window.parent.triggerSlash(`/echo ${text}`);
-                return;
-            }
-        } catch (e) {}
-        
-        // 降级：复制到剪贴板并提示
-        navigator.clipboard?.writeText(text).then(() => {
-            alert(`✅ 已复制“${text}”到剪贴板，请手动粘贴到输入框。`);
-        }).catch(() => {
-            prompt(' 请手动复制以下文本，然后粘贴到输入框发送：', text);
+        }
+
+        // 绑定所有按钮
+        document.querySelectorAll('.option-btn[data-text]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const text = btn.getAttribute('data-text');
+                fillInput(text);
+            });
         });
-    }
+    })();
 </script>
 </body>
 </html>
