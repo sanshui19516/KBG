@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+            font-family: 'Georgia', 'Times New Roman', serif;
+        }
+        .menu-container {
+            background: linear-gradient(145deg, #2a1a2e 0%, #1e1a1e 100%);
+            border: 1px solid #8f6b7c;
+            border-radius: 30px;
+            padding: 12px 18px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+        }
+        .menu-title {
+            color: #d9c0c9;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 10px;
+            letter-spacing: 1.5px;
+        }
+        .menu-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+        }
+        .option-btn {
+            background: #2e1f26;
+            border: 1px solid #8f6b7c;
+            border-radius: 25px;
+            padding: 6px 12px;
+            color: #f3e2e8;
+            font-size: 0.75rem;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #140d11;
+            transition: all 0.1s;
+            flex: 0 1 auto;
+        }
+        .option-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #140d11;
+        }
+        .random-btn {
+            background: #3f2a34;
+            border-color: #b5849a;
+            color: #f5e0e8;
+        }
+        .menu-footer {
+            color: #ab8a99;
+            font-size: 0.65rem;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="menu-container">
+    <div class="menu-title"> 今晚，请选择您想要的方式</div>
+    <div class="menu-options">
+        <div class="option-btn" onclick="selectService('泡泡浴')"> 泡泡浴</div>
+        <div class="option-btn" onclick="selectService('粉红沙龙')"> 粉红沙龙</div>
+        <div class="option-btn" onclick="selectService('触摸酒吧')"> 触摸酒吧</div>
+        <div class="option-btn" onclick="selectService('陪伴服务')"> 陪伴服务</div>
+        <div class="option-btn" onclick="selectService('角色扮演')"> 角色扮演</div>
+        <div class="option-btn random-btn" onclick="selectRandom()">✨ 让您决定</div>
+    </div>
+    <div class="menu-footer">点击选项，文字将填入输入框</div>
+</div>
+
+<script>
+    const services = ['泡泡浴', '粉红沙龙', '触摸酒吧', '陪伴服务', '角色扮演'];
+    
+    function selectService(name) {
+        setInputText(`我要${name}`);
+    }
+    
+    function selectRandom() {
+        setInputText(`你来帮我选吧`);
+    }
+    
+    function setInputText(text) {
+        // 方法1：尝试直接调用酒馆的 setInputText 函数
+        try {
+            if (window.parent && typeof window.parent.setInputText === 'function') {
+                window.parent.setInputText(text);
+                return;
+            }
+        } catch (e) {}
+        
+        // 方法2：通过 postMessage 发送设置输入框的指令
+        try {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'setInputText',
+                    text: text
+                }, '*');
+                return;
+            }
+        } catch (e) {}
+        
+        // 方法3：尝试触发酒馆的斜杠命令（模拟输入）
+        try {
+            if (window.parent && typeof window.parent.triggerSlash === 'function') {
+                window.parent.triggerSlash(`/echo ${text}`);
+                return;
+            }
+        } catch (e) {}
+        
+        // 降级：复制到剪贴板并提示
+        navigator.clipboard?.writeText(text).then(() => {
+            alert(`✅ 已复制“${text}”到剪贴板，请手动粘贴到输入框。`);
+        }).catch(() => {
+            prompt(' 请手动复制以下文本，然后粘贴到输入框发送：', text);
+        });
+    }
+</script>
+</body>
+</html>
