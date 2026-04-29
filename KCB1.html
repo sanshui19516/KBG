@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>熟れごろ · 角色卡说明</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            /* 背景图片直接显示，无渐变覆盖 */
+            background: url('https://testingcf.jsdelivr.net/gh/sanshui19516/-@main/sn.png');
+            background-size: 100%;           /* 缩小图片，更适配页面 */
+            background-repeat: no-repeat;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            padding: 16px;
+        }
+        .container {
+            max-width: 520px;
+            width: 100%;
+            /* 内容区域完全透明，直接显露背景图片 */
+            background: transparent;
+            border: 1px solid #b5849a;
+            border-radius: 32px;
+            padding: 32px 24px 28px;
+            text-align: center;
+        }
+
+        /* 装饰顶部 */
+        .deco-top {
+            font-size: 2.0rem;
+            opacity: 0.8;
+            margin-bottom: 6px;
+            letter-spacing: 6px;
+        }
+
+        /* 标题 */
+        .title {
+            color: #e8c8d8;
+            font-size: 1.6rem;
+            font-weight: 400;
+            letter-spacing: 6px;
+            margin-bottom: 4px;
+            text-shadow: 0 2px 8px rgba(20, 10, 20, 0.7);
+        }
+        .title-sub {
+            color: #c49aae;
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            font-style: italic;
+            text-shadow: 0 1px 4px rgba(20, 10, 20, 0.6);
+        }
+        .title-author {
+            color: #b5849a;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            margin-bottom: 24px;
+            text-shadow: 0 1px 4px rgba(20, 10, 20, 0.6);
+        }
+        .title-author span {
+            color: #d4a8ba;
+            font-weight: bold;
+        }
+
+        /* 分割线 */
+        .divider {
+            border: none;
+            border-top: 1px dashed #7a5f6b;
+            margin: 0 0 22px 0;
+            opacity: 0.6;
+        }
+
+        /* 信息块 */
+        .info-block {
+            background: rgba(30, 15, 30, 0.45);
+            border: 1px solid #6b4e5e;
+            border-radius: 20px;
+            padding: 18px 16px;
+            margin-bottom: 14px;
+            text-align: left;
+        }
+        .info-label {
+            color: #d4a8ba;
+            font-size: 0.8rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px dotted #5a3f4e;
+            text-shadow: 0 1px 3px rgba(20, 10, 20, 0.5);
+        }
+        .info-list {
+            list-style: none;
+            padding: 0;
+        }
+        .info-list li {
+            color: #c8a8b6;
+            font-size: 0.78rem;
+            line-height: 1.8;
+            padding-left: 12px;
+            position: relative;
+            text-shadow: 0 1px 3px rgba(20, 10, 20, 0.4);
+        }
+        .info-list li::before {
+            content: "·";
+            position: absolute;
+            left: 0;
+            color: #b5849a;
+            font-weight: bold;
+        }
+
+        /* 特别标记 */
+        .tag-allow {
+            color: #a8d8a8;
+        }
+        .tag-warn {
+            color: #d8a8a8;
+        }
+        .tag-note {
+            color: #c8c0a8;
+        }
+
+        /* 底部 */
+        .footer-note {
+            color: #8b6b7e;
+            font-size: 0.7rem;
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid #4a3540;
+            letter-spacing: 1px;
+            line-height: 1.6;
+            text-shadow: 0 1px 3px rgba(20, 10, 20, 0.5);
+        }
+        .footer-deco {
+            font-size: 1.2rem;
+            opacity: 0.5;
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- 装饰 -->
+    <div class="deco-top">🌸🪷🌸</div>
+
+    <!-- 标题 -->
+    <div class="title">熟れごろ</div>
+    <div class="title-sub">—— 恰好成熟时 ——</div>
+    <div class="title-author">作者：<span>三年的水</span></div>
+
+    <hr class="divider">
+
+    <!-- 发布信息 -->
+    <div class="info-block">
+        <div class="info-label">📡 发布信息</div>
+        <ul class="info-list">
+            <li>🛑 仅发布于 <span style="color:#d4a8ba;">Discord 类脑</span></li>
+        </ul>
+    </div>
+
+    <!-- 授权说明 -->
+    <div class="info-block">
+        <div class="info-label">📋 授权说明</div>
+        <ul class="info-list">
+            <li><span class="tag-allow">✅ 允许二改（授权即可）</span></li>
+            <li><span class="tag-allow">✅ 二改后需标注出处</span></li>
+            <li><span class="tag-warn">❌ 禁止商用</span></li>
+            <li><span class="tag-warn">❌ 禁止墙内二传</span></li>
+        </ul>
+    </div>
+
+    <!-- 内容清单 -->
+    <div class="info-block">
+        <div class="info-label">📝 本卡包含</div>
+        <ul class="info-list">
+            <li>简介</li>
+            <li>人物介绍</li>
+            <li>开场白</li>
+            <li>致谢信息</li>
+        </ul>
+    </div>
+
+    <!-- 使用说明 -->
+    <div class="info-block">
+        <div class="info-label">🛑 使用说明</div>
+        <ul class="info-list">
+            <li>导入角色卡到 SillyTavern</li>
+            <li>根据需要调整设定</li>
+            <li>开始对话体验</li>
+        </ul>
+    </div>
+
+    <!-- 额外说明 -->
+    <div class="info-block">
+        <div class="info-label">❇️ 额外说明</div>
+        <ul class="info-list">
+            <li><span class="tag-note">❇️ 多多反馈</span></li>
+            <li><span class="tag-note">❇️ 内置隐藏思维链正则；<br>　 我不太喜欢有思维链，<br>　 需要即可关闭或卸载思维链局部正则。</span></li>
+        </ul>
+    </div>
+
+    <!-- 底部 -->
+    <div class="footer-note">
+        <div class="footer-deco">🪷</div>
+        感谢使用 · 熟れごろ<br>
+        by 三年的水
+    </div>
+
+</div>
+</body>
+</html>
