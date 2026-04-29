@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>熟れごろ · 开局</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(145deg, #2a221e 0%, #1e1a16 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            padding: 12px;
+        }
+        .container {
+            max-width: 480px;
+            width: 100%;
+            background: rgba(45, 35, 28, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid #8b7355;
+            border-radius: 28px;
+            padding: 24px 16px 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.6), 0 0 0 1px #3f2e22 inset;
+            text-align: center;
+        }
+        /* 顶部标题区 */
+        .header-block {
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px dashed #8b7355;
+        }
+        .header-jp {
+            color: #e8d5c4;
+            font-size: 1.6rem;
+            font-weight: 400;
+            letter-spacing: 8px;
+            margin-bottom: 4px;
+        }
+        .header-cn {
+            color: #b89a8a;
+            font-size: 0.8rem;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+        }
+        .header-author {
+            color: #8b7355;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+        }
+        .header-author span {
+            color: #b89a8a;
+        }
+        /* 主体标题 */
+        h1 {
+            color: #e8d5c4;
+            font-size: 1.8rem;
+            font-weight: 400;
+            letter-spacing: 8px;
+            margin-bottom: 8px;
+        }
+        .sub {
+            color: #b89a8a;
+            margin-bottom: 20px;
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+        .choice-box {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .story-link {
+            flex: 1;
+            background: #3e2f22;
+            border: 1px solid #8b7355;
+            border-radius: 24px;
+            padding: 14px 6px;
+            color: #f3e8d8;
+            text-decoration: none;
+            box-shadow: 0 4px 0 #1a1510;
+            transition: all 0.1s ease;
+            text-align: center;
+            display: block;
+            cursor: pointer;
+        }
+        .story-link:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #1a1510;
+        }
+        .btn-icon {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 6px;
+        }
+        .btn-title {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #f3e8d8;
+        }
+        .btn-desc {
+            font-size: 0.65rem;
+            color: #b89a8a;
+            line-height: 1.3;
+        }
+        .footer-note {
+            color: #8b7355;
+            font-size: 0.7rem;
+            margin-top: 16px;
+            border-top: 1px solid #5a4a3a;
+            padding-top: 16px;
+            text-align: center;
+        }
+        .footer-line {
+            display: block;
+        }
+        /* 底部点题文字 */
+        .footer-tagline {
+            color: #b89a8a;
+            font-size: 0.65rem;
+            font-style: italic;
+            margin-top: 10px;
+            letter-spacing: 2px;
+        }
+        .nagi-deco {
+            font-size: 2.0rem;
+            opacity: 0.7;
+            margin-bottom: 8px;
+            letter-spacing: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 顶部标题区：模仿朋友的特刊样式 -->
+    <div class="header-block">
+        <div class="header-jp">熟れごろ</div>
+        <div class="header-cn">—— 恰好成熟时 ——</div>
+        <div class="header-author">作者：<span>三年的水</span></div>
+    </div>
+
+    <div class="nagi-deco">🍃🕯️🍃</div>
+    <h1>凪</h1>
+    <div class="sub">—— 风平浪静，暗涌将至 ——</div>
+
+    <div class="choice-box">
+        <!-- 滑动条索引 1：按摩店入职开场白 -->
+        <div class="story-link" onclick="switchOpening(1)">
+            <span class="btn-icon">🛎️</span>
+            <div class="btn-title">推开凪的木门</div>
+            <div class="btn-desc">涩谷后巷，檀香与柑橘<br>按摩店的故事由此开始</div>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        <span class="footer-line">🍃 点击选项，走进这间安静的按摩店</span>
+        <span class="footer-line">—— 风平浪静之下的暗涌 ——</span>
+    </div>
+
+    <!-- 底部点题文字 -->
+    <div class="footer-tagline">
+        「熟れごろ」—— 既是按摩力道恰到好处，亦是几位熟龄女性正值风韵最盛的年纪。
+    </div>
+</div>
+
+<script>
+    /**
+     * 切换至指定滑动条索引
+     * @param {number} swipeId - 滑动条索引（1）
+     */
+    async function switchOpening(swipeId) {
+        const clickedCard = event.currentTarget;
+        clickedCard.style.opacity = '0.6';
+        clickedCard.style.pointerEvents = 'none';
+
+        try {
+            // 获取聊天消息
+            let messages;
+            try {
+                messages = await getChatMessages?.('0', { include_swipe: true });
+            } catch (e) {
+                const context = window.SillyTavern?.getContext?.();
+                messages = context?.chat?.messages;
+            }
+
+            if (!messages || messages.length === 0) {
+                throw new Error('没有找到聊天消息。');
+            }
+
+            // 第一条消息（用户消息，显示 HTML 的那条）
+            const userMessage = messages[0];
+            if (!userMessage.swipes) {
+                throw new Error('第一条消息没有滑动条。');
+            }
+
+            if (userMessage.swipes.length <= swipeId) {
+                throw new Error(`滑动条 ${swipeId} 不存在，当前共有 ${userMessage.swipes.length} 个滑动条。`);
+            }
+
+            const targetSwipe = userMessage.swipes[swipeId];
+
+            // 执行切换
+            const setChatMessage = window.setChatMessage || window.SillyTavern?.getContext?.()?.setChatMessage;
+            if (typeof setChatMessage === 'function') {
+                await setChatMessage(targetSwipe, 0, {
+                    swipe_id: swipeId,
+                    refresh: 'display_and_render_current'
+                });
+            } else {
+                if (typeof userMessage.setSwipe === 'function') {
+                    userMessage.setSwipe(swipeId);
+                } else {
+                    throw new Error('无法找到切换滑动条的函数。');
+                }
+            }
+        } catch (error) {
+            console.error('切换开场白失败:', error);
+            // 静默失败，避免打扰用户（可自行决定是否弹窗）
+        } finally {
+            clickedCard.style.opacity = '1';
+            clickedCard.style.pointerEvents = 'auto';
+        }
+    }
+</script>
+</body>
+</html>
