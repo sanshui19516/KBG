@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>熟れごろ · 角色卡说明</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            /* 渐变底色 + 半透明图片叠加 */
+            background: 
+                linear-gradient(145deg, rgba(42, 26, 46, 0.7) 0%, rgba(30, 22, 40, 0.7) 100%),
+                url('https://testingcf.jsdelivr.net/gh/sanshui19516/KBG@main/Screenshot_20260508_160651.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            /* 使用 multiply 或 soft-light 会让图片与背景融合得更自然 */
+            background-blend-mode: soft-light;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            padding: 16px;
+        }
+        .container {
+            max-width: 520px;
+            width: 100%;
+            background: rgba(40, 22, 40, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid #b5849a;
+            border-radius: 32px;
+            padding: 32px 24px 28px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 1px #4a2a3a inset;
+            text-align: center;
+        }
+
+        /* 装饰顶部 */
+        .deco-top {
+            font-size: 2.0rem;
+            opacity: 0.7;
+            margin-bottom: 6px;
+            letter-spacing: 6px;
+        }
+
+        /* 标题 */
+        .title {
+            color: #e8c8d8;
+            font-size: 1.6rem;
+            font-weight: 400;
+            letter-spacing: 6px;
+            margin-bottom: 4px;
+        }
+        .title-sub {
+            color: #c49aae;
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        .title-author {
+            color: #b5849a;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            margin-bottom: 24px;
+        }
+        .title-author span {
+            color: #d4a8ba;
+            font-weight: bold;
+        }
+
+        /* 分割线 */
+        .divider {
+            border: none;
+            border-top: 1px dashed #7a5f6b;
+            margin: 0 0 22px 0;
+            opacity: 0.8;
+        }
+
+        /* 信息块 */
+        .info-block {
+            background: rgba(35, 18, 35, 0.5);
+            border: 1px solid #6b4e5e;
+            border-radius: 20px;
+            padding: 18px 16px;
+            margin-bottom: 14px;
+            text-align: left;
+        }
+        .info-label {
+            color: #d4a8ba;
+            font-size: 0.8rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px dotted #5a3f4e;
+        }
+        .info-list {
+            list-style: none;
+            padding: 0;
+        }
+        .info-list li {
+            color: #c8a8b6;
+            font-size: 0.78rem;
+            line-height: 1.8;
+            padding-left: 12px;
+            position: relative;
+        }
+        .info-list li::before {
+            content: "·";
+            position: absolute;
+            left: 0;
+            color: #b5849a;
+            font-weight: bold;
+        }
+
+        /* 特别标记 */
+        .tag-allow {
+            color: #a8d8a8;
+        }
+        .tag-warn {
+            color: #d8a8a8;
+        }
+        .tag-note {
+            color: #c8c0a8;
+        }
+
+        /* 底部 */
+        .footer-note {
+            color: #8b6b7e;
+            font-size: 0.7rem;
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid #4a3540;
+            letter-spacing: 1px;
+            line-height: 1.6;
+        }
+        .footer-deco {
+            font-size: 1.2rem;
+            opacity: 0.5;
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- 装饰 -->
+    <div class="deco-top">📱</div>
+
+    <!-- 标题 -->
+    <div class="title">[X]</div>
+    <div class="title-sub">—— 与推特上的故事 ——</div>
+
+    <hr class="divider">
+
+    <!-- 发布信息 -->
+    <div class="info-block">
+        <div class="info-label">📡 发布信息</div>
+        <ul class="info-list">
+            <li>🛑 仅发布于 <span style="color:#d4a8ba;">Discord 类脑</span></li>
+	    <li>🛑 作者： <span style="color:#d4a8ba;">三年的水</span></li>
+
+        </ul>
+    </div>
+
+    <!-- 授权说明 -->
+    <div class="info-block">
+        <div class="info-label">📋 授权说明</div>
+        <ul class="info-list">
+            <li><span class="tag-allow">✅ 允许二改（授权即可）</span></li>
+            <li><span class="tag-allow">✅ 二改后需标注出处</span></li>
+            <li><span class="tag-warn">❌ 禁止商用</span></li>
+            <li><span class="tag-warn">❌ 禁止墙内二传</span></li>
+        </ul>
+    </div>
+
+    <!-- 内容清单 -->
+    <div class="info-block">
+        <div class="info-label">📝 本卡包含</div>
+        <ul class="info-list">
+            <li>简介</li>
+            <li>人物介绍</li>
+            <li>开场白</li>
+            <li>致谢信息</li>
+        </ul>
+    </div>
+
+    <!-- 使用说明 -->
+    <div class="info-block">
+        <div class="info-label">🛑 使用说明</div>
+        <ul class="info-list">
+            <li>导入角色卡到 SillyTavern</li>
+            <li>根据需要调整设定</li>
+            <li>开始对话体验</li>
+        </ul>
+    </div>
+
+    <!-- 额外说明 -->
+    <div class="info-block">
+        <div class="info-label">❇️ 额外说明</div>
+        <ul class="info-list">
+            <li><span class="tag-note">❇️ 多多反馈</span></li>
+            <li><span class="tag-note">❇️ 纯文字</span></li>
+        </ul>
+    </div>
+
+    <!-- 底部 -->
+    <div class="footer-note">
+        <div class="footer-deco">📱</div>
+        感谢使用 · [X]推特<br>
+        by 三年的水
+    </div>
+
+</div>
+</body>
+</html>
