@@ -1,0 +1,346 @@
+```html
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>熟れごろ · 霓虹角色卡</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            /* 霓虹深色基底 + 动态光晕渐变 (无图片) */
+            background: radial-gradient(circle at 20% 30%, #0a0f1e, #03060c);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Poppins', 'Orbitron', 'Georgia', monospace;
+            padding: 20px;
+            position: relative;
+            /* 模拟霓虹氛围的微弱光晕 */
+            box-shadow: inset 0 0 80px rgba(0, 255, 255, 0.05);
+        }
+
+        /* 主容器 —— 半透明霓虹玻璃效果 */
+        .container {
+            max-width: 560px;
+            width: 100%;
+            background: rgba(8, 12, 28, 0.55);
+            backdrop-filter: blur(18px);
+            border-radius: 48px;
+            padding: 32px 26px 34px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3), 0 0 3px rgba(0, 255, 255, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            text-align: center;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .container:hover {
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5), 0 0 8px #0ff;
+        }
+
+        /* 装饰顶 —— 霓虹小图标 */
+        .deco-top {
+            font-size: 2.2rem;
+            text-shadow: 0 0 6px cyan, 0 0 12px #f0f;
+            opacity: 0.95;
+            margin-bottom: 8px;
+            letter-spacing: 8px;
+            filter: drop-shadow(0 0 4px #0ff);
+        }
+
+        /* 动态发光标题 —— 主标题 X  霓虹闪烁+流光 */
+        .neon-title {
+            font-size: 5rem;
+            font-weight: 800;
+            font-family: 'Orbitron', 'Segoe UI', monospace;
+            letter-spacing: 12px;
+            text-transform: uppercase;
+            color: #fff;
+            text-shadow: 
+                0 0 5px #0ff,
+                0 0 10px #0ff,
+                0 0 20px #0ff,
+                0 0 40px #00e0ff,
+                0 0 80px #0af;
+            animation: flickerGlow 2s infinite alternate, drift 3s ease-in-out infinite;
+            margin-bottom: 6px;
+            display: inline-block;
+            background: linear-gradient(135deg, #e0ffff, #aaffff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: none;
+            /* 增强流光质感 */
+            position: relative;
+        }
+
+        /* 动态发光增强 + 特殊流光扫描 */
+        @keyframes flickerGlow {
+            0% {
+                text-shadow: 0 0 2px cyan, 0 0 6px cyan, 0 0 12px #0ff, 0 0 20px #0af;
+                opacity: 0.9;
+            }
+            100% {
+                text-shadow: 0 0 6px #0ff, 0 0 18px cyan, 0 0 35px #0ff, 0 0 60px #0aefef;
+                opacity: 1;
+            }
+        }
+
+        @keyframes drift {
+            0% {
+                letter-spacing: 12px;
+                transform: scale(1);
+            }
+            50% {
+                letter-spacing: 14px;
+                transform: scale(1.02);
+            }
+            100% {
+                letter-spacing: 12px;
+                transform: scale(1);
+            }
+        }
+
+        /* 因为用了渐变文字，需要额外动效保证发光感 */
+        .neon-title {
+            background: linear-gradient(135deg, #c0ffff, #0ff, #ff88ff);
+            background-size: 200% auto;
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: flickerGradient 1.8s infinite alternate, drift 3s ease-in-out infinite;
+        }
+
+        @keyframes flickerGradient {
+            0% {
+                background-position: 0% 50%;
+                text-shadow: 0 0 4px cyan, 0 0 10px #0ff;
+            }
+            100% {
+                background-position: 100% 50%;
+                text-shadow: 0 0 12px #0ff, 0 0 25px magenta;
+            }
+        }
+
+        /* 副标题霓虹风味 */
+        .title-sub {
+            color: #b3f0ff;
+            font-size: 0.9rem;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            font-style: italic;
+            text-shadow: 0 0 5px #0ff;
+            background: rgba(0, 20, 30, 0.5);
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 50px;
+            backdrop-filter: blur(4px);
+        }
+
+        .title-author {
+            color: #cc88bb;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 2px #f0f;
+        }
+
+        .title-author span {
+            color: #ffaae6;
+            font-weight: bold;
+            text-shadow: 0 0 3px rgb(255, 0, 255);
+        }
+
+        /* 霓虹分割线 */
+        .divider {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #0ff, #f0f, #0ff, transparent);
+            margin: 10px 0 24px 0;
+            opacity: 0.8;
+            box-shadow: 0 0 5px cyan;
+        }
+
+        /* 信息块 - 半透明霓虹玻璃风格 */
+        .info-block {
+            background: rgba(16, 20, 35, 0.55);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            border-radius: 28px;
+            padding: 16px 20px;
+            margin-bottom: 18px;
+            text-align: left;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 0 4px rgba(0, 255, 255, 0.2);
+        }
+
+        .info-block:hover {
+            border-color: #ff44dd;
+            box-shadow: 0 0 12px rgba(0, 255, 200, 0.4);
+        }
+
+        .info-label {
+            color: #9effff;
+            font-size: 0.85rem;
+            font-weight: bold;
+            letter-spacing: 2.5px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.5);
+            text-shadow: 0 0 3px cyan;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .info-list li {
+            color: #d4eaff;
+            font-size: 0.82rem;
+            line-height: 1.85;
+            padding-left: 16px;
+            position: relative;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+            text-shadow: 0 0 1px #0ff;
+        }
+
+        .info-list li::before {
+            content: "⚡";
+            position: absolute;
+            left: 0;
+            color: #0ff;
+            font-weight: bold;
+            font-size: 0.75rem;
+            filter: drop-shadow(0 0 2px cyan);
+        }
+
+        /* 特殊标签霓虹色 */
+        .tag-allow {
+            color: #aaffcc;
+            text-shadow: 0 0 2px #0f0;
+            font-weight: 500;
+        }
+
+        .tag-warn {
+            color: #ffa0b0;
+            text-shadow: 0 0 2px #f66;
+        }
+
+        .tag-note {
+            color: #ffdd99;
+            text-shadow: 0 0 2px orange;
+        }
+
+        /* 底部光效 */
+        .footer-note {
+            color: #88bbdd;
+            font-size: 0.72rem;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(0, 255, 255, 0.4);
+            letter-spacing: 1px;
+            line-height: 1.6;
+            text-shadow: 0 0 3px #0ff;
+        }
+
+        .footer-deco {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 6px magenta);
+            display: inline-block;
+        }
+
+        /* 加强霓虹按钮感 */
+        .info-list li .highlight {
+            color: #0ff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- 动态霓虹装饰顶部 -->
+    <div class="deco-top">✧ 𝗡𝗘𝗢𝗡 ✧</div>
+
+    <!-- 动态会发光的 霓虹 X 标题 ———— 多次强化 -->
+    <div class="neon-title">X</div>
+    <!-- 伴随呼吸光晕副标题 -->
+    <div class="title-sub">—— 与推特上的故事 ——</div>
+    <div class="title-author">by <span>三年的水</span> ◈</div>
+
+    <hr class="divider">
+
+    <!-- 发布信息 -->
+    <div class="info-block">
+        <div class="info-label"> 发布信息 </div>
+        <ul class="info-list">
+            <li>🛑 仅发布于 <span style="color:#9effff; text-shadow:0 0 3px cyan;">Discord 类脑</span></li>
+            <li>🛑 作者： <span style="color:#ffaaff;">三年的水</span></li>
+        </ul>
+    </div>
+
+    <!-- 授权说明 -->
+    <div class="info-block">
+        <div class="info-label">📋 授权说明</div>
+        <ul class="info-list">
+            <li><span class="tag-allow">✅ 允许二改（授权即可）</span></li>
+            <li><span class="tag-allow">✅ 二改后需标注出处</span></li>
+            <li><span class="tag-warn">❌ 禁止商用</span></li>
+            <li><span class="tag-warn">❌ 禁止墙内二传</span></li>
+        </ul>
+    </div>
+
+    <!-- 内容清单 -->
+    <div class="info-block">
+        <div class="info-label">📝 本卡包含</div>
+        <ul class="info-list">
+            <li> 简介</li>
+            <li> 人物介绍</li>
+            <li> 开场白 </li>
+            <li> 致谢信息 </li>
+        </ul>
+    </div>
+
+    <!-- 使用说明 -->
+    <div class="info-block">
+        <div class="info-label">⚙️ 使用说明</div>
+        <ul class="info-list">
+            <li>📌 导入角色卡到 <span style="color:#0ff;">SillyTavern</span> ｜ 终端加载</li>
+            <li>📌 可根据需求 <span style="color:#ffcc88;">调整设定</li>
+            <li>📌 开始对话 </li>
+        </ul>
+    </div>
+
+    <!-- 额外说明 -->
+    <div class="info-block">
+        <div class="info-label">❇️ 额外说明</div>
+        <ul class="info-list">
+            <li><span class="tag-note">🌀 多多反馈</li>
+            <li><span class="tag-note">📜 纯文字</span></li>
+        </ul>
+    </div>
+
+    <!-- 底部流光署名 -->
+    <div class="footer-note">
+        <div class="footer-deco">◈ 𝗡𝗘𝗢𝗡 𝗖𝗢𝗥𝗘 ◈</div>
+        感谢游玩 · 「X」<br>
+        ⚡ by 三年的水 ⚡
+    </div>
+
+</div>
+</body>
+</html>
+```
