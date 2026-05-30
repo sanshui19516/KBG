@@ -1,0 +1,224 @@
+```
+<head>
+<div class="mvu-options-panel">
+    <div class="options-header">
+        <span class="options-title">🎮 行动选项</span>
+        <span class="author-credit">作者：三年的水</span>
+        <span class="options-toggle">▼</span>
+    </div>
+    <div class="options-body">
+        <div class="options-buttons"></div>
+        <div class="options-note">备注：此选项面板可在正则-/选项/中关闭</div>
+    </div>
+</div>
+<div id="options-data-holder" style="display:none;">$1</div>
+
+<style>
+    /* 样式与之前相同，省略不重复，保持原样 */
+    .mvu-options-panel {
+        max-width: 900px;
+        min-width: 260px;
+        margin: 12px auto;
+        background: rgba(42, 38, 32, 0.85);
+        backdrop-filter: blur(12px);
+        border-radius: 28px;
+        border: 1px solid rgba(212, 197, 169, 0.4);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+    .options-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 24px;
+        background: linear-gradient(135deg, #8b6946, #3a7ca5);
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .options-header:hover {
+        background: linear-gradient(135deg, #a8855e, #5a9fc9);
+    }
+    .options-title {
+        font-size: clamp(0.9rem, 4vw, 1.1rem);
+        font-weight: 700;
+        color: #f0f3fa;
+        letter-spacing: 1px;
+    }
+    .options-toggle {
+        font-size: 1.2rem;
+        color: #f0f3fa;
+        transition: transform 0.3s;
+    }
+    .author-credit {
+        font-size: 0.7rem;
+        color: rgba(240, 243, 250, 0.5);
+        margin-left: auto;
+        margin-right: 12px;
+        cursor: default;
+        user-select: none;
+        white-space: nowrap;
+    }
+    .author-credit:hover {
+        color: rgba(240, 243, 250, 0.8);
+    }
+    .mvu-options-panel.collapsed .options-toggle {
+        transform: rotate(-90deg);
+    }
+    .options-body {
+        transition: max-height 0.4s ease-out, padding 0.3s ease;
+        max-height: 500px;
+        padding: 20px;
+        overflow: hidden;
+    }
+    .mvu-options-panel.collapsed .options-body {
+        max-height: 0;
+        padding: 0 20px;
+    }
+    .options-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: center;
+    }
+    .option-btn {
+        flex: 1 1 auto;
+        min-width: 140px;
+        background: rgba(58, 52, 46, 0.7);
+        border: 1px solid rgba(212, 197, 169, 0.3);
+        border-radius: 60px;
+        padding: 10px 20px;
+        font-size: clamp(0.75rem, 3vw, 0.9rem);
+        font-weight: 500;
+        color: #e8e2d6;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(4px);
+        white-space: nowrap;
+        overflow-x: auto;
+    }
+    .option-btn:hover {
+        transform: translateY(-2px);
+        background: rgba(106, 96, 86, 0.95);
+        border-color: rgba(212, 197, 169, 0.8);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+        color: #fff;
+    }
+    @media (max-width: 600px) {
+        .options-buttons { flex-direction: column; }
+        .option-btn { min-width: 100%; white-space: normal; }
+        .options-header { padding: 10px 18px; }
+        .options-body { padding: 16px; }
+    }
+    .options-note {
+        text-align: center;
+        font-size: 0.7rem;
+        color: rgba(240, 243, 250, 0.4);
+        margin-top: 16px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(212, 197, 169, 0.2);
+        cursor: default;
+        user-select: none;
+    }
+</style>
+
+<script type="module">
+    /* 严格遵循 MVU-5 规范：使用 jQuery、errorCatched、等待 Mvu 初始化 */
+    $(function() {
+        /* 发送消息函数：先填入文本，再触发发送按钮 */
+        function sendMessage(text) {
+            try {
+                /* 1. 获取输入框并填入文本 */
+                const textarea = document.querySelector('#send_textarea') ||
+                                 (window.parent && window.parent.document.querySelector('#send_textarea'));
+                if (!textarea) return;
+                textarea.value = text;
+                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                textarea.focus();
+
+                /* 2. 查找发送按钮并模拟点击 */
+                const sendBtn = document.querySelector('#send_button') ||
+                                document.querySelector('#send_btn') ||
+                                document.querySelector('button[type="submit"]') ||
+                                (window.parent && window.parent.document.querySelector('#send_button'));
+                if (sendBtn) {
+                    sendBtn.click();
+                } else {
+                    /* 备选：尝试触发回车键 */
+                    const enterEvent = new KeyboardEvent('keydown', {
+                        key: 'Enter',
+                        code: 'Enter',
+                        keyCode: 13,
+                        which: 13,
+                        bubbles: true
+                    });
+                    textarea.dispatchEvent(enterEvent);
+                }
+            } catch (e) { console.error('发送失败:', e); }
+        }
+
+        /* 从隐藏 holder 中读取选项并渲染按钮 */
+        function renderOptions() {
+            const $holder = $('#options-data-holder');
+            if (!$holder.length) return;
+            let optionsStr = $holder.text();
+            if (!optionsStr || optionsStr.trim() === '') {
+                $('.options-buttons').html('<div style="text-align:center; color:#aaa;">暂无可选行动</div>');
+                return;
+            }
+            const items = optionsStr.split('|').map(s => s.trim()).filter(s => s !== '');
+            if (items.length === 0) {
+                $('.options-buttons').html('<div style="text-align:center; color:#aaa;">暂无可选行动</div>');
+                return;
+            }
+            let html = '';
+            for (let item of items) {
+                /* 转义 HTML 实体和引号 */
+                const escaped = item.replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
+                    return m;
+                }).replace(/"/g, '&quot;');
+                const safeText = escaped.replace(/'/g, "\\'");
+                html += `<div class="option-btn" data-opt="${safeText}">${escaped}</div>`;
+            }
+            $('.options-buttons').html(html);
+        }
+
+        /* 折叠功能 */
+        function initCollapse() {
+            const $panel = $('.mvu-options-panel');
+            const $header = $('.options-header');
+            $header.off('click').on('click', function() {
+                $panel.toggleClass('collapsed');
+            });
+        }
+
+        /* 绑定按钮点击事件：直接发送 */
+        function bindOptionSend() {
+            $(document).off('click', '.option-btn').on('click', '.option-btn', function() {
+                const opt = $(this).attr('data-opt') || $(this).text();
+                if (opt) sendMessage(opt);
+            });
+        }
+
+        /* 主初始化 */
+        async function init() {
+            if (typeof waitGlobalInitialized === 'function') {
+                await waitGlobalInitialized('Mvu');
+            }
+            renderOptions();
+            initCollapse();
+            bindOptionSend();
+        }
+
+        if (typeof errorCatched === 'function') {
+            $(errorCatched(init));
+        } else {
+            $(init);
+        }
+    });
+</script>
+```
