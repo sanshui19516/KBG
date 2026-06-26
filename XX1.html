@@ -1,0 +1,188 @@
+<div class="options-module" id="optionsRender">
+    <div class="options-inner"></div>
+</div>
+
+<style>
+    /* ===== 选项栏样式（与状态栏一体） ===== */
+    .options-module {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        background: rgba(30, 30, 38, 0.75);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 24px;
+        border: 1px solid rgba(124, 58, 237, 0.25);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(124, 58, 237, 0.05) inset;
+        padding: 12px 14px;
+        font-family: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+        min-height: 60px;
+    }
+    .options-module::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image:
+            linear-gradient(rgba(124, 58, 237, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(124, 58, 237, 0.04) 1px, transparent 1px);
+        background-size: 20px 20px;
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0.5;
+    }
+
+    .options-inner {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+        padding: 4px 0;
+    }
+
+    /* ===== 选项按钮 ===== */
+    .opt-btn {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 100px;
+        padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(124, 58, 237, 0.3);
+        border-radius: 16px;
+        color: #e2e8f0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        font-family: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+        letter-spacing: 0.3px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        line-height: 1.3;
+    }
+    .opt-btn:hover {
+        background: rgba(124, 58, 237, 0.2);
+        border-color: rgba(124, 58, 237, 0.6);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.15);
+    }
+    .opt-btn:active {
+        transform: scale(0.96) translateY(0);
+        background: rgba(124, 58, 237, 0.3);
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+        transition-duration: 0.05s;
+    }
+
+    /* 手机端单列 */
+    @media (max-width: 480px) {
+        .options-module {
+            padding: 10px 10px;
+            border-radius: 20px;
+        }
+        .opt-btn {
+            flex: 1 1 100%;
+            min-width: unset;
+            padding: 12px 14px;
+            font-size: 0.7rem;
+        }
+    }
+
+    /* 无选项时的占位 */
+    .options-empty {
+        color: rgba(255,255,255,0.2);
+        font-size: 0.6rem;
+        letter-spacing: 2px;
+        padding: 8px 0;
+        text-align: center;
+        width: 100%;
+    }
+</style>
+
+<script>
+    (function() {
+        // ===== 找到自己所属的 host 容器和数据来源 =====
+        // document.currentScript 在 jQuery .load() 注入的脚本同步执行期间仍然有效，
+        // 用它向上找到自己的 .options-host，再找紧邻的数据 <script type="text/plain">，
+        // 这样即使一个页面里同时存在多条 <options> 消息，互相也不会串数据。
+        var hostDiv = document.currentScript ? document.currentScript.closest('.options-host') : null;
+        var dataEl = hostDiv ? hostDiv.previousElementSibling : null;
+        var raw = (dataEl ? dataEl.textContent : '').trim();
+        var container = hostDiv ? hostDiv.querySelector('.options-inner') : null;
+        if (!container) return;
+
+        // 发送消息函数（兼容SillyTavern）
+        function sendOption(text) {
+            if (!text) return;
+            // 尝试 triggerSlash（SillyTavern 标准方式）
+            if (typeof triggerSlash === 'function') {
+                triggerSlash(`/send ${text}|/trigger`);
+                return;
+            }
+            // 备选：fillInput（此脚本与主页面同源同文档，直接查询即可，不需要 window.parent）
+            const textarea = document.querySelector('#send_textarea');
+            if (textarea) {
+                textarea.value = text;
+                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                textarea.focus();
+                const sendBtn = document.querySelector('#send_button') || document.querySelector('#send_btn');
+                if (sendBtn) {
+                    setTimeout(() => sendBtn.click(), 100);
+                }
+            } else {
+                console.log('[Options] 发送:', text);
+            }
+        }
+
+        // 解析选项
+        let items = [];
+        if (raw && raw !== '') {
+            items = raw.split('|').map(s => s.trim()).filter(s => s.length > 0);
+        }
+
+        if (items.length === 0) {
+            container.innerHTML = '<div class="options-empty">⚡ 暂无行动选项</div>';
+            return;
+        }
+
+        // 生成按钮
+        let html = '';
+        items.forEach((opt, index) => {
+            // 转义特殊字符（防止XSS）
+            const safeText = opt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            html += `<div class="opt-btn" data-opt="${safeText}">${safeText}</div>`;
+        });
+        container.innerHTML = html;
+
+        // 绑定点击事件（事件委托）
+        container.addEventListener('click', function(e) {
+            const btn = e.target.closest('.opt-btn');
+            if (!btn) return;
+            const text = btn.getAttribute('data-opt') || btn.textContent;
+            if (text) sendOption(text);
+        });
+
+        // 也支持触摸设备快速响应
+        container.addEventListener('touchstart', function(e) {
+            const btn = e.target.closest('.opt-btn');
+            if (!btn) return;
+            btn.style.transition = 'none';
+            btn.style.transform = 'scale(0.96)';
+            setTimeout(() => {
+                btn.style.transition = '';
+                btn.style.transform = '';
+            }, 100);
+        }, { passive: true });
+
+    })();
+</script>
