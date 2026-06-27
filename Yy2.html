@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>四季的回廊 · 状态栏</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        .status-module {
+            --border-color: rgba(180, 150, 220, 0.25);
+            --glow-color: rgba(180, 150, 220, 0.08);
+            --badge-color: #b496dc;
+            --blob-pink: #f472b6;
+            --blob-gold: #fbbf24;
+            --text-accent: #b496dc;
+
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto 12px;
+            background: radial-gradient(circle at 20% 10%, #1e1e2a, #0d0d14);
+            border-radius: 32px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px var(--border-color) inset, 0 0 40px var(--glow-color);
+            padding: 18px 16px 16px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            font-family: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+            transition: border-color 0.8s ease, box-shadow 0.8s ease;
+        }
+
+        /* ===== 季节主题 ===== */
+        .status-module.season-spring {
+            --border-color: rgba(255, 182, 193, 0.5);
+            --glow-color: rgba(255, 182, 193, 0.15);
+            --badge-color: #f8a4b8;
+            --blob-pink: #ffb6c1;
+            --blob-gold: #ffdab9;
+            --text-accent: #f8a4b8;
+        }
+        .status-module.season-spring::after {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -30%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, rgba(255, 182, 193, 0.12), transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .status-module.season-summer {
+            --border-color: rgba(255, 215, 0, 0.5);
+            --glow-color: rgba(255, 215, 0, 0.15);
+            --badge-color: #fbbf24;
+            --blob-pink: #fcd34d;
+            --blob-gold: #f59e0b;
+            --text-accent: #fbbf24;
+        }
+        .status-module.season-summer::after {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -30%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.12), transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .status-module.season-autumn {
+            --border-color: rgba(255, 140, 50, 0.5);
+            --glow-color: rgba(255, 140, 50, 0.15);
+            --badge-color: #f97316;
+            --blob-pink: #fb923c;
+            --blob-gold: #ea580c;
+            --text-accent: #f97316;
+        }
+        .status-module.season-autumn::after {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -30%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, rgba(255, 140, 50, 0.12), transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .status-module.season-winter {
+            --border-color: rgba(200, 230, 255, 0.4);
+            --glow-color: rgba(200, 230, 255, 0.12);
+            --badge-color: #93c5fd;
+            --blob-pink: #bfdbfe;
+            --blob-gold: #60a5fa;
+            --text-accent: #93c5fd;
+        }
+        .status-module.season-winter::after {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -30%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, rgba(200, 230, 255, 0.10), transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .status-module::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(var(--border-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.3;
+            transition: background-image 0.8s ease;
+        }
+
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            position: relative;
+            z-index: 1;
+        }
+        .ticket-logo {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 900;
+            font-size: 0.95rem;
+            letter-spacing: -0.02em;
+            color: #f8fafc;
+        }
+        .ticket-logo svg {
+            width: 1.2rem;
+            height: 1.2rem;
+            fill: var(--badge-color);
+            filter: drop-shadow(0 0 6px var(--badge-color));
+            animation: logoPulse 3s ease-in-out infinite alternate;
+            transition: fill 0.8s ease, filter 0.8s ease;
+        }
+        @keyframes logoPulse {
+            0% { filter: drop-shadow(0 0 2px var(--badge-color)); }
+            100% { filter: drop-shadow(0 0 12px var(--badge-color)) brightness(1.1); }
+        }
+
+        .header-badges {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ticket-badge {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--badge-color);
+            border: 1px solid var(--border-color);
+            padding: 0.3em 0.8em;
+            border-radius: 99em;
+            font-weight: 700;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(4px);
+            transition: color 0.8s ease, border-color 0.8s ease;
+        }
+        .ticket-badge.author {
+            text-transform: none;
+            letter-spacing: 0.05em;
+            font-weight: 500;
+        }
+
+        .flip-area {
+            position: relative;
+            z-index: 2;
+            perspective: 1200px;
+            touch-action: none;
+        }
+        .flip-wrapper {
+            width: 100%;
+            aspect-ratio: 3 / 4.2;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none;
+        }
+        .flip-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+        .flip-wrapper.flipped .flip-inner {
+            transform: rotateY(180deg) !important;
+        }
+
+        .flip-front,
+        .flip-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 24px;
+            overflow: hidden;
+            background: rgba(30, 30, 38, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            will-change: transform;
+        }
+        .flip-back {
+            transform: rotateY(180deg);
+            background: rgba(20, 18, 30, 0.92);
+            padding: 16px 14px 12px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .flip-front .bg-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(rgba(255,255,255,0.04) 1.2px, transparent 1.2px);
+            background-size: 20px 20px;
+            opacity: 0.3;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .flip-front .bg-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.2;
+            z-index: 0;
+            pointer-events: none;
+            transition: background 0.8s ease;
+        }
+        .flip-front .bg-blob.pink {
+            width: 240px;
+            height: 240px;
+            background: var(--blob-pink);
+            top: -10%;
+            right: -20%;
+        }
+        .flip-front .bg-blob.gold {
+            width: 200px;
+            height: 200px;
+            background: var(--blob-gold);
+            bottom: -10%;
+            left: -20%;
+        }
+
+        .flip-front .sticker-title {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-0.5deg);
+            z-index: 30;
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.12);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            padding: 3px 14px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.65rem;
+            letter-spacing: 3px;
+            color: #e2e8f0;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .flip-front .sticker-title span { color: var(--text-accent); }
+
+        .flip-front .character-sprite {
+            position: absolute;
+            bottom: -5%;
+            left: 50%;
+            transform: translateX(-50%) scale(1.2);
+            height: 110%;
+            width: auto;
+            z-index: 10;
+            filter: drop-shadow(8px 8px 0px rgba(0,0,0,0.15)) drop-shadow(0 0 30px rgba(180,150,220,0.12));
+            animation: breathe 4s ease-in-out infinite;
+            pointer-events: none;
+            object-fit: contain;
+            object-position: bottom center;
+            transition: opacity 0.6s ease;
+            /* ===== 手机端图片懒加载优化 ===== */
+            loading: lazy;
+        }
+        @keyframes breathe {
+            0%, 100% { transform: translateX(-50%) scale(1.2) translateY(0); }
+            50% { transform: translateX(-50%) scale(1.2) translateY(-10px); }
+        }
+
+        .flip-front .sticker-card {
+            position: absolute;
+            z-index: 20;
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.6rem;
+            color: #e2e8f0;
+            min-width: 60px;
+            text-align: center;
+            transition: transform 0.2s ease;
+            pointer-events: none;
+            will-change: transform;
+        }
+        .flip-front .sticker-card .num {
+            font-size: 1rem;
+            font-weight: 900;
+            display: block;
+            line-height: 1.2;
+        }
+        .flip-front .sticker-card .num.gold { color: var(--blob-gold); }
+        .flip-front .sticker-card .num.pink { color: var(--blob-pink); }
+        .flip-front .sticker-card .num.green { color: #6ee7b7; }
+        .flip-front .sticker-card .label {
+            font-size: 0.45rem;
+            font-weight: 400;
+            color: #94a3b8;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .flip-front .sticker-card .sub {
+            font-size: 0.5rem;
+            font-weight: 400;
+            color: #94a3b8;
+            display: block;
+            margin-top: 1px;
+        }
+        .flip-front .sticker-card.left-top { top: 14%; left: 5%; transform: rotate(-2deg); }
+        .flip-front .sticker-card.right-upper { top: 10%; right: 5%; transform: rotate(2deg); }
+        .flip-front .sticker-card.right-top { top: 22%; right: 5%; transform: rotate(3deg); }
+        .flip-front .sticker-card.left-bottom { bottom: 20%; left: 5%; transform: rotate(1deg); }
+        .flip-front .sticker-card.right-bottom { bottom: 26%; right: 5%; transform: rotate(-1deg); }
+
+        .flip-front .float-heart {
+            position: absolute;
+            z-index: 25;
+            font-size: 1.4rem;
+            animation: floatPulse 2.6s ease-in-out infinite;
+            pointer-events: none;
+            filter: drop-shadow(0 4px 8px rgba(180,150,220,0.2));
+        }
+        .flip-front .float-heart.h1 { top: 46%; right: 2%; animation-delay: 0.2s; }
+        .flip-front .float-heart.h2 { bottom: 48%; left: 2%; animation-delay: 1.2s; }
+        @keyframes floatPulse {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
+            50% { transform: translateY(-10px) scale(1.1); opacity: 1; }
+        }
+
+        .flip-front .flip-hint {
+            position: absolute;
+            bottom: 8px;
+            right: 10px;
+            z-index: 30;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-size: 0.4rem;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 1px;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+        }
+
+        .flip-back .back-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+        .flip-back .back-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #f8fafc;
+            letter-spacing: 2px;
+        }
+        .flip-back .back-badge {
+            background: var(--badge-color);
+            color: #fff;
+            font-size: 0.45rem;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.15);
+            transition: background 0.8s ease;
+        }
+        .flip-back .back-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        .season-group {
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            padding: 5px 10px;
+            border-left: 2px solid var(--border-color);
+            transition: border-color 0.8s ease;
+        }
+        .season-group .season-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #cbd5e1;
+            padding-bottom: 3px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .season-group .season-header .count {
+            font-size: 0.55rem;
+            font-weight: 400;
+            color: #94a3b8;
+        }
+        .season-group .season-header .count .done { color: #6ee7b7; }
+        .season-group .season-events {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px 8px;
+            padding-top: 4px;
+        }
+        .season-group .season-events .ev-item {
+            font-size: 0.5rem;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .season-group .season-events .ev-item .dot {
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #4a4a5a;
+            flex-shrink: 0;
+        }
+        .season-group .season-events .ev-item .dot.done { background: #6ee7b7; }
+        .season-group .season-events .ev-item .name { color: #cbd5e1; }
+
+        .back-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 4px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .back-stats .stat-item {
+            text-align: center;
+            font-size: 0.45rem;
+            color: #94a3b8;
+        }
+        .back-stats .stat-item .val {
+            display: block;
+            font-weight: 700;
+            font-size: 0.7rem;
+            color: #f8fafc;
+        }
+        .back-stats .stat-item .val.gold { color: var(--blob-gold); }
+        .back-stats .stat-item .val.pink { color: var(--blob-pink); }
+
+        .back-footer {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            text-align: center;
+            font-size: 0.4rem;
+            color: rgba(255,255,255,0.15);
+            letter-spacing: 2px;
+        }
+
+        @media (max-width: 480px) {
+            .status-module { padding: 14px 12px; border-radius: 24px; }
+            .flip-wrapper { aspect-ratio: 3 / 4.5; }
+            .flip-front .sticker-title { font-size: 0.5rem; padding: 2px 10px; top: 6px; }
+            .flip-front .sticker-card { font-size: 0.5rem; padding: 4px 6px; min-width: 48px; border-width: 1px; }
+            .flip-front .sticker-card .num { font-size: 0.85rem; }
+            .flip-front .sticker-card .label { font-size: 0.4rem; }
+            .flip-front .sticker-card .sub { font-size: 0.4rem; }
+            .flip-front .sticker-card.left-top { top: 12%; left: 4%; }
+            .flip-front .sticker-card.right-upper { top: 8%; right: 4%; }
+            .flip-front .sticker-card.right-top { top: 20%; right: 4%; }
+            .flip-front .sticker-card.left-bottom { bottom: 16%; left: 4%; }
+            .flip-front .sticker-card.right-bottom { bottom: 22%; right: 4%; }
+            .flip-front .character-sprite { height: 105%; transform: translateX(-50%) scale(1.1); }
+            @keyframes breathe {
+                0%, 100% { transform: translateX(-50%) scale(1.1) translateY(0); }
+                50% { transform: translateX(-50%) scale(1.1) translateY(-6px); }
+            }
+            .flip-front .float-heart { font-size: 1rem; }
+            .flip-back { padding: 12px 10px; }
+            .flip-back .back-title { font-size: 0.75rem; }
+            .flip-back .back-body { gap: 4px; }
+            .season-group { padding: 4px 8px; }
+            .season-group .season-header { font-size: 0.55rem; }
+            .season-group .season-events .ev-item { font-size: 0.4rem; }
+            .season-group .season-events .ev-item .dot { width: 4px; height: 4px; }
+            .back-stats { grid-template-columns: 1fr 1fr 1fr; gap: 2px; }
+            .back-stats .stat-item { font-size: 0.4rem; }
+            .back-stats .stat-item .val { font-size: 0.6rem; }
+        }
+        @media (max-width: 380px) {
+            .flip-wrapper { aspect-ratio: 3 / 4.8; }
+            .flip-front .sticker-title { font-size: 0.4rem; padding: 2px 8px; }
+            .flip-front .sticker-card { font-size: 0.4rem; padding: 3px 5px; min-width: 40px; }
+            .flip-front .sticker-card .num { font-size: 0.7rem; }
+            .flip-front .sticker-card .sub { font-size: 0.35rem; }
+            .flip-front .sticker-card.left-top { top: 10%; left: 3%; }
+            .flip-front .sticker-card.right-upper { top: 6%; right: 3%; }
+            .flip-front .sticker-card.right-top { top: 18%; right: 3%; }
+            .flip-front .sticker-card.left-bottom { bottom: 12%; left: 3%; }
+            .flip-front .sticker-card.right-bottom { bottom: 18%; right: 3%; }
+            .season-group .season-events .ev-item { font-size: 0.35rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="status-module" id="statusModule">
+    <div class="ticket-header">
+        <div class="ticket-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+            四季的回廊
+        </div>
+        <div class="header-badges">
+            <span class="ticket-badge" id="seasonBadge">作者 · 三年的水</span>
+        </div>
+    </div>
+
+    <div class="flip-area">
+        <div class="flip-wrapper" id="flipWrapper">
+            <div class="flip-inner" id="flipInner">
+
+                <!-- ====== 正面 ====== -->
+                <div class="flip-front" id="frontFace">
+                    <div class="bg-grid"></div>
+                    <div class="bg-blob pink"></div>
+                    <div class="bg-blob gold"></div>
+                    <div class="sticker-title">✦ <span id="seasonEmblem">母と子</span> 四季の物語 ✦</div>
+
+                    <!-- 季节立绘 - 已添加 loading="lazy" -->
+                    <img class="character-sprite" id="seasonSprite"
+                         src="https://testingcf.jsdelivr.net/gh/sanshui19516/-@main/ztc.png"
+                         alt="角色立绘"
+                         loading="lazy"
+                         onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20400%22%3E%3Crect%20width%3D%22200%22%20height%3D%22400%22%20fill%3D%22%23e8ddd0%22%2F%3E%3Ctext%20x%3D%22100%22%20y%3D%22200%22%20text-anchor%3D%22middle%22%20fill%3D%22%23908080%22%20font-size%3D%2220%22%3E立绘%3Cbr%3E占位%3C%2Ftext%3E%3C%2Fsvg%3E';">
+
+                    <div class="sticker-card left-top">
+                        <span class="label">🌸 季节</span>
+                        <span class="num" id="display-season">早春</span>
+                    </div>
+                    <div class="sticker-card right-upper">
+                        <span class="label">💞 结合</span>
+                        <span class="num" id="display-status">未结合</span>
+                    </div>
+                    <div class="sticker-card right-top">
+                        <span class="label">🚶 距离</span>
+                        <span class="num" id="display-distance">跟在后面</span>
+                    </div>
+                    <div class="sticker-card left-bottom">
+                        <span class="label">💗 心动值</span>
+                        <span class="num gold" id="display-heartbeat">8</span>
+                    </div>
+                    <div class="sticker-card right-bottom">
+                        <span class="label">📖 事件</span>
+                        <span class="num pink" id="display-events">0/11</span>
+                    </div>
+
+                    <div class="float-heart h1" id="floatEmoji1">🌸</div>
+                    <div class="float-heart h2" id="floatEmoji2">🍃</div>
+                    <div class="flip-hint">点击翻转 ▼</div>
+                </div>
+
+                <!-- ====== 背面 ====== -->
+                <div class="flip-back" id="backFace">
+                    <div class="back-header">
+                        <span class="back-title">📋 事件记录</span>
+                        <span class="back-badge" id="back-event-count">0 / 11</span>
+                    </div>
+                    <div class="back-body" id="backBody"></div>
+                    <div class="back-footer">✦ 四季轮转 · 故事未央 ✦</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        /* ===== 翻转控制 ===== */
+        const wrapper = document.getElementById('flipWrapper');
+        const inner = document.getElementById('flipInner');
+        if (!wrapper || !inner) return;
+
+        let flipped = false;
+        let isTouching = false;
+        let currentX = 0, currentY = 0;
+        const maxAngle = 10;
+
+        wrapper.addEventListener('click', function(e) {
+            flipped = !flipped;
+            wrapper.classList.toggle('flipped', flipped);
+            if (flipped) {
+                currentX = 0; currentY = 0;
+                inner.style.transform = 'rotateY(180deg)';
+            } else {
+                currentX = 0; currentY = 0;
+                inner.style.transform = 'rotateX(0deg) rotateY(0deg)';
+            }
+        });
+
+        function updateTilt(clientX, clientY) {
+            if (flipped) return;
+            const rect = wrapper.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            let dx = (clientX - centerX) / (rect.width / 2);
+            let dy = (clientY - centerY) / (rect.height / 2);
+            dx = Math.max(-1, Math.min(1, dx));
+            dy = Math.max(-1, Math.min(1, dy));
+            currentX += (dx - currentX) * 0.12;
+            currentY += (dy - currentY) * 0.12;
+            const rotateY = currentX * maxAngle;
+            const rotateX = -currentY * maxAngle;
+            inner.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            const stickers = document.querySelectorAll('.sticker-card');
+            stickers.forEach((sticker, i) => {
+                const speed = 0.02;
+                const offsetX = -currentX * speed * (i % 2 === 0 ? 1 : -1) * 16;
+                const offsetY = -currentY * speed * (i < 2 ? 1 : -1) * 16;
+                const rot = sticker.dataset.rot || 0;
+                sticker.style.transform = `translate(${offsetX}px, ${offsetY}px) rotate(${rot}deg)`;
+            });
+        }
+
+        function resetTilt() {
+            if (flipped) return;
+            currentX = 0; currentY = 0;
+            inner.style.transform = 'rotateX(0deg) rotateY(0deg)';
+            document.querySelectorAll('.sticker-card').forEach((sticker) => {
+                const rot = sticker.dataset.rot || 0;
+                sticker.style.transform = `rotate(${rot}deg)`;
+            });
+        }
+
+        document.querySelectorAll('.sticker-card').forEach((sticker) => {
+            const transform = window.getComputedStyle(sticker).transform;
+            const matrix = transform.match(/matrix.*\((.+)\)/);
+            if (matrix) {
+                const values = matrix[1].split(', ');
+                const angle = Math.round(Math.atan2(parseFloat(values[1]), parseFloat(values[0])) * 180 / Math.PI);
+                sticker.dataset.rot = angle || 0;
+            } else {
+                sticker.dataset.rot = 0;
+            }
+        });
+
+        wrapper.addEventListener('mouseenter', (e) => { if (!flipped) updateTilt(e.clientX, e.clientY); });
+        wrapper.addEventListener('mousemove', (e) => { if (!flipped) updateTilt(e.clientX, e.clientY); });
+        wrapper.addEventListener('mouseleave', () => { if (!flipped) resetTilt(); });
+
+        wrapper.addEventListener('touchstart', (e) => {
+            isTouching = true;
+            if (!flipped) {
+                const touch = e.touches[0];
+                if (touch) updateTilt(touch.clientX, touch.clientY);
+            }
+        }, { passive: true });
+        wrapper.addEventListener('touchmove', (e) => {
+            if (!isTouching || flipped) return;
+            const touch = e.touches[0];
+            if (touch) updateTilt(touch.clientX, touch.clientY);
+        }, { passive: true });
+        wrapper.addEventListener('touchend', () => {
+            isTouching = false;
+            if (!flipped) resetTilt();
+        }, { passive: true });
+        wrapper.addEventListener('touchcancel', () => {
+            isTouching = false;
+            if (!flipped) resetTilt();
+        }, { passive: true });
+
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (!flipped && !isTouching) resetTilt();
+            }, 200);
+        });
+
+        /* ===== 数据绑定 ===== */
+        const EVENT_NAMES = {
+            '第一次没有拉衣领': '拉衣领',
+            '去海边': '去海边',
+            '赏花': '赏花',
+            '花火大会': '花火大会',
+            '收衣服': '收衣服',
+            '红叶山道': '红叶山道',
+            '说好': '说好',
+            '雪夜': '雪夜',
+            '没有移开眼睛': '没移开眼',
+            '怀孕': '怀孕',
+            '女儿出生': '女儿出生'
+        };
+
+        const INTIMACY_NAMES = {
+            '第一次牵手': '牵手',
+            '第一次接吻': '接吻',
+            '第一次赤裸相对': '赤裸',
+            '第一次性爱': '性爱',
+            '第一次一起睡觉': '同床'
+        };
+        const INTIMACY_KEYS = [
+            '第一次牵手',
+            '第一次接吻',
+            '第一次赤裸相对',
+            '第一次性爱',
+            '第一次一起睡觉'
+        ];
+
+        const SEASON_GROUPS = [
+            { name: '春', keys: ['第一次没有拉衣领', '去海边', '赏花'], icon: '🌸' },
+            { name: '夏', keys: ['花火大会', '收衣服'], icon: '🌊' },
+            { name: '秋', keys: ['红叶山道', '说好'], icon: '🍁' },
+            { name: '冬', keys: ['雪夜', '没有移开眼睛', '怀孕'], icon: '❄️' },
+            { name: '第二年春', keys: ['女儿出生'], icon: '🌱' }
+        ];
+        const ALL_KEYS = SEASON_GROUPS.flatMap(g => g.keys);
+
+        /* ===== 季节立绘与主题切换 ===== */
+        const SEASON_SPRITES = {
+            'spring': 'https://testingcf.jsdelivr.net/gh/sanshui19516/-@main/ztc.png',
+            'summer': 'https://testingcf.jsdelivr.net/gh/sanshui19516/-@main/ztx.png',
+            'autumn': 'https://testingcf.jsdelivr.net/gh/sanshui19516/-@main/ztq.png',
+            'winter': 'https://testingcf.jsdelivr.net/gh/sanshui19516/-@main/ztd.png'
+        };
+
+        const SEASON_MAP = {
+            '早春': 'spring',
+            '春中': 'spring',
+            '春末': 'spring',
+            '夏初': 'summer',
+            '夏末': 'summer',
+            '深秋': 'autumn',
+            '秋末': 'autumn',
+            '深冬': 'winter',
+            '冬末': 'winter',
+            '跨冬春': 'winter',
+            '第二年早春': 'spring',
+            '春·时间走了很远': 'spring'
+        };
+
+        const EMOJI_MAP = {
+            'spring': ['🌸', '🍃'],
+            'summer': ['🌊', '✨'],
+            'autumn': ['🍁', '🍂'],
+            'winter': ['❄️', '✨']
+        };
+
+        function applySeasonTheme(season) {
+            const module = document.getElementById('statusModule');
+            if (!module) return;
+
+            module.classList.remove('season-spring', 'season-summer', 'season-autumn', 'season-winter');
+
+            const clsMap = {
+                'spring': 'season-spring',
+                'summer': 'season-summer',
+                'autumn': 'season-autumn',
+                'winter': 'season-winter'
+            };
+
+            const seasonKey = SEASON_MAP[season] || 'spring';
+            const cls = clsMap[seasonKey] || 'season-spring';
+            module.classList.add(cls);
+
+            // 切换立绘
+            const sprite = document.getElementById('seasonSprite');
+            if (sprite) {
+                const imgUrl = SEASON_SPRITES[seasonKey] || SEASON_SPRITES.spring;
+                sprite.src = imgUrl;
+            }
+
+            // 切换漂浮emoji
+            const emojis = EMOJI_MAP[seasonKey] || ['🌸', '🍃'];
+            const el1 = document.getElementById('floatEmoji1');
+            const el2 = document.getElementById('floatEmoji2');
+            if (el1) el1.textContent = emojis[0];
+            if (el2) el2.textContent = emojis[1];
+
+            // 更新标题中的季节符号
+            const emblem = document.getElementById('seasonEmblem');
+            if (emblem) {
+                const symbolMap = {
+                    'spring': '🌸',
+                    'summer': '🌊',
+                    'autumn': '🍁',
+                    'winter': '❄️'
+                };
+                emblem.textContent = symbolMap[seasonKey] || '🌸';
+            }
+        }
+
+        function renderBack() {
+            try {
+                const allVars = typeof getAllVariables === 'function' ? getAllVariables() : {};
+                const statData = _.get(allVars, 'stat_data', {});
+
+                let totalDone = 0;
+                ALL_KEYS.forEach(function(key) {
+                    if (_.get(statData, '事件.' + key, false)) totalDone++;
+                });
+                document.getElementById('back-event-count').textContent = totalDone + ' / ' + ALL_KEYS.length;
+
+                const body = document.getElementById('backBody');
+                let html = '';
+
+                SEASON_GROUPS.forEach(function(group) {
+                    let doneCount = 0;
+                    let eventsHtml = '';
+                    group.keys.forEach(function(key) {
+                        const done = _.get(statData, '事件.' + key, false);
+                        if (done) doneCount++;
+                        const label = EVENT_NAMES[key] || key;
+                        eventsHtml += '<span class="ev-item">' +
+                            '<span class="dot ' + (done ? 'done' : '') + '"></span>' +
+                            '<span class="name">' + label + '</span>' +
+                            '</span>';
+                    });
+                    html += '<div class="season-group">' +
+                        '<div class="season-header">' +
+                        '<span>' + group.icon + ' ' + group.name + '</span>' +
+                        '<span class="count"><span class="done">' + doneCount + '</span> / ' + group.keys.length + '</span>' +
+                        '</div>' +
+                        '<div class="season-events">' + eventsHtml + '</div>' +
+                        '</div>';
+                });
+
+                let intimacyDoneCount = 0;
+                let intimacyHtml = '';
+                INTIMACY_KEYS.forEach(function(key) {
+                    const done = _.get(statData, '事件.' + key, false);
+                    if (done) intimacyDoneCount++;
+                    const label = INTIMACY_NAMES[key] || key;
+                    intimacyHtml += '<span class="ev-item">' +
+                        '<span class="dot ' + (done ? 'done' : '') + '"></span>' +
+                        '<span class="name">' + label + '</span>' +
+                        '</span>';
+                });
+                html += '<div class="season-group">' +
+                    '<div class="season-header">' +
+                    '<span>💕 亲密</span>' +
+                    '<span class="count"><span class="done">' + intimacyDoneCount + '</span> / ' + INTIMACY_KEYS.length + '</span>' +
+                    '</div>' +
+                    '<div class="season-events">' + intimacyHtml + '</div>' +
+                    '</div>';
+
+                const season = _.get(statData, '世界.季节', '早春');
+                const year = _.get(statData, '世界.年', '第一年');
+                const stage = _.get(statData, '世界.故事阶段', '日常');
+                const days = _.get(statData, '世界.本季已过天数', 0);
+                const progress = _.get(statData, '世界.本季事件进度', 0);
+                const date = _.get(statData, '世界.当前日期', '2025-03-24');
+                const heartbeat = _.get(statData, '关系.心动值', 8);
+                const distance = _.get(statData, '关系.距离', '跟在后面');
+
+                html += '<div class="back-stats">' +
+                    '<div class="stat-item">📅 日期<span class="val">' + date + '</span></div>' +
+                    '<div class="stat-item">🌸 ' + season + '<span class="val">' + year + '</span></div>' +
+                    '<div class="stat-item">📖 阶段<span class="val">' + stage + '</span></div>' +
+                    '<div class="stat-item">📆 已过<span class="val gold">' + days + '天</span></div>' +
+                    '<div class="stat-item">📊 进度<span class="val pink">' + progress + '%</span></div>' +
+                    '<div class="stat-item">💗 心动<span class="val gold">' + heartbeat + '</span></div>' +
+                    '</div>';
+
+                body.innerHTML = html;
+
+                // 应用季节主题
+                applySeasonTheme(season);
+
+            } catch (e) {
+                console.error('背面更新出错:', e);
+            }
+        }
+
+        function renderFront() {
+            try {
+                const allVars = typeof getAllVariables === 'function' ? getAllVariables() : {};
+                const statData = _.get(allVars, 'stat_data', {});
+
+                const season = _.get(statData, '世界.季节', '早春');
+                const distance = _.get(statData, '关系.距离', '跟在后面');
+                const heartbeat = _.get(statData, '关系.心动值', 8);
+                const status = _.get(statData, '关系.性与爱', '未结合');
+
+                let totalDone = 0;
+                ALL_KEYS.forEach(function(key) {
+                    if (_.get(statData, '事件.' + key, false)) totalDone++;
+                });
+
+                document.getElementById('display-season').textContent = season;
+                document.getElementById('display-distance').textContent = distance;
+                document.getElementById('display-heartbeat').textContent = heartbeat;
+                document.getElementById('display-events').textContent = totalDone + '/' + ALL_KEYS.length;
+                document.getElementById('display-status').textContent = status;
+
+                // 主题切换也在正面更新时触发
+                applySeasonTheme(season);
+
+            } catch (e) {
+                console.error('正面更新出错:', e);
+            }
+        }
+
+        function renderAll() {
+            renderFront();
+            renderBack();
+        }
+
+        /* ===== 优化：手机端降低刷新频率 ===== */
+        async function init() {
+            if (typeof waitGlobalInitialized === 'function') {
+                await waitGlobalInitialized('Mvu');
+            }
+            renderAll();
+
+            // 手机端（宽度 < 600px）降低刷新频率到 3000ms，减少网络请求
+            var isMobile = window.innerWidth < 600;
+            var refreshInterval = isMobile ? 3000 : 1500;
+            setInterval(renderAll, refreshInterval);
+
+            if (typeof document !== 'undefined') {
+                $(document).off('VARIABLE_UPDATE_ENDED', renderAll);
+                $(document).on('VARIABLE_UPDATE_ENDED', renderAll);
+            }
+        }
+
+        $(typeof errorCatched === 'function' ? errorCatched(init) : init);
+    })();
+</script>
+</body>
+</html>
