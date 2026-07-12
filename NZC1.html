@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>状态栏 · 青梅的她</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,500;14..32,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <style>
+        /* =============================================
+           主题变量 (HSL) – 深邃紫罗兰 + 珊瑚粉
+           ============================================= */
+        :root {
+            --hue-primary: 260;
+            --sat-primary: 80%;
+            --light-primary: 63%;
+            --color-primary: hsl(var(--hue-primary), var(--sat-primary), var(--light-primary));
+            --color-primary-glow: hsla(var(--hue-primary), 80%, 70%, 0.5);
+
+            --hue-accent: 340;
+            --sat-accent: 80%;
+            --light-accent: 70%;
+            --color-accent: hsl(var(--hue-accent), var(--sat-accent), var(--light-accent));
+            --color-accent-glow: hsla(var(--hue-accent), 80%, 75%, 0.4);
+
+            --bg-base: rgba(18, 14, 30, 0.88);
+            --bg-card: rgba(30, 26, 50, 0.55);
+            --border-glow: rgba(108, 92, 231, 0.2);
+            --text-primary: #f0ecff;
+            --text-secondary: #b8b0d0;
+            --text-muted: #8a82a0;
+
+            /* 折叠动画时长 */
+            --collapse-duration: 0.5s;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: transparent;
+            font-family: 'Inter', -apple-system, sans-serif;
+            padding: 10px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* =============================================
+           主面板 – 毛玻璃 + 光晕
+           ============================================= */
+        .status-panel {
+            width: 100%;
+            max-width: 760px;
+            background: var(--bg-base);
+            backdrop-filter: blur(18px) saturate(1.5);
+            -webkit-backdrop-filter: blur(18px) saturate(1.5);
+            border-radius: 40px;
+            padding: 4px 4px 0 4px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow:
+                0 24px 80px rgba(0, 0, 0, 0.7),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+                0 0 100px -30px var(--color-primary-glow);
+            transition: box-shadow 0.5s ease;
+            animation: panelIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            overflow: hidden;
+        }
+        @keyframes panelIn {
+            0% { opacity: 0; transform: translateY(24px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* =============================================
+           可折叠头部（点击切换）
+           ============================================= */
+        .panel-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 22px 14px 22px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.25s ease;
+            border-radius: 40px 40px 0 0;
+            background: transparent;
+            position: relative;
+            z-index: 2;
+        }
+        .panel-toggle:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .panel-toggle:active {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .toggle-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .brand-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 15px;
+            color: #fff;
+            box-shadow: 0 0 24px var(--color-primary-glow);
+            flex-shrink: 0;
+        }
+        .panel-title {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: clamp(1rem, 4vw, 1.3rem);
+            letter-spacing: 0.04em;
+            background: linear-gradient(135deg, var(--text-primary), var(--color-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 折叠箭头 – 带动画 */
+        .toggle-arrow {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            transition: transform var(--collapse-duration) cubic-bezier(0.34, 1.56, 0.64, 1);
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+        .status-panel.collapsed .toggle-arrow {
+            transform: rotate(-180deg);
+        }
+
+        /* =============================================
+           可折叠内容区
+           ============================================= */
+        .panel-body {
+            max-height: 4000px;
+            overflow: hidden;
+            transition: max-height var(--collapse-duration) cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity var(--collapse-duration) ease,
+                        padding var(--collapse-duration) ease;
+            opacity: 1;
+            padding: 0 20px 24px 20px;
+        }
+        .status-panel.collapsed .panel-body {
+            max-height: 0;
+            opacity: 0;
+            padding: 0 20px 0 20px;
+        }
+
+        /* =============================================
+           顶部信息栏（日期、地点、作者）
+           ============================================= */
+        .header-section {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 18px;
+            gap: 6px 12px;
+        }
+        .header-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 16px;
+            color: var(--text-secondary);
+            font-size: clamp(0.65rem, 2.2vw, 0.8rem);
+            font-weight: 500;
+        }
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .meta-item .label {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+        .meta-item .value {
+            color: var(--text-primary);
+            font-weight: 500;
+            word-break: break-word;
+        }
+        .author-badge {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 3px 12px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: clamp(0.55rem, 1.8vw, 0.7rem);
+            color: var(--text-muted);
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+        }
+
+        /* =============================================
+           角色卡片网格
+           ============================================= */
+        .characters-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* =============================================
+           单张角色卡片 – 玻璃拟态 + 悬浮
+           ============================================= */
+        .char-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: clamp(14px, 2.5vw, 22px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+            transition: all 0.3s ease;
+            animation: cardFloat 6s infinite ease-in-out;
+        }
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-2px); }
+        }
+        .char-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(108, 92, 231, 0.25);
+            box-shadow: 0 12px 48px rgba(108, 92, 231, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        /* ----- 卡片头部：头像 + 姓名 ----- */
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: clamp(12px, 2.5vw, 20px);
+            margin-bottom: 14px;
+        }
+        .avatar-wrapper {
+            flex-shrink: 0;
+            width: clamp(56px, 12vw, 80px);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.04), 0 8px 24px rgba(0,0,0,0.5);
+            transition: box-shadow 0.3s ease;
+            background: #1c1a2e;
+            aspect-ratio: 3 / 4;
+        }
+        .avatar-wrapper img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .char-card:hover .avatar-wrapper {
+            box-shadow: 0 0 0 2px var(--color-primary-glow), 0 8px 32px rgba(108, 92, 231, 0.25);
+        }
+
+        .char-name-area {
+            flex: 1;
+            min-width: 0;
+        }
+        .char-name {
+            font-size: clamp(1.1rem, 3.5vw, 1.5rem);
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+            background: linear-gradient(135deg, var(--text-primary), var(--color-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            word-break: break-word;
+        }
+        .char-sub {
+            font-size: clamp(0.65rem, 1.8vw, 0.8rem);
+            color: var(--text-secondary);
+            font-weight: 400;
+            letter-spacing: 0.02em;
+            margin-top: 2px;
+            line-height: 1.3;
+        }
+
+        /* ----- 属性网格 – 自适应列数 ----- */
+        .attr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 6px 10px;
+        }
+        @media (min-width: 480px) {
+            .attr-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+        }
+        @media (min-width: 640px) {
+            .attr-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        .attr-item {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 40px;
+            padding: 5px 12px 5px 10px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.2s ease;
+            font-size: clamp(0.65rem, 1.8vw, 0.78rem);
+            line-height: 1.4;
+            min-height: 28px;
+        }
+        .attr-item:hover {
+            background: rgba(108, 92, 231, 0.06);
+            border-color: rgba(108, 92, 231, 0.12);
+        }
+        .attr-key {
+            color: var(--text-secondary);
+            font-weight: 500;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .attr-value {
+            color: var(--text-primary);
+            font-weight: 400;
+            word-break: break-word;
+            min-width: 0;
+        }
+        .attr-value.highlight {
+            color: var(--color-accent);
+            font-weight: 600;
+            text-shadow: 0 0 12px var(--color-accent-glow);
+        }
+        .attr-value .num {
+            font-feature-settings: "tnum";
+        }
+
+        /* 性欲值专用呼吸光晕 */
+        .attr-item.lust .attr-value {
+            color: var(--color-accent);
+            font-weight: 700;
+            animation: pulseLust 2.2s infinite ease-in-out;
+        }
+        @keyframes pulseLust {
+            0%, 100% { text-shadow: 0 0 4px var(--color-accent-glow); }
+            50% { text-shadow: 0 0 20px var(--color-accent-glow), 0 0 40px rgba(255, 107, 157, 0.15); }
+        }
+
+        /* ----- 最近亲密行为 ----- */
+        .recent-section {
+            margin-top: 12px;
+        }
+        .recent-label {
+            font-size: clamp(0.6rem, 1.6vw, 0.7rem);
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .recent-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 8px;
+            list-style: none;
+            padding: 0;
+        }
+        .recent-list li {
+            font-size: clamp(0.6rem, 1.6vw, 0.7rem);
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.02);
+            padding: 2px 12px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            white-space: nowrap;
+        }
+
+        /* =============================================
+           响应式 – 手机 (≤480px)
+           ============================================= */
+        @media (max-width: 480px) {
+            body { padding: 5px; }
+            .status-panel { border-radius: 28px; }
+            .panel-toggle { padding: 12px 16px 10px 16px; }
+            .panel-body { padding: 0 14px 18px 14px; }
+            .status-panel.collapsed .panel-body { padding: 0 14px 0 14px; }
+
+            .brand-icon { width: 26px; height: 26px; font-size: 12px; }
+            .header-section { flex-direction: column; align-items: stretch; gap: 4px; }
+            .header-meta { justify-content: flex-start; gap: 4px 10px; }
+            .author-badge { align-self: flex-start; }
+
+            .char-card { border-radius: 20px; padding: 14px; }
+            .avatar-wrapper { width: 48px; border-radius: 14px; }
+            .attr-grid { grid-template-columns: 1fr 1fr; gap: 4px 6px; }
+            .attr-item { padding: 4px 10px; font-size: 0.65rem; min-height: 24px; border-radius: 30px; }
+        }
+
+        /* =============================================
+           响应式 – 平板 (481px – 768px)
+           ============================================= */
+        @media (min-width: 481px) and (max-width: 768px) {
+            .status-panel { border-radius: 34px; }
+            .panel-toggle { padding: 14px 20px 12px 20px; }
+            .panel-body { padding: 0 18px 20px 18px; }
+            .status-panel.collapsed .panel-body { padding: 0 18px 0 18px; }
+            .avatar-wrapper { width: 64px; border-radius: 16px; }
+            .attr-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* =============================================
+           响应式 – 桌面 (>768px) – 已是默认样式
+           ============================================= */
+        @media (min-width: 769px) {
+            .status-panel { border-radius: 44px; }
+        }
+
+        /* =============================================
+           加载占位
+           ============================================= */
+        .loading-placeholder {
+            text-align: center;
+            padding: 32px 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- YAML 数据源 -->
+    <script id="yaml-data-source" type="text/yaml">
+$1
+</script>
+
+    <!-- 主面板 -->
+    <div class="status-panel" id="statusPanel">
+
+        <!-- 可折叠头部 -->
+        <div class="panel-toggle" id="panelToggle" role="button" aria-expanded="true">
+            <div class="toggle-left">
+                <div class="brand-icon">✦</div>
+                <span class="panel-title">青梅的她</span>
+            </div>
+            <span class="toggle-arrow" id="toggleArrow">▾</span>
+        </div>
+
+        <!-- 可折叠内容体 -->
+        <div class="panel-body" id="panelBody">
+            <!-- 顶栏（日期/地点/作者） -->
+            <div class="header-section" id="headerSection">
+                <div class="header-meta" id="headerMeta">
+                    <span class="meta-item">
+                        <span class="label">📍</span>
+                        <span class="value" id="locationDisplay">加载中...</span>
+                    </span>
+                    <span class="meta-item">
+                        <span class="label">🕒</span>
+                        <span class="value" id="timeDisplay">加载中...</span>
+                    </span>
+                    <span class="author-badge">作者 · 三年的水</span>
+                </div>
+            </div>
+
+            <!-- 角色卡片容器 -->
+            <div class="characters-grid" id="charactersGrid">
+                <div class="loading-placeholder">✦ 加载状态中 ✦</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // ----- 折叠控制 -----
+        const panel = document.getElementById('statusPanel');
+        const toggleBtn = document.getElementById('panelToggle');
+        if (panel && toggleBtn) {
+            // 从 localStorage 读取折叠状态 (可选)
+            const saved = localStorage.getItem('statusPanelCollapsed');
+            if (saved === 'true') {
+                panel.classList.add('collapsed');
+                toggleBtn.setAttribute('aria-expanded', 'false');
+            }
+            toggleBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isCollapsed = panel.classList.toggle('collapsed');
+                toggleBtn.setAttribute('aria-expanded', !isCollapsed);
+                localStorage.setItem('statusPanelCollapsed', isCollapsed);
+            });
+        }
+
+        // ----- 获取 YAML 数据 -----
+        function getYamlData() {
+            const script = document.getElementById('yaml-data-source');
+            if (!script) return null;
+            let raw = script.textContent || script.innerText || '';
+            if (typeof raw !== 'string') raw = String(raw);
+            raw = raw.trim();
+            if (!raw) return null;
+            try {
+                return jsyaml.load(raw);
+            } catch (e) {
+                console.warn('YAML解析失败:', e);
+                return null;
+            }
+        }
+
+        // ----- HTML 转义 -----
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ----- 渲染 -----
+        function render() {
+            const data = getYamlData();
+            const grid = document.getElementById('charactersGrid');
+            if (!grid) return;
+
+            if (!data) {
+                grid.innerHTML = '<div class="loading-placeholder">暂无状态数据</div>';
+                return;
+            }
+
+            const rootKey = Object.keys(data)[0];
+            const root = data[rootKey];
+            if (!root) {
+                grid.innerHTML = '<div class="loading-placeholder">数据格式错误</div>';
+                return;
+            }
+
+            // 全局信息
+            const dateTime = root['日期和时间'] || '未知时间';
+            const location = root['地点'] || '未知地点';
+            document.getElementById('timeDisplay').textContent = dateTime;
+            document.getElementById('locationDisplay').textContent = location;
+
+            const userList = root['用户列表'] || [];
+            grid.innerHTML = '';
+
+            if (userList.length === 0) {
+                grid.innerHTML = '<div class="loading-placeholder">暂无角色数据</div>';
+                return;
+            }
+
+            userList.forEach(userObj => {
+                let userData = userObj;
+                if (userObj && typeof userObj === 'object' && userObj['用户']) {
+                    userData = userObj['用户'];
+                }
+                if (!userData || typeof userData !== 'object') return;
+
+                const name = userData['名字'] || '未知';
+                const avatar = userData['头像'] || '';
+                const action = userData['行动'] || '';
+                const inner = userData['内心'] || '';
+                const mood = userData['情绪状态'] || '';
+                const pressure = userData['工作压力值'];
+                const fatigue = userData['疲劳程度'];
+                const lust = userData['性欲值'];
+                const chest = userData['胸部'] || '';
+                const pussy = userData['小穴'] || '';
+                const dependency = userData['情感依赖度'] || '';
+                const possess = userData['占有欲'] || '';
+                const state = userData['精神状态'] || '';
+                const dress = userData['穿搭'] || '';
+                const penis = userData['阳具'] || '';
+                const testicles = userData['睾丸'] || '';
+                const recent = userData['最近亲密行为'] || [];
+
+                const card = document.createElement('div');
+                card.className = 'char-card';
+
+                // ---- 卡片头部 ----
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'card-header';
+
+                const avatarWrapper = document.createElement('div');
+                avatarWrapper.className = 'avatar-wrapper';
+                if (avatar) {
+                    const img = document.createElement('img');
+                    img.src = avatar;
+                    img.alt = name;
+                    img.loading = 'lazy';
+                    avatarWrapper.appendChild(img);
+                } else {
+                    const placeholder = document.createElement('div');
+                    placeholder.style.cssText =
+                        'width:100%;height:100%;background:linear-gradient(135deg,#2a2640,#1c1a2e);display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:#6a62a0;';
+                    placeholder.textContent = name.charAt(0).toUpperCase();
+                    avatarWrapper.appendChild(placeholder);
+                }
+                headerDiv.appendChild(avatarWrapper);
+
+                const nameArea = document.createElement('div');
+                nameArea.className = 'char-name-area';
+                const nameSpan = document.createElement('div');
+                nameSpan.className = 'char-name';
+                nameSpan.textContent = name;
+                nameArea.appendChild(nameSpan);
+                if (action) {
+                    const sub = document.createElement('div');
+                    sub.className = 'char-sub';
+                    sub.textContent = action;
+                    nameArea.appendChild(sub);
+                }
+                headerDiv.appendChild(nameArea);
+                card.appendChild(headerDiv);
+
+                // ---- 属性网格 ----
+                const gridAttr = document.createElement('div');
+                gridAttr.className = 'attr-grid';
+
+                function addAttr(key, value, highlight = false, lustFlag = false) {
+                    if (value === undefined || value === null || value === '') return;
+                    const item = document.createElement('div');
+                    item.className = 'attr-item' + (lustFlag ? ' lust' : '');
+                    const keySpan = document.createElement('span');
+                    keySpan.className = 'attr-key';
+                    keySpan.textContent = key + ':';
+                    const valSpan = document.createElement('span');
+                    valSpan.className = 'attr-value' + (highlight ? ' highlight' : '');
+                    if (typeof value === 'number') {
+                        valSpan.innerHTML = `<span class="num">${value}</span>`;
+                    } else {
+                        valSpan.textContent = value;
+                    }
+                    item.appendChild(keySpan);
+                    item.appendChild(valSpan);
+                    gridAttr.appendChild(item);
+                }
+
+                const isWanwan = name.includes('温晚婉');
+                const isUser = name.includes('{{user}}') || name === '{{user}}';
+
+                if (isWanwan) {
+                    addAttr('内心', inner);
+                    addAttr('情绪', mood);
+                    addAttr('工作压力', pressure, true);
+                    addAttr('疲劳程度', fatigue, true);
+                    addAttr('性欲值', lust, true, true);
+                    addAttr('胸部', chest);
+                    addAttr('小穴', pussy);
+                    addAttr('情感依赖', dependency);
+                    addAttr('占有欲', possess);
+                    addAttr('穿搭', dress);
+                } else if (isUser) {
+                    addAttr('精神状态', state);
+                    addAttr('穿搭', dress);
+                    addAttr('阳具', penis);
+                    addAttr('睾丸', testicles);
+                } else {
+                    addAttr('行动', action);
+                    addAttr('穿搭', dress);
+                    if (inner) addAttr('内心', inner);
+                    if (mood) addAttr('情绪', mood);
+                    if (pressure !== undefined) addAttr('压力', pressure, true);
+                    if (fatigue !== undefined) addAttr('疲劳', fatigue, true);
+                    if (lust !== undefined) addAttr('性欲', lust, true, true);
+                }
+
+                card.appendChild(gridAttr);
+
+                // ---- 最近亲密行为 ----
+                if (recent && Array.isArray(recent) && recent.length > 0) {
+                    const section = document.createElement('div');
+                    section.className = 'recent-section';
+                    const label = document.createElement('div');
+                    label.className = 'recent-label';
+                    label.textContent = '最近亲密';
+                    section.appendChild(label);
+                    const list = document.createElement('ul');
+                    list.className = 'recent-list';
+                    recent.forEach(item => {
+                        const li = document.createElement('li');
+                        let text = '';
+                        if (item && typeof item === 'object' && item['亲密行为']) {
+                            text = item['亲密行为'];
+                        } else if (typeof item === 'string') {
+                            text = item;
+                        } else {
+                            text = '无';
+                        }
+                        li.textContent = text;
+                        list.appendChild(li);
+                    });
+                    section.appendChild(list);
+                    card.appendChild(section);
+                }
+
+                grid.appendChild(card);
+            });
+        }
+
+        // 初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', render);
+        } else {
+            render();
+        }
+    })();
+    </script>
+</body>
+</html>
