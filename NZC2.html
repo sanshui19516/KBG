@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>行动选项</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --hue-primary: 260;
+            --sat-primary: 80%;
+            --light-primary: 63%;
+            --color-primary: hsl(var(--hue-primary), var(--sat-primary), var(--light-primary));
+            --color-primary-glow: hsla(var(--hue-primary), 80%, 70%, 0.5);
+            --hue-accent: 340;
+            --sat-accent: 80%;
+            --light-accent: 70%;
+            --color-accent: hsl(var(--hue-accent), var(--sat-accent), var(--light-accent));
+            --color-accent-glow: hsla(var(--hue-accent), 80%, 75%, 0.4);
+            --bg-base: rgba(18, 14, 30, 0.88);
+            --bg-card: rgba(30, 26, 50, 0.55);
+            --text-primary: #f0ecff;
+            --text-secondary: #b8b0d0;
+            --text-muted: #8a82a0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: transparent;
+            font-family: 'Inter', -apple-system, sans-serif;
+            padding: 8px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        .options-panel {
+            width: 100%;
+            max-width: 760px;
+            background: var(--bg-base);
+            backdrop-filter: blur(18px) saturate(1.5);
+            -webkit-backdrop-filter: blur(18px) saturate(1.5);
+            border-radius: 32px;
+            padding: 16px 20px 18px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 16px 60px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 0 80px -30px var(--color-primary-glow);
+            animation: panelIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes panelIn {
+            0% { opacity: 0; transform: translateY(12px) scale(0.97); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .options-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 12px;
+            transition: opacity 0.2s;
+        }
+        .options-header:hover { opacity: 0.8; }
+        .options-title {
+            font-weight: 600;
+            font-size: clamp(0.75rem, 2vw, 0.9rem);
+            color: var(--text-secondary);
+            letter-spacing: 0.06em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .options-title .dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            box-shadow: 0 0 12px var(--color-primary-glow);
+            animation: pulseDot 2s infinite ease-in-out;
+        }
+        @keyframes pulseDot {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.3); }
+        }
+        .options-toggle-icon {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .options-panel.collapsed .options-toggle-icon {
+            transform: rotate(-180deg);
+        }
+        .options-body {
+            max-height: 400px;
+            overflow: hidden;
+            transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease, padding 0.4s ease;
+            opacity: 1;
+        }
+        .options-panel.collapsed .options-body {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding-top: 2px;
+        }
+        .option-btn {
+            background: var(--bg-card);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 14px 16px;
+            color: var(--text-secondary);
+            font-size: clamp(0.7rem, 1.8vw, 0.85rem);
+            font-weight: 500;
+            line-height: 1.4;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+            position: relative;
+            overflow: hidden;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            word-break: break-word;
+        }
+        .option-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            padding: 1px;
+            background: linear-gradient(135deg, transparent 40%, var(--color-primary-glow), transparent 60%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .option-btn:hover::before { opacity: 1; }
+        .option-btn:hover {
+            transform: translateY(-2px) scale(1.01);
+            border-color: rgba(108, 92, 231, 0.25);
+            box-shadow: 0 8px 32px rgba(108, 92, 231, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+        .option-btn:active { transform: scale(0.97); transition-duration: 0.05s; }
+        .option-btn .badge {
+            display: inline-block;
+            font-size: 0.55rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            background: rgba(108, 92, 231, 0.12);
+            padding: 2px 8px;
+            border-radius: 30px;
+            margin-right: 8px;
+            letter-spacing: 0.04em;
+            flex-shrink: 0;
+        }
+        .option-btn .text { flex: 1; }
+        @media (max-width: 480px) {
+            body { padding: 4px; }
+            .options-panel { border-radius: 24px; padding: 12px 14px 14px 14px; }
+            .options-grid { grid-template-columns: 1fr; gap: 8px; }
+            .option-btn { padding: 12px 14px; min-height: 44px; font-size: 0.75rem; border-radius: 16px; }
+            .options-title { font-size: 0.7rem; }
+        }
+        @media (min-width: 481px) and (max-width: 768px) {
+            .options-panel { padding: 14px 18px 16px 18px; }
+            .option-btn { padding: 13px 15px; min-height: 46px; font-size: 0.8rem; }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 16px 0 8px 0;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 400;
+            letter-spacing: 0.04em;
+        }
+    </style>
+</head>
+<body>
+    <!-- 隐藏数据容器：$1 由正则替换自动填充 -->
+    <div id="options-data-holder" style="display:none;">$1</div>
+
+    <div class="options-panel" id="optionsPanel">
+        <div class="options-header" id="optionsHeader">
+            <span class="options-title"><span class="dot"></span>行动选项</span>
+            <span class="options-toggle-icon">▾</span>
+        </div>
+        <div class="options-body" id="optionsBody">
+            <div class="options-grid" id="optionsGrid"></div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // 从隐藏容器读取数据
+        const dataHolder = document.getElementById('options-data-holder');
+        let rawOptions = dataHolder ? (dataHolder.textContent || dataHolder.innerText || '') : '';
+        // 清洗数据
+        const items = rawOptions.split('|').map(s => s.trim()).filter(s => s.length > 0);
+
+        const grid = document.getElementById('optionsGrid');
+        if (!grid) return;
+
+        if (items.length === 0) {
+            grid.innerHTML = `<div class="empty-state">✦ 暂无行动选项 ✦</div>`;
+            return;
+        }
+
+        const displayItems = items.slice(0, 2);
+
+        function sendOption(text) {
+            if (!text || text.trim().length === 0) return;
+            try {
+                if (typeof triggerSlash === 'function') {
+                    triggerSlash(`/send ${text}|/trigger`);
+                    return;
+                }
+                const textarea = document.querySelector('#send_textarea') ||
+                                 (window.parent && window.parent.document.querySelector('#send_textarea'));
+                if (textarea) {
+                    textarea.value = text;
+                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    textarea.focus();
+                    const sendBtn = document.querySelector('#send_button') ||
+                                    document.querySelector('#send_btn') ||
+                                    (window.parent && window.parent.document.querySelector('#send_button'));
+                    if (sendBtn) {
+                        sendBtn.click();
+                    } else {
+                        textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+                    }
+                } else {
+                    console.warn('无法找到 SillyTavern 输入框, 选项:', text);
+                }
+            } catch (e) {
+                console.error('发送选项失败:', e);
+            }
+        }
+
+        grid.innerHTML = '';
+        displayItems.forEach((item, index) => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            const badge = document.createElement('span');
+            badge.className = 'badge';
+            badge.textContent = index + 1;
+            const textSpan = document.createElement('span');
+            textSpan.className = 'text';
+            textSpan.textContent = item;
+            btn.appendChild(badge);
+            btn.appendChild(textSpan);
+
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                sendOption(item);
+                this.style.transition = 'background 0.1s';
+                this.style.background = 'rgba(108, 92, 231, 0.2)';
+                setTimeout(() => { this.style.background = ''; }, 200);
+            });
+            btn.addEventListener('touchstart', function(e) {}, { passive: true });
+
+            grid.appendChild(btn);
+        });
+
+        // 折叠控制
+        const panel = document.getElementById('optionsPanel');
+        const header = document.getElementById('optionsHeader');
+        if (panel && header) {
+            const saved = localStorage.getItem('optionsPanelCollapsed');
+            if (saved === 'true') { panel.classList.add('collapsed'); }
+            header.addEventListener('click', function(e) {
+                e.stopPropagation();
+                panel.classList.toggle('collapsed');
+                localStorage.setItem('optionsPanelCollapsed', panel.classList.contains('collapsed'));
+            });
+        }
+    })();
+    </script>
+</body>
+</html>
