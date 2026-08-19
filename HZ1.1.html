@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>选项栏 · 三行毛玻璃</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
+    <style>
+        /* ===== 选项栏 — 三行纵向布局 ===== */
+        .options-module {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            background: hsla(0, 0%, 100%, 0.04);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 20px;
+            border: 1px solid hsla(0, 0%, 100%, 0.06);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            padding: 14px 16px 16px;
+            position: relative;
+            overflow: hidden;
+            min-height: 60px;
+            font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+
+        .options-module::before {
+            content: '';
+            position: absolute;
+            top: -60%;
+            left: -60%;
+            width: 220%;
+            height: 220%;
+            background: radial-gradient(ellipse at 30% 20%, hsla(35, 60%, 55%, 0.04), transparent 60%);
+            animation: shimmer-options 10s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes shimmer-options {
+            0% {
+                transform: translate(-5%, -5%) scale(1);
+                opacity: 0.3;
+            }
+            100% {
+                transform: translate(5%, 5%) scale(1.15);
+                opacity: 0.7;
+            }
+        }
+
+        .options-module>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== 三行纵向排列 ===== */
+        .options-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 2px 0;
+        }
+
+        /* ===== 每个按钮占一整行 ===== */
+        .opt-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 18px;
+            background: hsla(0, 0%, 100%, 0.03);
+            border: 1px solid hsla(0, 0%, 100%, 0.06);
+            border-radius: 12px;
+            color: hsla(0, 0%, 100%, 0.75);
+            font-size: 13.5px;
+            font-weight: 450;
+            font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+            line-height: 1.5;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            letter-spacing: 0.2px;
+            position: relative;
+        }
+
+        /* 序号装饰（① ② ③） */
+        .opt-btn .badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            color: hsla(35, 60%, 55%, 0.25);
+            margin-right: 12px;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            font-variant-numeric: tabular-nums;
+            min-width: 20px;
+        }
+
+        /* 悬停 */
+        .opt-btn:hover {
+            background: hsla(35, 50%, 40%, 0.12);
+            border-color: hsla(35, 60%, 55%, 0.25);
+            transform: translateX(4px) scale(1.01);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            color: hsla(0, 0%, 100%, 0.92);
+        }
+
+        .opt-btn:hover .badge {
+            color: hsl(35, 60%, 55%);
+        }
+
+        /* 点击 */
+        .opt-btn:active {
+            transform: scale(0.97) translateX(0);
+            background: hsla(35, 60%, 55%, 0.15);
+            transition-duration: 0.05s;
+        }
+
+        /* 禁用（防连点） */
+        .opt-btn.disabled {
+            opacity: 0.35;
+            pointer-events: none;
+            transform: none !important;
+        }
+
+        /* 三行线色暗示（好/中/坏） */
+        .opt-btn[data-line="good"] {
+            border-left: 3px solid hsla(140, 50%, 45%, 0.15);
+        }
+        .opt-btn[data-line="good"]:hover {
+            border-left-color: hsla(140, 50%, 50%, 0.35);
+        }
+
+        .opt-btn[data-line="mid"] {
+            border-left: 3px solid hsla(45, 60%, 45%, 0.12);
+        }
+        .opt-btn[data-line="mid"]:hover {
+            border-left-color: hsla(45, 60%, 50%, 0.3);
+        }
+
+        .opt-btn[data-line="bad"] {
+            border-left: 3px solid hsla(350, 50%, 45%, 0.12);
+        }
+        .opt-btn[data-line="bad"]:hover {
+            border-left-color: hsla(350, 50%, 50%, 0.3);
+        }
+
+        /* 空状态 */
+        .options-empty {
+            color: hsla(0, 0%, 100%, 0.15);
+            font-size: 11px;
+            font-weight: 400;
+            letter-spacing: 1px;
+            padding: 10px 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* ==========================================
+           响应式
+           ========================================== */
+        @media (max-width: 480px) {
+            .options-module {
+                padding: 12px 12px 14px;
+                border-radius: 16px;
+            }
+            .opt-btn {
+                padding: 11px 14px;
+                font-size: 12.5px;
+            }
+            .opt-btn .badge {
+                font-size: 10px;
+                margin-right: 10px;
+                min-width: 18px;
+            }
+            .options-inner {
+                gap: 6px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .opt-btn {
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+            .opt-btn .badge {
+                font-size: 9px;
+                margin-right: 8px;
+                min-width: 16px;
+            }
+        }
+
+        @media (min-width: 600px) {
+            .options-module {
+                max-width: 520px;
+                padding: 18px 20px 20px;
+                border-radius: 24px;
+            }
+            .opt-btn {
+                padding: 14px 22px;
+                font-size: 14.5px;
+            }
+            .opt-btn .badge {
+                font-size: 12px;
+                margin-right: 14px;
+            }
+            .options-inner {
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 选项模块 ===== -->
+    <div class="options-module" id="optionsRender">
+        <div class="options-inner" id="optionsList"></div>
+    </div>
+
+    <!-- ✅ 核心改动：存放 $1 的隐藏容器 -->
+    <div id="options-data" style="display:none;">$1</div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ===== ★★★ 核心：从隐藏容器读取数据，而非直接读 '$1' ★★★ =====
+            const dataContainer = document.getElementById('options-data');
+            const raw = dataContainer ? dataContainer.textContent.trim() : '';
+
+            const container = document.getElementById('optionsList');
+            if (!container) return;
+
+            // ===== 发送选项到酒馆 =====
+            function sendOption(text) {
+                if (!text) return;
+                if (typeof triggerSlash === 'function') {
+                    triggerSlash(`/send ${text}|/trigger`);
+                    return;
+                }
+                const textarea = document.querySelector('#send_textarea') ||
+                    (window.parent && window.parent.document.querySelector('#send_textarea'));
+                if (textarea) {
+                    textarea.value = text;
+                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    textarea.focus();
+                    const sendBtn = document.querySelector('#send_button') ||
+                        document.querySelector('#send_btn') ||
+                        (window.parent && window.parent.document.querySelector('#send_button'));
+                    if (sendBtn) {
+                        setTimeout(() => sendBtn.click(), 100);
+                    }
+                } else {
+                    console.log('[选项] 已选择:', text);
+                }
+            }
+
+            // ===== 分支暗示（如果外部存在 #branchVal 则读取，否则按序号循环） =====
+            function getLineHint(index) {
+                const branchEl = document.getElementById('branchVal');
+                let branch = '';
+                if (branchEl) branch = branchEl.textContent.trim();
+                if (branch) {
+                    // 如果外部给了分支值，映射到 good/mid/bad
+                    const map = { '好': 'good', '中': 'mid', '坏': 'bad' };
+                    return map[branch] || 'mid';
+                }
+                // 没有外部数据，按索引循环
+                const map = ['good', 'mid', 'bad'];
+                return map[index % 3] || 'mid';
+            }
+
+            // ===== 解析并渲染 =====
+            let items = [];
+            if (raw && raw !== '') {
+                items = raw.split('|').map(s => s.trim()).filter(s => s.length > 0);
+            }
+
+            if (items.length === 0) {
+                container.innerHTML = '<div class="options-empty">✦ 等待行动选项 ✦</div>';
+                return;
+            }
+
+            // 生成按钮
+            let html = '';
+            const badges = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];
+            items.forEach((opt, index) => {
+                const safeText = opt.replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+                const line = getLineHint(index);
+                html += `
+                    <div class="opt-btn" data-opt="${safeText}" data-line="${line}">
+                        <span class="badge">${badges[index] || (index + 1)}</span>
+                        ${safeText}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+
+            // ===== 事件委托 =====
+            container.addEventListener('click', function(e) {
+                const btn = e.target.closest('.opt-btn');
+                if (!btn) return;
+                if (btn.classList.contains('disabled')) return;
+                const text = btn.getAttribute('data-opt') || btn.textContent.replace(/[①②③④⑤⑥⑦⑧⑨⑩]\s*/, '').trim();
+                if (text) {
+                    document.querySelectorAll('.opt-btn').forEach(b => b.classList.add('disabled'));
+                    sendOption(text);
+                    setTimeout(() => {
+                        document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('disabled'));
+                    }, 5000);
+                }
+            });
+
+            // ===== 触摸反馈 =====
+            container.addEventListener('touchstart', function(e) {
+                const btn = e.target.closest('.opt-btn');
+                if (!btn) return;
+                btn.style.transition = 'none';
+                btn.style.transform = 'scale(0.96)';
+                setTimeout(() => {
+                    btn.style.transition = '';
+                    btn.style.transform = '';
+                }, 100);
+            }, { passive: true });
+
+            console.log('🌟 三行选项栏已加载（从 #options-data 读取数据）');
+        })();
+    </script>
+
+</body>
+</html>
