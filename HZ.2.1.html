@@ -1,0 +1,2427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>合住之后 · 状态栏</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
+
+    <style>
+        /* ==========================================
+           全局重置
+           ========================================== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            display: block;
+        }
+
+        .status-container {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            background: hsla(0, 0%, 100%, 0.05);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 20px;
+            border: 1px solid hsla(0, 0%, 100%, 0.06);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            padding: 16px 16px 14px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .status-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, hsla(35, 60%, 55%, 0.05), transparent 60%);
+            animation: shimmer 8s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translate(-5%, -5%) scale(1);
+                opacity: 0.4;
+            }
+            100% {
+                transform: translate(5%, 5%) scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        .status-container>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== 顶部栏 ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid hsla(0, 0%, 100%, 0.04);
+            margin-bottom: 12px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-title {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: hsl(35, 60%, 65%);
+            text-transform: uppercase;
+        }
+
+        .header-title svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: hsl(35, 60%, 55%);
+            stroke-width: 2;
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 11px;
+            color: hsla(0, 0%, 100%, 0.4);
+        }
+
+        .header-info .dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: hsl(35, 60%, 55%);
+            display: inline-block;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.3);
+            }
+        }
+
+        .header-info .scene {
+            color: hsla(0, 0%, 100%, 0.65);
+        }
+        .header-info .time {
+            color: hsla(0, 0%, 100%, 0.35);
+        }
+        /* ===== 新增：天数显示样式 ===== */
+        .header-info .day {
+            color: hsla(35, 60%, 55%, 0.5);
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .fold-btn {
+            background: none;
+            border: none;
+            color: hsla(0, 0%, 100%, 0.25);
+            cursor: pointer;
+            padding: 4px;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            font-size: 0;
+        }
+
+        .fold-btn:hover {
+            color: hsla(0, 0%, 100%, 0.5);
+        }
+
+        .fold-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform 0.3s ease;
+        }
+
+        .status-container.collapsed .fold-btn svg {
+            transform: rotate(-90deg);
+        }
+
+        .status-container.collapsed .inner-voice,
+        .status-container.collapsed .tabs,
+        .status-container.collapsed .tab-content {
+            display: none;
+        }
+
+        .status-container.collapsed .header {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        /* ===== 内心话 ===== */
+        .inner-voice {
+            background: linear-gradient(135deg, hsla(35, 50%, 20%, 0.2), hsla(270, 20%, 20%, 0.1));
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            border-left: 2px solid hsla(35, 60%, 55%, 0.25);
+            position: relative;
+            min-height: 48px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .inner-voice .icon {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            color: hsla(35, 60%, 55%, 0.4);
+        }
+
+        .inner-voice .icon svg {
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .inner-voice .text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: hsla(0, 0%, 100%, 0.85);
+            font-weight: 400;
+            flex: 1;
+            min-height: 1.6em;
+        }
+
+        .inner-voice .text .name-tag {
+            font-size: 10px;
+            color: hsla(35, 60%, 55%, 0.4);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .inner-voice .quote-mark {
+            position: absolute;
+            font-size: 24px;
+            color: hsla(35, 60%, 55%, 0.06);
+            font-family: Georgia, serif;
+            line-height: 1;
+            pointer-events: none;
+        }
+        .inner-voice .quote-mark.left {
+            top: 4px;
+            left: 10px;
+        }
+        .inner-voice .quote-mark.right {
+            bottom: 0px;
+            right: 10px;
+            transform: rotate(180deg);
+        }
+
+        /* ===== 页签栏 ===== */
+        .tabs {
+            display: flex;
+            gap: 2px;
+            background: hsla(0, 0%, 0%, 0.2);
+            border-radius: 10px;
+            padding: 3px;
+            margin-bottom: 12px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 6px 0;
+            border: none;
+            background: transparent;
+            color: hsla(0, 0%, 100%, 0.3);
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .tab-btn svg {
+            width: 13px;
+            height: 13px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .tab-btn:hover {
+            color: hsla(0, 0%, 100%, 0.55);
+        }
+
+        .tab-btn.active {
+            background: hsla(35, 50%, 40%, 0.15);
+            color: hsl(35, 60%, 65%);
+            box-shadow: 0 0 20px hsla(35, 60%, 55%, 0.04);
+        }
+
+        /* ===== 页签内容 ===== */
+        .tab-content {
+            position: relative;
+            min-height: 160px;
+        }
+
+        .tab-pane {
+            display: none;
+            animation: paneIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        @keyframes paneIn {
+            0% {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== 状态页签 ===== */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .stat-card {
+            background: hsla(0, 0%, 100%, 0.03);
+            border-radius: 10px;
+            padding: 10px 12px 12px;
+            border: 1px solid hsla(0, 0%, 100%, 0.04);
+        }
+
+        .stat-card .label {
+            font-size: 9px;
+            font-weight: 500;
+            color: hsla(0, 0%, 100%, 0.3);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .label svg {
+            width: 11px;
+            height: 11px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .stat-card .value {
+            font-size: 17px;
+            font-weight: 600;
+            color: hsla(0, 0%, 100%, 0.9);
+            letter-spacing: -0.5px;
+            margin-bottom: 2px;
+        }
+
+        .stat-card .value .suffix {
+            font-size: 11px;
+            font-weight: 400;
+            color: hsla(0, 0%, 100%, 0.25);
+            margin-left: 2px;
+        }
+
+        .stat-card .bar {
+            width: 100%;
+            height: 2.5px;
+            background: hsla(0, 0%, 100%, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .stat-card .bar .fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+            background: linear-gradient(90deg, hsl(35, 60%, 45%), hsl(35, 60%, 65%));
+            width: 0%;
+        }
+
+        .stat-card .bar .fill.danger {
+            background: linear-gradient(90deg, hsl(350, 50%, 45%), hsl(15, 50%, 55%));
+        }
+        .stat-card .bar .fill.warning {
+            background: linear-gradient(90deg, hsl(40, 60%, 45%), hsl(50, 60%, 55%));
+        }
+        .stat-card .bar .fill.good {
+            background: linear-gradient(90deg, hsl(160, 50%, 35%), hsl(140, 50%, 50%));
+        }
+
+        .stat-card .tag {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: hsla(35, 60%, 55%, 0.1);
+            color: hsl(35, 60%, 55%);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .stat-card .tag.muted {
+            background: hsla(0, 0%, 100%, 0.04);
+            color: hsla(0, 0%, 100%, 0.35);
+        }
+
+        .stat-card.full {
+            grid-column: 1 / -1;
+        }
+
+        /* ===== 关系页签 ===== */
+        .relation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .relation-card {
+            background: hsla(0, 0%, 100%, 0.03);
+            border-radius: 10px;
+            padding: 12px;
+            border: 1px solid hsla(0, 0%, 100%, 0.04);
+            text-align: center;
+        }
+
+        .relation-card .label {
+            font-size: 9px;
+            font-weight: 500;
+            color: hsla(0, 0%, 100%, 0.3);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .relation-card .value {
+            font-size: 18px;
+            font-weight: 600;
+            color: hsla(0, 0%, 100%, 0.9);
+        }
+
+        .relation-card .value .suffix {
+            font-size: 11px;
+            font-weight: 400;
+            color: hsla(0, 0%, 100%, 0.25);
+        }
+
+        .relation-card .bar {
+            width: 100%;
+            height: 2.5px;
+            background: hsla(0, 0%, 100%, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .relation-card .bar .fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+            background: linear-gradient(90deg, hsl(35, 60%, 45%), hsl(35, 60%, 65%));
+            width: 0%;
+        }
+
+        .relation-card .bar .fill.danger {
+            background: linear-gradient(90deg, hsl(350, 50%, 45%), hsl(15, 50%, 55%));
+        }
+
+        .relation-card.full {
+            grid-column: 1 / -1;
+        }
+
+        .relation-card .callout {
+            font-size: 13px;
+            color: hsl(35, 60%, 60%);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        /* ===== 事件页签 ===== */
+        .event-info {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .event-badge {
+            flex: 1;
+            background: hsla(0, 0%, 100%, 0.03);
+            border-radius: 8px;
+            padding: 8px 12px;
+            border: 1px solid hsla(0, 0%, 100%, 0.04);
+            text-align: center;
+        }
+
+        .event-badge .label {
+            font-size: 8px;
+            font-weight: 500;
+            color: hsla(0, 0%, 100%, 0.25);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 1px;
+        }
+
+        .event-badge .value {
+            font-size: 15px;
+            font-weight: 600;
+            color: hsla(0, 0%, 100%, 0.85);
+        }
+
+        .event-badge .value .sub {
+            font-size: 11px;
+            font-weight: 400;
+            color: hsla(0, 0%, 100%, 0.25);
+        }
+
+        .event-badge .value.branch-good {
+            color: hsl(140, 50%, 55%);
+        }
+        .event-badge .value.branch-mid {
+            color: hsl(45, 60%, 55%);
+        }
+        .event-badge .value.branch-bad {
+            color: hsl(350, 50%, 55%);
+        }
+
+        /* ===== 故事抽屉 ===== */
+        .story-toggle {
+            width: 100%;
+            padding: 8px 0;
+            background: none;
+            border: none;
+            border-top: 1px solid hsla(0, 0%, 100%, 0.04);
+            color: hsla(0, 0%, 100%, 0.25);
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .story-toggle:hover {
+            color: hsla(0, 0%, 100%, 0.5);
+        }
+
+        .story-toggle svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            transition: transform 0.3s ease;
+        }
+
+        .story-toggle.open svg {
+            transform: rotate(180deg);
+        }
+
+        .story-drawer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .story-drawer.open {
+            max-height: 70vh;
+            opacity: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .story-drawer::-webkit-scrollbar {
+            width: 3px;
+        }
+        .story-drawer::-webkit-scrollbar-track {
+            background: hsla(0, 0%, 100%, 0.02);
+            border-radius: 3px;
+        }
+        .story-drawer::-webkit-scrollbar-thumb {
+            background: hsla(35, 60%, 55%, 0.2);
+            border-radius: 3px;
+        }
+        .story-drawer::-webkit-scrollbar-thumb:hover {
+            background: hsla(35, 60%, 55%, 0.35);
+        }
+
+        /* ==========================================
+           时间线（固定显示，23个条目全部直接写在HTML里）
+           ========================================== */
+        .timeline {
+            padding: 10px 0 2px;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 6px;
+            bottom: 6px;
+            width: 1.5px;
+            background: hsla(35, 60%, 55%, 0.12);
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 12px;
+            padding-bottom: 10px;
+            padding-left: 18px;
+            position: relative;
+            align-items: flex-start;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 3px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: hsla(35, 60%, 55%, 0.15);
+            border: 1.5px solid hsla(35, 60%, 55%, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item.active::before {
+            background: hsl(35, 60%, 55%);
+            border-color: hsl(35, 60%, 55%);
+            box-shadow: 0 0 14px hsla(35, 60%, 55%, 0.2);
+        }
+
+        .timeline-item.done::before {
+            background: hsla(35, 60%, 55%, 0.4);
+            border-color: hsla(35, 60%, 55%, 0.3);
+        }
+
+        .timeline-item .content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .timeline-item .title {
+            font-size: 11px;
+            font-weight: 500;
+            color: hsla(0, 0%, 100%, 0.7);
+            letter-spacing: 0.2px;
+        }
+
+        .timeline-item .title .num {
+            font-size: 9px;
+            font-weight: 400;
+            color: hsla(0, 0%, 100%, 0.2);
+            margin-right: 4px;
+        }
+
+        .timeline-item .desc {
+            font-size: 10px;
+            color: hsla(0, 0%, 100%, 0.3);
+            line-height: 1.5;
+            margin-top: 1px;
+        }
+
+        .timeline-item .img-thumb {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid hsla(0, 0%, 100%, 0.06);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, hsla(35, 30%, 15%, 0.3), hsla(270, 20%, 15%, 0.2));
+            position: relative;
+        }
+
+        .timeline-item .img-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .timeline-item .img-thumb:hover {
+            border-color: hsla(35, 60%, 55%, 0.25);
+            transform: scale(1.05);
+        }
+
+        .timeline-item .img-thumb .placeholder-icon {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: hsla(0, 0%, 100%, 0.06);
+        }
+        .timeline-item .img-thumb .placeholder-icon svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.5;
+            opacity: 0.4;
+        }
+
+        .timeline-item .row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            width: 100%;
+        }
+        .timeline-item .row .content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* ==========================================
+           故事页签 · 翻牌堆叠设计（移植自测试版）
+           ========================================== */
+        .story-stack-wrapper {
+            width: 100%;
+            padding: 4px 0 2px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .story-stack-wrapper .story-hint {
+            font-size: 10px;
+            color: hsla(0, 0%, 100%, 0.12);
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            font-weight: 400;
+            text-align: center;
+        }
+        .story-stack-wrapper .story-hint span {
+            display: inline-block;
+            animation: pulseHint 2.5s ease-in-out infinite;
+        }
+        @keyframes pulseHint {
+            0%,
+            100% {
+                opacity: 0.2;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .card-stack {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3 / 4.2;
+            max-height: 420px;
+            margin: 0 auto;
+            perspective: 1200px;
+        }
+
+        .stack-card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            cursor: default;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.5s ease,
+                opacity 0.4s ease;
+            transform-style: preserve-3d;
+        }
+
+        .stack-card .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            backface-visibility: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
+            /* ==== 修复1：加深背景，提升白色文字可读性 ==== */
+            background: hsla(220, 12%, 10%, 0.92);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid hsla(0, 0%, 100%, 0.07);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .stack-card .card-face::-webkit-scrollbar {
+            width: 2px;
+        }
+        .stack-card .card-face::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .stack-card .card-face::-webkit-scrollbar-thumb {
+            background: hsla(35, 60%, 55%, 0.15);
+            border-radius: 2px;
+        }
+
+        .stack-card .card-front {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stack-card .card-front .card-img {
+            width: 100%;
+            height: 55%;
+            overflow: hidden;
+            background: linear-gradient(135deg, hsla(35, 30%, 10%, 0.4), hsla(270, 20%, 10%, 0.3));
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .stack-card .card-front .card-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .stack-card .card-front .card-img .placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: hsla(0, 0%, 100%, 0.06);
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .stack-card .card-front .card-body {
+            padding: 12px 16px 14px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 70px;
+            /* 确保文字在深色背景上清晰 */
+            background: transparent;
+        }
+
+        .stack-card .card-front .card-body .card-number {
+            font-size: 9px;
+            font-weight: 500;
+            color: hsla(35, 60%, 55%, 0.35);
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .stack-card .card-front .card-body .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: hsla(0, 0%, 100%, 0.92);
+            letter-spacing: 0.3px;
+            line-height: 1.3;
+            margin-bottom: 3px;
+        }
+
+        .stack-card .card-front .card-body .card-desc {
+            font-size: 11.5px;
+            color: hsla(0, 0%, 100%, 0.5);
+            line-height: 1.5;
+        }
+
+        .stack-card .card-back {
+            transform: rotateY(180deg);
+            /* ==== 修复1：背面也加深背景 ==== */
+            background: hsla(220, 12%, 10%, 0.95);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid hsla(35, 60%, 55%, 0.08);
+            padding: 18px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .stack-card .card-back .back-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid hsla(0, 0%, 100%, 0.06);
+        }
+
+        .stack-card .card-back .back-header .back-number {
+            font-size: 9px;
+            color: hsla(35, 60%, 55%, 0.3);
+            letter-spacing: 0.5px;
+        }
+
+        .stack-card .card-back .back-header .back-title {
+            font-size: 12px;
+            font-weight: 500;
+            color: hsla(0, 0%, 100%, 0.6);
+            letter-spacing: 0.3px;
+        }
+
+        .stack-card .card-back .back-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            font-size: 12px;
+            line-height: 1.8;
+            color: hsla(0, 0%, 100%, 0.78);
+            letter-spacing: 0.2px;
+        }
+
+        /* ==== 修复2：段落间距 + 故事感排版 ==== */
+        .stack-card .card-back .back-content p {
+            margin-bottom: 0.9em;
+            line-height: 1.9;
+            text-indent: 0em;
+        }
+
+        .stack-card .card-back .back-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 为故事内容增加首段装饰感（可选） */
+        .stack-card .card-back .back-content p:first-of-type::first-letter {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: hsla(35, 60%, 65%, 0.6);
+            margin-right: 0.05em;
+        }
+
+        .stack-card .card-back .back-content::-webkit-scrollbar {
+            width: 2px;
+        }
+        .stack-card .card-back .back-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .stack-card .card-back .back-content::-webkit-scrollbar-thumb {
+            background: hsla(35, 60%, 55%, 0.12);
+            border-radius: 2px;
+        }
+
+        /* ===== 导航按钮 ===== */
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: hsla(0, 0%, 100%, 0.06);
+            border: 1px solid hsla(0, 0%, 100%, 0.08);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: hsla(0, 0%, 100%, 0.3);
+            transition: all 0.3s ease;
+            z-index: 20;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            font-size: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            pointer-events: auto;
+        }
+
+        .nav-btn:hover {
+            background: hsla(0, 0%, 100%, 0.12);
+            color: hsla(0, 0%, 100%, 0.6);
+            border-color: hsla(35, 60%, 55%, 0.2);
+        }
+
+        .nav-btn:active {
+            transform: translateY(-50%) scale(0.92);
+        }
+
+        .nav-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .nav-btn.prev {
+            left: -6px;
+        }
+        .nav-btn.next {
+            right: -6px;
+        }
+
+        .stack-card.pos-0 .nav-btn {
+            display: flex;
+        }
+        .stack-card:not(.pos-0) .nav-btn {
+            display: none;
+        }
+        .stack-card.flipped .nav-btn {
+            display: none !important;
+        }
+        .stack-card.flipped .card-back .nav-btn {
+            display: flex !important;
+        }
+        .nav-btn.hidden {
+            opacity: 0;
+            pointer-events: none !important;
+            cursor: default;
+        }
+
+        /* ===== 堆叠位置 ===== */
+        .stack-card.pos-0 {
+            transform: translateY(0px) rotate(0deg) scale(1);
+            z-index: 6;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+        }
+        .stack-card.pos-1 {
+            transform: translateY(8px) rotate(1.2deg) scale(0.97);
+            z-index: 5;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        .stack-card.pos-2 {
+            transform: translateY(14px) rotate(-0.8deg) scale(0.94);
+            z-index: 4;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.32);
+        }
+        .stack-card.pos-3 {
+            transform: translateY(18px) rotate(0.6deg) scale(0.91);
+            z-index: 3;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.26);
+        }
+        .stack-card.pos-4 {
+            transform: translateY(22px) rotate(-0.4deg) scale(0.88);
+            z-index: 2;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        }
+        .stack-card.pos-5 {
+            transform: translateY(24px) rotate(0.2deg) scale(0.85);
+            z-index: 1;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+        }
+
+        .stack-card.flipped {
+            transform: translateY(0px) rotate(0deg) scale(1) rotateY(180deg);
+            z-index: 10;
+            box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6);
+        }
+
+        .stack-card.flying-out {
+            transition: transform 0.6s cubic-bezier(0.34, 0.1, 0.2, 0.9),
+                opacity 0.6s cubic-bezier(0.34, 0.1, 0.2, 0.9);
+            pointer-events: none !important;
+            z-index: 20 !important;
+        }
+
+        .stack-card.flying-out.prev-direction {
+            transform: translateX(-80px) translateY(60px) rotate(-15deg) scale(0.85);
+            opacity: 0;
+        }
+
+        .stack-card.flying-out.next-direction {
+            transform: translateX(80px) translateY(60px) rotate(15deg) scale(0.85);
+            opacity: 0;
+        }
+
+        .stack-card.slide-in {
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                opacity 0.4s ease;
+        }
+
+        .card-counter {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 10px;
+            color: hsla(0, 0%, 100%, 0.08);
+            letter-spacing: 0.5px;
+        }
+        .card-counter .count-num {
+            color: hsla(35, 60%, 55%, 0.2);
+            font-weight: 500;
+        }
+
+        /* ===== 图片放大遮罩 ===== */
+        .image-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 16px;
+            cursor: pointer;
+        }
+
+        .image-overlay.open {
+            display: flex;
+        }
+
+        .image-overlay .overlay-inner {
+            position: relative;
+            max-width: 90vw;
+            max-height: 85vh;
+            cursor: default;
+        }
+
+        .image-overlay .overlay-inner img {
+            max-width: 90vw;
+            max-height: 75vh;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        .image-overlay .close-btn {
+            position: absolute;
+            top: -36px;
+            right: 0;
+            background: none;
+            border: none;
+            color: hsla(0, 0%, 100%, 0.4);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px 8px;
+            transition: all 0.3s ease;
+            font-family: "Inter", sans-serif;
+            line-height: 1;
+        }
+
+        .image-overlay .close-btn:hover {
+            color: hsla(0, 0%, 100%, 0.8);
+            transform: scale(1.1);
+        }
+
+        .image-overlay .overlay-label {
+            position: absolute;
+            bottom: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: hsla(0, 0%, 100%, 0.15);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        /* ===== 作者页签 ===== */
+        .author-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 180px;
+        }
+
+        .author-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 24px 20px 20px;
+            background: hsla(0, 0%, 100%, 0.03);
+            border-radius: 18px;
+            border: 1px solid hsla(0, 0%, 100%, 0.05);
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .author-card:hover {
+            background: hsla(0, 0%, 100%, 0.06);
+            border-color: hsla(35, 60%, 55%, 0.1);
+        }
+
+        .author-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid hsla(35, 60%, 55%, 0.12);
+            transition: all 0.4s ease;
+        }
+
+        .author-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .author-avatar:hover {
+            border-color: hsla(35, 60%, 55%, 0.25);
+        }
+
+        .author-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: hsla(0, 0%, 100%, 0.75);
+            letter-spacing: 0.5px;
+        }
+
+        .author-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            color: hsla(35, 60%, 55%, 0.5);
+            text-decoration: none;
+            letter-spacing: 0.3px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid hsla(35, 60%, 55%, 0.1);
+            background: hsla(35, 60%, 55%, 0.04);
+            transition: all 0.3s ease;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .author-link svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .author-link:hover {
+            color: hsl(35, 60%, 65%);
+            border-color: hsla(35, 60%, 55%, 0.25);
+            background: hsla(35, 60%, 55%, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .author-footer-text {
+            font-size: 9px;
+            color: hsla(0, 0%, 100%, 0.15);
+            letter-spacing: 0.3px;
+            line-height: 1.6;
+            text-align: center;
+            margin-top: 2px;
+        }
+
+        /* ==========================================
+           响应式适配
+           ========================================== */
+        @media (max-width: 420px) {
+            .status-container {
+                padding: 12px 12px 10px;
+                border-radius: 16px;
+            }
+            .header-title {
+                font-size: 11px;
+            }
+            .header-info {
+                font-size: 10px;
+                gap: 8px;
+            }
+            .header-info .day {
+                font-size: 10px;
+            }
+            .inner-voice .text {
+                font-size: 12px;
+            }
+            .stat-grid {
+                gap: 5px;
+            }
+            .stat-card {
+                padding: 8px 10px 10px;
+            }
+            .stat-card .value {
+                font-size: 15px;
+            }
+            .relation-grid {
+                gap: 5px;
+            }
+            .relation-card {
+                padding: 10px;
+            }
+            .relation-card .value {
+                font-size: 16px;
+            }
+            .tab-btn {
+                font-size: 9px;
+                padding: 5px 0;
+            }
+            .tab-btn svg {
+                width: 12px;
+                height: 12px;
+            }
+            .timeline-item {
+                padding-bottom: 8px;
+                padding-left: 16px;
+            }
+            .timeline-item .title {
+                font-size: 10px;
+            }
+            .timeline-item .desc {
+                font-size: 9px;
+            }
+            .timeline-item .img-thumb {
+                width: 36px;
+                height: 36px;
+            }
+            .story-drawer.open {
+                max-height: 60vh;
+            }
+            .card-stack {
+                max-height: 340px;
+            }
+            .stack-card .card-front .card-body .card-title {
+                font-size: 13px;
+            }
+            .stack-card .card-front .card-body .card-desc {
+                font-size: 10.5px;
+            }
+            .stack-card .card-front .card-body {
+                padding: 10px 14px 12px;
+                min-height: 60px;
+            }
+            .stack-card .card-back {
+                padding: 14px 14px 12px;
+            }
+            .stack-card .card-back .back-content {
+                font-size: 11px;
+                line-height: 1.7;
+            }
+            .stack-card .card-back .back-header .back-title {
+                font-size: 11px;
+            }
+            .nav-btn {
+                width: 28px;
+                height: 28px;
+            }
+            .nav-btn svg {
+                width: 14px;
+                height: 14px;
+            }
+            .nav-btn.prev {
+                left: -4px;
+            }
+            .nav-btn.next {
+                right: -4px;
+            }
+            .author-card {
+                padding: 18px 16px 16px;
+            }
+            .author-avatar {
+                width: 52px;
+                height: 52px;
+            }
+            .author-name {
+                font-size: 13px;
+            }
+            .author-link {
+                font-size: 10px;
+                padding: 5px 12px;
+            }
+            .author-link svg {
+                width: 13px;
+                height: 13px;
+            }
+            /* 小屏段落间距微调 */
+            .stack-card .card-back .back-content p {
+                margin-bottom: 0.7em;
+                line-height: 1.7;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .card-stack {
+                max-height: 290px;
+            }
+            .stack-card .card-front .card-body .card-title {
+                font-size: 12px;
+            }
+            .stack-card .card-front .card-body .card-desc {
+                font-size: 10px;
+            }
+            .stack-card .card-front .card-body {
+                padding: 8px 12px 10px;
+                min-height: 50px;
+            }
+            .stack-card .card-back .back-content {
+                font-size: 10px;
+            }
+            .stack-card .card-back {
+                padding: 12px 12px 10px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+            .relation-grid {
+                grid-template-columns: 1fr;
+            }
+            .event-info {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+
+        @media (min-width: 600px) {
+            .status-container {
+                max-width: 520px;
+                padding: 20px 20px 16px;
+                border-radius: 24px;
+            }
+            .stat-grid {
+                gap: 8px;
+            }
+            .stat-card {
+                padding: 12px 16px 14px;
+            }
+            .stat-card .value {
+                font-size: 19px;
+            }
+            .relation-grid {
+                gap: 8px;
+            }
+            .relation-card {
+                padding: 14px;
+            }
+            .timeline-item .img-thumb {
+                width: 48px;
+                height: 48px;
+            }
+            .story-drawer.open {
+                max-height: 65vh;
+            }
+            .card-stack {
+                max-height: 460px;
+            }
+            .author-avatar {
+                width: 72px;
+                height: 72px;
+            }
+            .author-name {
+                font-size: 16px;
+            }
+        }
+
+        @media (min-width: 900px) {
+            .status-container {
+                max-width: 560px;
+                padding: 24px 24px 18px;
+                border-radius: 28px;
+            }
+            .story-drawer.open {
+                max-height: 70vh;
+            }
+            .card-stack {
+                max-height: 480px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="status-container" id="app">
+        <!-- ===== 顶部栏 ===== -->
+        <div class="header">
+            <div class="header-left">
+                <div class="header-title">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    合住之后
+                </div>
+            </div>
+            <div class="header-info">
+                <span class="scene" id="sceneDisplay"></span>
+                <span class="dot"></span>
+                <span class="time" id="timeDisplay"></span>
+                <span class="day" id="dayDisplay"></span>
+                <button class="fold-btn" onclick="toggleFold()" aria-label="折叠">
+                    <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== 内心话 ===== -->
+        <div class="inner-voice" id="innerVoice">
+            <span class="quote-mark left">"</span>
+            <span class="icon">
+                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </span>
+            <div class="text" id="innerText">
+                <span id="innerVoiceContent"></span>
+                <span class="name-tag">—— 有菜 · 此刻</span>
+            </div>
+            <span class="quote-mark right">"</span>
+        </div>
+
+        <!-- ===== 页签栏 ===== -->
+        <div class="tabs" id="tabs">
+            <button class="tab-btn active" data-tab="status">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                状态
+            </button>
+            <button class="tab-btn" data-tab="relation">
+                <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                关系
+            </button>
+            <button class="tab-btn" data-tab="event">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                事件
+            </button>
+            <button class="tab-btn" data-tab="story">
+                <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                故事
+            </button>
+            <button class="tab-btn" data-tab="author">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                作者
+            </button>
+        </div>
+
+        <!-- ===== 页签内容 ===== -->
+        <div class="tab-content">
+
+            <!-- 状态页签 -->
+            <div class="tab-pane active" id="tab-status">
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="label"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>好感度</div>
+                        <div class="value" id="likeVal"><span class="suffix">/100</span></div>
+                        <div class="bar"><div class="fill" id="likeBar"></div></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>信任度</div>
+                        <div class="value" id="trustVal"><span class="suffix">/100</span></div>
+                        <div class="bar"><div class="fill" id="trustBar"></div></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>自我伤害</div>
+                        <div class="value" id="harmVal"><span class="suffix">/100</span></div>
+                        <div class="bar"><div class="fill" id="harmBar"></div></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>情绪</div>
+                        <div class="value" id="emotionVal" style="font-size:15px;"></div>
+                        <div><span class="tag" id="emotionTag"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 关系页签 -->
+            <div class="tab-pane" id="tab-relation">
+                <div class="relation-grid">
+                    <div class="relation-card">
+                        <span class="label">亲密度</span>
+                        <div class="value" id="intimacyVal"><span class="suffix">/100</span></div>
+                        <div class="bar"><div class="fill" id="intimacyBar"></div></div>
+                    </div>
+                    <div class="relation-card">
+                        <span class="label">隔阂值</span>
+                        <div class="value" id="gapVal"><span class="suffix">/100</span></div>
+                        <div class="bar"><div class="fill" id="gapBar"></div></div>
+                    </div>
+                    <div class="relation-card">
+                        <span class="label">信任度</span>
+                        <div class="value" id="relationTrustVal"><span class="suffix">/100</span></div>
+                        <div class="bar"><div class="fill" id="relationTrustBar"></div></div>
+                    </div>
+                    <div class="relation-card full">
+                        <span class="label">当前称呼</span>
+                        <div class="callout" id="calloutVal"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 事件页签 -->
+            <div class="tab-pane" id="tab-event">
+                <div class="event-info">
+                    <div class="event-badge">
+                        <span class="label">进度</span>
+                        <div class="value" id="progressVal"><span class="sub">/ 17</span></div>
+                    </div>
+                    <div class="event-badge">
+                        <span class="label">分支</span>
+                        <div class="value" id="branchVal"></div>
+                    </div>
+                </div>
+                <button class="story-toggle" id="storyToggle" onclick="toggleStory()">
+                    <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                    展开故事时间线
+                </button>
+                <div class="story-drawer" id="storyDrawer">
+                    <div class="timeline" id="timelineContainer"></div>
+                </div>
+            </div>
+
+            <!-- ===== 故事页签 · 翻牌堆叠设计 ===== -->
+            <div class="tab-pane" id="tab-story">
+                <div class="story-stack-wrapper">
+                    <div class="story-hint"><span>✦ 点击卡片 · 翻转查看故事 ✦</span></div>
+                    <div class="card-stack" id="storyCardStack">
+                        <!-- 由 JavaScript 生成 -->
+                    </div>
+                    <div class="card-counter">
+                        <span class="count-num" id="storyCounter">1</span> / <span id="storyTotal">7</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 作者页签 -->
+            <div class="tab-pane" id="tab-author">
+                <div class="author-container">
+                    <div class="author-card">
+                        <div class="author-avatar">
+                            <img src="https://cdn.jsdelivr.net/gh/sanshui19516/CG@main/%E5%A4%B4%E5%83%8F.png" alt="三年的水" />
+                        </div>
+                        <div class="author-name">三年的水</div>
+                        <a href="#" target="_blank" class="author-link">
+                            <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                            点击原帖链接
+                        </a>
+                        <a href="{{原帖链接占位符}}" target="_blank" class="author-link">
+                            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                            作品集锦
+                        </a>
+                        <a href="https://discord.com/channels/1134557553011998840/1516980193195987075/1516980470871621794" target="_blank" class="author-link">
+                            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                            关注作者
+                        </a>
+                        <div class="author-footer-text">请多多关注原创者，期待下一个故事</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===== 图片放大遮罩 ===== -->
+    <div class="image-overlay" id="imageOverlay" onclick="closeImageOverlay()">
+        <div class="overlay-inner" onclick="event.stopPropagation()">
+            <button class="close-btn" onclick="closeImageOverlay()">✕</button>
+            <img id="overlayImage" src="" alt="放大查看" />
+            <div class="overlay-label" id="overlayLabel">点击任意位置关闭</div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 故事数据（独立数据，不依赖任何MVU变量）
+        // ==========================================
+        var storyData = [{
+            id: 1,
+            title: '第一次见他',
+            desc: '那年夏天，姑姑带她来家里。她躲在门后面，偷偷看了他一眼。',
+            img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E7%AC%AC%E4%B8%80%E6%AC%A1%E8%A7%81%E4%BB%96.jpg',
+            detail: '<p>那是一个夏天的傍晚。姑姑拉着她的手站在门口，她紧紧抿着嘴，往后退了半步。门开了，姑姑轻轻推了一下她的肩膀。</p><p>"叫哥哥呀。"</p><p>她的声音闷闷的，像含着一颗糖："……堂哥。"</p><p>你站在客厅里，穿着件短袖，袖口卷了一截。你看了她一眼，又移开视线。</p><p>"……堂妹好。"你说。声音很小，像在自言自语。</p><p>她抬起头看了你一下，又低下去。两个人都没有说话，只是站在那里，一个低着头，一个看着别处。窗外的蝉叫得很响，空气里浮着细小的灰尘，在傍晚的光里慢慢旋转。</p><p>她偷偷抬了一下眼睛。她看到你在看她，又赶紧低下头。你发现她看到自己了，也赶紧低下头。然后她笑了一下，很轻，像憋不住漏出来的一声。你也听到了，也跟着笑了一下。两个人还是没说话，但好像没那么紧张了。</p><p>后来你递了一杯水给她。</p><p>"……喝吗。"你说。声音还是不大，像怕说重了会吓到她。</p><p>她接过去，两只手捧着杯壁，喝了一小口。然后她小声说："谢谢堂哥。"</p><p>你也小声回："……不谢。"</p><p>那天傍晚的光线很淡，把两个人的影子拉得很长，快要碰到一起，又没有完全碰着。</p>'
+        }, {
+            id: 2,
+            title: '老家 · 双马尾',
+            desc: '小时候回老家过年。她扎着双马尾，站在大树下笑。',
+            img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E8%80%81%E5%AE%B6%20%C2%B7%20%E5%8F%8C%E9%A9%AC%E5%B0%BE.jpg',
+            detail: '<p>那一年冬天冷得早。老家院子里那棵树的叶子掉光了，光秃秃的树枝伸在灰白色的天空底下。她扎着两个小辫，红头绳在风里飘着，一跳一跳的。</p><p>她站在那棵大树下面，仰着头，够一根低矮的树枝。够不到。她踮起脚，手指尖碰了一下树枝的边缘，又滑下来。</p><p>"堂哥，你过来呀。"</p><p>你从台阶上跑下来，跑到她旁边。你也仰起头，看着那根树枝，伸手去够。你的手比她长一点，但也差了一小截。</p><p>"……我也够不到。"你说，有点不好意思。</p><p>她看着你，然后"噗"地笑了一声。"你比我高还够不到。"</p><p>"……树太高了。"你说。</p><p>她蹲下身去捡地上的落叶，一片一片叠在手心里。你也蹲下来，帮她捡。两个人蹲在树底下，把叶子叠成一小摞。风吹过来，叶子又散了一地。</p><p>"哎呀——"她喊了一声。</p><p>"我帮你捡。"你说。你又蹲回去，一片一片捡起来，放在她手心里。她笑了一下，很轻很快，然后低头看着手里的叶子。</p><p>后来她站起来，拍了拍膝盖上的土，仰起头看着那棵大树。"我以后要长得很高很高。"</p><p>你说："那你帮我够那根树枝。"</p><p>"好呀，等我长高了就帮你。"</p><p>她又笑了一下，然后低头看着你。你蹲在地上，手里还捏着一片叶子，抬头看她。</p><p>"……你蹲着干什么。"</p><p>"我帮你捡叶子呀。"</p><p>"那你捡完了吗。"</p><p>"……还没有。"</p><p>她又笑了。你低下头，继续捡地上的落叶，一片一片叠在手心里，像在完成一件很重要的事。</p>'
+        }, {
+            id: 3,
+            title: '一起长大的夏天',
+            desc: '每年暑假都在老家见面。捉蝉、摘莲蓬、坐在门口吃西瓜。',
+            img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E4%B8%80%E8%B5%B7%E9%95%BF%E5%A4%A7%E7%9A%84%E5%A4%8F%E5%A4%A9.jpg',
+            detail: '<p>暑假你又去老家了。</p><p>院子里那棵树的叶子已经长得很密了，像一把撑开的绿色的大伞。她在院子里切西瓜，蹲在水缸旁边，小心翼翼地握着刀。</p><p>"你会不会切。"你站在旁边问。</p><p>"我会。"她说完又犹豫了一下，"……你站远一点。"</p><p>你退了一步。她又说："再远一点。"</p><p>你又退了一步。她低下头，慢慢切下去，西瓜裂开一条缝，露出红色的瓤。她抬起头看着你，有点得意。</p><p>"切开了。"</p><p>"你好厉害。"你说。</p><p>她笑了一下，又低下头继续切。她把切好的西瓜递给你一块，汁水沾在手指上，亮晶晶的。你接过去咬了一口。</p><p>"甜不甜。"她问。</p><p>"甜。"你说。</p><p>她笑了，也拿起一块咬了一口。西瓜汁沾在下巴上，她没有擦，又咬了一口。"确实甜，我切得好。"</p><p>你看着她，也跟着笑了一下。</p><p>后来你们坐在门口的台阶上吃西瓜，她把西瓜籽吐在手心里，数了数，放在旁边。"数这个干什么。"你问。"好看。"她说。你看着她手心里那几粒黑乎乎的西瓜籽，觉得确实挺好看的。你指了指自己的嘴角。</p><p>"……你这里有。"</p><p>她用手背擦了擦，没擦到。"哪里呀。"</p><p>"这边。"你伸手想指，又缩回去了。"……你自己再擦一下。"</p><p>她用手背胡乱蹭了一下，蹭歪了，汁水沾到脸颊上。你从口袋里掏出一张纸巾递给她。"……给你。"</p><p>她接过去擦了擦，擦完把纸巾叠好放在旁边。"谢谢堂哥。"</p><p>"嗯。"你说。蝉在头顶叫着，热风一阵一阵地吹过来。你偷偷看了她一眼，她在低头看手里的西瓜皮，很认真的样子。你没说话，又咬了一口西瓜。很甜。</p>'
+        }, {
+            id: 4,
+            title: '春节 · 哭着不放手',
+            desc: '春节过完他要走了。她扒着门框不肯松开，哭得满脸通红。',
+            img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%98%A5%E8%8A%82%20%C2%B7%20%E5%93%AD%E7%9D%80%E4%B8%8D%E6%94%BE%E6%89%8B.jpg',
+            detail: '<p>春节过完，你要回去了。</p><p>那天下午天色灰沉沉的，风不大但很冷，她站在门口，看着你收拾东西。你没有带很多行李，一个小包，很快就装好了。</p><p>你走到门口，她站在门框那里，没有让开。</p><p>"……你要走了。"她说。不是问句。</p><p>"嗯。"你说。你拉了拉包的带子，"暑假再回来。"</p><p>她不说话。</p><p>你侧过身想从她旁边过去，她往旁边移了一小步，正好挡住你。</p><p>"……堂妹。"你说。</p><p>她低下头，看着自己的鞋尖，过了一会儿才开口："……你一定要回来。"</p><p>"一定。"你说。你伸手在她头顶轻轻按了一下，"……说话算话。"</p><p>她抬起头看你，嘴唇动了动，想说什么，又咽回去了。然后她往旁边让了让，给你让出一条路。</p><p>你走出去的时候听到身后很轻很轻的一声"堂哥"。你回头看了一眼，她站在门口，风吹着她的头发，眼眶有点红，但没有哭。她抬起手，轻轻挥了一下，又放下来了，像怕挥重了会把什么东西弄碎。</p><p>暑假你回去的时候，她已经等在那棵大树下面了。远远地看到你，她跑了几步，又停下来，站在那里看着你。她没叫你，只是等你走过来。</p><p>"……堂哥。"她说那两个字的时候声音很稳，像已经等了好久了。</p><p>你走过去，站在她面前，想说点什么，但开口的时候只说了一句："……我回来了。"</p><p>她笑了一下。风吹过来，她的头发轻轻动着。</p><p>"嗯，"她说，"我知道。"</p>'
+        }, {
+            id: 5,
+            title: 'Cosplay的起点',
+            desc: '高中时第一次接触cosplay。她对着镜子试着扎双马尾。',
+            img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-Cosplay%E7%9A%84%E8%B5%B7%E7%82%B9.jpg',
+            detail: '<p>高中那年，她对着镜子试了一下扎双马尾。</p><p>她已经很久没有扎过了。小时候她自己会扎，后来不扎了，再后来想扎，手已经不太记得该怎么绕了。</p><p>她把头发分成两束，用皮筋绕了两圈。镜子里的那张脸——下巴圆了一点，脸颊线条柔和了很多，眼睛也跟小时候不太一样了，没那么亮了，像一根细细的蜡烛，风一吹就会晃一晃。她看了很久。</p><p>后来她站起来，拆掉皮筋，头发散下来落在肩上。她走到门口，没有回头。那天晚上她发了一条动态。很短，只有一行字。</p><p>"试了一下，不太会扎了。"</p><p>你看到了。你没有评论，没有点赞，只是看着那条动态，屏幕的光映在你的脸上。你想起很多年前，她站在那棵大树下面，红头绳在风里飘着，像一小簇火。你看了一会儿，按灭了手机。</p><p>你没有告诉她，你其实还记得那时候她的样子。</p>'
+        }, {
+            id: 6,
+            title: '那场车祸',
+            desc: '你父母的意外。电话打来的时候，他摔了东西。',
+            img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E9%82%A3%E5%9C%BA%E8%BD%A6%E7%A5%B8.jpg',
+            detail: '<p>电话响的时候，你在客厅里。</p><p>接起来，那边说了一句什么。你站在那里，没有动。手里的听筒还贴着耳朵，但那边已经没有人说话了。你慢慢放下来，手指松了，听筒滑落在桌面上，发出一声短促的闷响。</p><p>你站在那里，看着窗外。外面是下午，阳光从窗户照进来，落在地板上。你想，这片阳光和昨天没有什么区别，和前天也没有区别。可是有些东西不一样了。你说不上来是什么，你只是站在那里，看着那片阳光，像在看一样很陌生的东西，像在看一样你以前从来没有注意过的东西。</p><p>你把手撑在桌沿上，慢慢地坐下来。坐下来之后，你发现自己的手在发抖，不是很明显的那种抖，是很轻微的、持续的，像有什么东西在里面轻轻地颤抖着。你低头看着自己的手，手指微微蜷缩，又松开，又蜷缩。你不知道自己在做什么，你只是看着它们，好像在看别人的手。</p><p>后来你站起来，把掉在地上的听筒捡起来，放回座机上。动作很慢，像在完成一件需要很大力气才能完成的事。</p><p>你走到窗边，又站在了那里。阳光落在你的手上，你觉得暖。你把翻过来，看着自己的掌心，手心有一点汗。你不知道这汗是怎么来的。你把手握紧了，又松开，掌心空空的，什么都没有。你想起那天早上出门的时候，你没有关门，门一直是开着的。你不知道那扇门后来是谁关上的。</p>'
+        }, {
+            id: 7,
+            title: '搬进来的第一天',
+            desc: '行李箱轮子滚过地板。她站在玄关，穿着洗得发白的旧运动鞋。',
+            img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%90%AC%E8%BF%9B%E6%9D%A5%E7%9A%84%E7%AC%AC%E4%B8%80%E5%A4%A9.jpg',
+            detail: '<p>行李箱的轮子在地板上滚过，发出沉闷的响声。她站在门口，没有进来。她穿着一双洗得发白的旧运动鞋，鞋带系得很紧，两只鞋的结头一样大。</p><p>你站在客厅里，没有走过去。</p><p>"进来吧。"你说，"鞋柜最下面那层空出来了。"</p><p>她低头看了一眼鞋柜，又看了看你。然后弯腰把鞋脱了，两只鞋整整齐齐地摆在一起，靠得很近。她穿着一双旧袜子，脚踝露出来一小截。</p><p>她跟着你走到那扇门前面，你推开门，退到一侧，让她自己走进去。床铺好了，枕套是新的，床头柜上放着一杯水，玻璃杯干净，水面平着。</p><p>"杯子是干净的。"你说。</p><p>她走进去，站在房间中央，手里还攥着背包的肩带。她看了一圈，目光没有在任何一样东西上多停留，然后她轻声说了一句："……谢谢。"</p><p>你走回客厅，把门留了一条缝。光从门缝里透进去，落在她的脚边。她看着那道光。没有走过去把它合上，也没有把它彻底打开。后来她把背包放在床边，坐下来——没有坐在床上，坐在床边的地板上，膝盖并拢，手指搭在膝盖上。</p><p>那杯水放在床头柜上，她没有碰。水还是满的。</p>'
+        }];
+
+        // ==========================================
+        // 事件数据（用于事件页签抽屉）
+        // ==========================================
+        var backgroundEvents = [
+            { id: 1, title: '老家 · 双马尾', desc: '小时候回老家过年。她扎着双马尾，站在大树下笑。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E8%80%81%E5%AE%B6%20%C2%B7%20%E5%8F%8C%E9%A9%AC%E5%B0%BE.jpg' },
+            { id: 2, title: '第一次见他', desc: '那年夏天，姑姑带她来家里。她躲在门后面，偷偷看了他一眼。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E7%AC%AC%E4%B8%80%E6%AC%A1%E8%A7%81%E4%BB%96.jpg' },
+            { id: 3, title: '一起长大的夏天', desc: '每年暑假都在老家见面。捉蝉、摘莲蓬、坐在门口吃西瓜。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E4%B8%80%E8%B5%B7%E9%95%BF%E5%A4%A7%E7%9A%84%E5%A4%8F%E5%A4%A9.jpg' },
+            { id: 4, title: '春节 · 哭着不放手', desc: '春节过完他要走了。她扒着门框不肯松开，哭得满脸通红。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%98%A5%E8%8A%82%20%C2%B7%20%E5%93%AD%E7%9D%80%E4%B8%8D%E6%94%BE%E6%89%8B.jpg' },
+            { id: 5, title: 'Cosplay的起点', desc: '高中时第一次接触cosplay。她对着镜子试着扎双马尾。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-Cosplay%E7%9A%84%E8%B5%B7%E7%82%B9.jpg' },
+            { id: 6, title: '那场车祸', desc: '{{user}}父母的意外。电话打来的时候，她听到他摔了东西的声音。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E9%82%A3%E5%9C%BA%E8%BD%A6%E7%A5%B8.jpg' }
+        ];
+
+        var sharedEvents = [
+            { id: 7, title: '搬进来的第一天', desc: '行李箱轮子滚过地板。她站在玄关，穿着洗得发白的旧运动鞋。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%90%AC%E8%BF%9B%E6%9D%A5%E7%9A%84%E7%AC%AC%E4%B8%80%E5%A4%A9.jpg' },
+            { id: 8, title: '第一次共同用餐', desc: '他做了两碗面。她吃完之后说："好吃。"', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/Avatar_1786892808105.jpg' },
+            { id: 9, title: '长时间洗澡', desc: '水声持续了很久。她在浴室里待了四十分钟。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E9%95%BF%E6%97%B6%E9%97%B4%E6%B4%97%E6%BE%A1.jpg' },
+            { id: 10, title: '童年记忆被提起', desc: '她翻出一张旧照片。双马尾，大树下，笑得眯起眼睛。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E7%AB%A5%E5%B9%B4%E8%AE%B0%E5%BF%86%E8%A2%AB%E6%8F%90%E8%B5%B7.jpg' },
+            { id: 11, title: '第一次注意到遮掩动作', desc: '他看到了她手腕上的旧痕。没有说话。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%B3%A8%E6%84%8F%E5%88%B0%E9%81%AE%E6%8E%A9%E5%8A%A8%E4%BD%9C.jpg' },
+            { id: 12, title: '沈婉清第一次电话', desc: '"她问我住不住得惯。""你怎么说的。""就说还行。"', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%B2%88%E5%A9%89%E6%B8%85%E7%AC%AC%E4%B8%80%E6%AC%A1%E7%94%B5%E8%AF%9D.jpg' }
+        ];
+
+        var branchEvents = {
+            '好线': [
+                { id: 13, title: '暴食后的自我厌恶', desc: '外卖盒空了。她蹲在客厅地板上，肩膀在抖。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%9A%B4%E9%A3%9F%E5%90%8E%E7%9A%84%E8%87%AA%E6%88%91%E5%8E%8C%E6%81%B6.jpg' },
+                { id: 14, title: '行动介入', desc: '他把刀片收走了。浴室镜柜里多了一管祛疤膏。', img: '' },
+                { id: 15, title: '靠近与退开', desc: '她在阳台晾衣服，他递衣架的时候手指碰到了。她缩回去了。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E9%9D%A0%E8%BF%91%E4%B8%8E%E6%8E%A8%E5%BC%80.jpg' },
+                { id: 16, title: 'cosplay前后', desc: '她穿好cos服站在客厅里："怎么样。"他说："领口很正。"', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-Cosplay%E5%89%8D%E5%90%8E.jpg' },
+                { id: 17, title: '深夜共处', desc: '凌晨一点。她坐在沙发角落，他坐在另一端。谁也没动。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E4%B8%8D%E5%8F%AF%E8%83%BD%E5%8F%91%E7%94%9F%E7%9A%84%E7%AC%AC%E4%B8%80%E6%AC%A1.jpg' },
+                { id: 18, title: '第一次发生关系', desc: '那天晚上她喝了酒。她靠过来的时候，他没有躲开。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%89%BF%E8%AE%A4.jpg' },
+                { id: 19, title: '事后沉默', desc: '他醒的时候她已经不在床上了。客厅里没有开灯。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E4%BA%8B%E5%90%8E%E6%B2%89%E9%BB%98.jpg' },
+                { id: 20, title: '性关系拉扯', desc: '"……我有时候分不清，我是在躲你，还是在躲自己。"', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%80%A7%E5%85%B3%E7%B3%BB%E6%8B%89%E6%89%AF.jpg' },
+                { id: 21, title: '小改变', desc: '浴室镜柜里的刀片不见了。取而代之的是一盒新创可贴。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E5%B0%8F%E6%94%B9%E5%8F%98.jpg' },
+                { id: 22, title: '承认', desc: '"我做了一个梦。梦见你走了。""……我不会走的。"', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%89%BF%E8%AE%A4.jpg' },
+                { id: 23, title: '日常收尾', desc: '早上七点。她那一碗粥里多放了几颗红枣。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%97%A5%E5%B8%B8%E6%94%B6%E5%B0%BE.jpg' }
+            ],
+            '中间线': [
+                { id: 13, title: '暴食后的自我厌恶', desc: '外卖盒空了。她蹲在客厅地板上，肩膀在抖。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%9A%B4%E9%A3%9F%E5%90%8E%E7%9A%84%E8%87%AA%E6%88%91%E5%8E%8C%E6%81%B6.jpg' },
+                { id: 14, title: '说出口的话', desc: '"以后别再用那个了。"他说。她背对着他，没有转身。', img: '' },
+                { id: 15, title: '静默的日子', desc: '她开始早睡早起。不再在客厅待到很晚。也不等他回来了。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E9%9D%99%E9%BB%98%E7%9A%84%E6%97%A5%E5%AD%90.jpg' },
+                { id: 16, title: '回避的距离', desc: '凌晨一点。她坐在沙发上。他倒水经过的时候她没有抬头。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E5%9B%9E%E9%81%BF%E7%9A%84%E8%B7%9D%E7%A6%BB.jpg' },
+                { id: 17, title: '试探与收回', desc: '她在他门口站了一会儿。没有敲门。走开了。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E4%B8%8D%E5%8F%AF%E8%83%BD%E5%8F%91%E7%94%9F%E7%9A%84%E7%AC%AC%E4%B8%80%E6%AC%A1.jpg' },
+                { id: 18, title: '默认的靠近', desc: '她躺在他旁边，没有说话。身体是软的，适应得很快。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E4%B8%8D%E5%8F%AF%E8%83%BD%E5%8F%91%E7%94%9F%E7%9A%84%E7%AC%AC%E4%B8%80%E6%AC%A1.jpg' },
+                { id: 19, title: '没有回应的沉默', desc: '"我不知道……这样对不对。"她说。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%B2%A1%E6%9C%89%E5%9B%9E%E5%A3%B0%E7%9A%84%E6%88%BF%E9%97%B4.jpg' },
+                { id: 20, title: '不需要答案的提问', desc: '"我们这样算什么。"她问。不是提问，更像是在念一个答案。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%B2%A1%E6%9C%89%E5%9B%9E%E5%A3%B0%E7%9A%84%E6%88%BF%E9%97%B4.jpg' },
+                { id: 21, title: '她学会了正常', desc: '她穿了一件短袖。手腕上的旧痕露在外面。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E5%A5%B9%E5%AD%A6%E4%BC%9A%E4%BA%86%E6%AD%A3%E5%B8%B8.jpg' },
+                { id: 22, title: '停在原地的承认', desc: '"我可能也不需要你做什么了。"她说。然后走回了房间。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E5%81%9C%E5%9C%A8%E5%8E%9F%E5%9C%B0%E7%9A%84%E6%89%BF%E8%AE%A4.jpg' },
+                { id: 23, title: '后来的事（明信片）', desc: '两年后收到一张明信片。她站在海边的街道上，怀里抱着一个女孩。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E5%90%8E%E6%9D%A5%E7%9A%84%E4%BA%8B.jpg' }
+            ],
+            '坏线': [
+                { id: 13, title: '暴食后的自我厌恶', desc: '外卖盒空了。她蹲在客厅地板上，肩膀在抖。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%9A%B4%E9%A3%9F%E5%90%8E%E7%9A%84%E8%87%AA%E6%88%91%E5%8E%8C%E6%81%B6.jpg' },
+                { id: 14, title: '以正常之名的刀', desc: '"你有没有想过变成更正常一点的人。"她夹菜的手停住了。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%B2%A1%E6%9C%89%E5%9B%9E%E5%A3%B0%E7%9A%84%E6%88%BF%E9%97%B4.jpg' },
+                { id: 15, title: '她学会了保持正常', desc: '她开始早睡。开始吃得很少。开始变成一个不再让他担心的人。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E5%A5%B9%E5%AD%A6%E4%BC%9A%E4%BA%86%E4%BF%9D%E6%8C%81%E6%AD%A3%E5%B8%B8.jpg' },
+                { id: 16, title: '没有回声的房间', desc: '她坐在床边，手里拿着一本书。翻了几页，没有在看。合上了。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E6%B2%A1%E6%9C%89%E5%9B%9E%E5%A3%B0%E7%9A%84%E6%88%BF%E9%97%B4.jpg' },
+                { id: 17, title: '不会再有的试探', desc: '她在阳台晾衣服。风把衣摆吹起来。她没有再按住它。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E4%B8%8D%E4%BC%9A%E5%86%8D%E6%9C%89%E7%9A%84%E8%AF%95%E6%8E%A2.jpg' },
+                { id: 18, title: '不可能发生的第一次', desc: '她坐在床边，他站在门口。她说："……这样不对。"', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E4%B8%8D%E5%8F%AF%E8%83%BD%E5%8F%91%E7%94%9F%E7%9A%84%E7%AC%AC%E4%B8%80%E6%AC%A1.jpg' },
+                { id: 19, title: '说错的话', desc: '"你知道什么。"她说完这句话之后没有再看他。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E8%AF%B4%E9%94%99%E7%9A%84%E8%AF%9D.jpg' },
+                { id: 20, title: '她确认了', desc: '"我想过正常的生活。"她说。"你不知道什么是正常。"', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E5%A5%B9%E7%A1%AE%E8%AE%A4%E4%BA%86.jpg' },
+                { id: 21, title: '她走在变好的路上', desc: '她开始瘦了。开始吃得很少。开始变成一个不再让他担心的人。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E5%A5%B9%E8%B5%B0%E5%9C%A8%E5%8F%98%E5%A5%BD%E7%9A%84%E8%B7%AF%E4%B8%8A.jpg' },
+                { id: 22, title: '他醒来的时候', desc: '她走了。被子叠好了。碗洗了。钥匙放在桌上。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E4%BB%96%E9%86%92%E6%9D%A5%E7%9A%84%E6%97%B6%E5%80%99.jpg' },
+                { id: 23, title: '后来的事（她结婚了）', desc: '她上个月结婚了。照片里她穿着白裙子，站在一个他没见过的人旁边。', img: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E5%90%88%E4%BD%8F%E4%B9%8B%E5%90%8E-%E5%90%8E%E6%9D%A5%E7%9A%84%E4%BA%8B%EF%BC%88%E5%A5%B9%E7%BB%93%E5%A9%9A%E4%BA%86%EF%BC%89.jpg' }
+            ]
+        };
+
+        // ==========================================
+        // MVU 数据拉取
+        // ==========================================
+        var state = {
+            scene: undefined,
+            time: undefined,
+            day: undefined,
+            like: undefined,
+            trust: undefined,
+            harm: undefined,
+            emotion: undefined,
+            innerVoice: undefined,
+            intimacy: undefined,
+            gap: undefined,
+            callout: undefined,
+            progress: undefined,
+            branch: undefined
+        };
+
+        function fetchStateFromMVU() {
+            try {
+                var allVars = typeof getAllVariables === 'function' ? getAllVariables() : {};
+                var data = allVars.stat_data;
+                if (!data) return;
+                state.scene = data.世界?.当前场景;
+                state.time = data.世界?.当前时段;
+                state.day = data.世界?.当前天数;
+                state.like = data.有菜?.好感度;
+                state.trust = data.有菜?.信任度;
+                state.harm = data.有菜?.自我伤害倾向;
+                state.emotion = data.有菜?.情绪状态;
+                state.innerVoice = data.有菜?.内心话;
+                state.intimacy = data.关系?.亲密度;
+                state.gap = data.关系?.隔阂值;
+                state.callout = data.称谓?.当前称呼;
+                state.progress = data.事件?.进度;
+                state.branch = data.事件?.分支;
+            } catch (e) {}
+        }
+
+        // ==========================================
+        // DOM 引用
+        // ==========================================
+        function getEl(id) { return document.getElementById(id); }
+
+        var els = {
+            scene: getEl('sceneDisplay'),
+            time: getEl('timeDisplay'),
+            day: getEl('dayDisplay'),
+            innerVoiceContent: getEl('innerVoiceContent'),
+            likeVal: getEl('likeVal'),
+            likeBar: getEl('likeBar'),
+            trustVal: getEl('trustVal'),
+            trustBar: getEl('trustBar'),
+            harmVal: getEl('harmVal'),
+            harmBar: getEl('harmBar'),
+            emotionVal: getEl('emotionVal'),
+            emotionTag: getEl('emotionTag'),
+            intimacyVal: getEl('intimacyVal'),
+            intimacyBar: getEl('intimacyBar'),
+            gapVal: getEl('gapVal'),
+            gapBar: getEl('gapBar'),
+            relationTrustVal: getEl('relationTrustVal'),
+            relationTrustBar: getEl('relationTrustBar'),
+            calloutVal: getEl('calloutVal'),
+            progressVal: getEl('progressVal'),
+            branchVal: getEl('branchVal'),
+            timelineContainer: getEl('timelineContainer'),
+            storyCardStack: getEl('storyCardStack'),
+            storyCounter: getEl('storyCounter'),
+            storyTotal: getEl('storyTotal'),
+            storyDrawer: getEl('storyDrawer'),
+            storyToggle: getEl('storyToggle'),
+            app: getEl('app'),
+            overlay: getEl('imageOverlay'),
+            overlayImg: getEl('overlayImage'),
+            overlayLabel: getEl('overlayLabel')
+        };
+
+        if (els.storyTotal) {
+            els.storyTotal.textContent = storyData.length;
+        }
+
+        // ==========================================
+        // 故事卡片堆叠逻辑（独立于MVU）
+        // ==========================================
+        var storyCurrentIndex = 0;
+        var storyFlippedIndex = -1;
+        var storyTotalCards = storyData.length;
+        var storyIsAnimating = false;
+        var storyTypewriterTimeout = null;
+
+        function storyTypeWriter(element, html, speed) {
+            speed = speed || 8;
+            element.innerHTML = '';
+            var temp = document.createElement('div');
+            temp.innerHTML = html;
+            var nodes = temp.childNodes;
+            var allChars = [];
+
+            function extractText(node) {
+                if (node.nodeType === 3) {
+                    var text = node.textContent;
+                    for (var i = 0; i < text.length; i++) {
+                        allChars.push({ type: 'char', char: text[i] });
+                    }
+                } else if (node.nodeType === 1) {
+                    var tagName = node.tagName.toLowerCase();
+                    allChars.push({ type: 'open', tag: tagName });
+                    for (var child = node.firstChild; child; child = child.nextSibling) {
+                        extractText(child);
+                    }
+                    allChars.push({ type: 'close', tag: tagName });
+                }
+            }
+            for (var i = 0; i < nodes.length; i++) {
+                extractText(nodes[i]);
+            }
+
+            var output = '';
+            var index = 0;
+
+            function typeNext() {
+                if (index >= allChars.length) return;
+                var item = allChars[index];
+                if (item.type === 'char') {
+                    output += item.char;
+                    element.innerHTML = output;
+                    index++;
+                    storyTypewriterTimeout = setTimeout(typeNext, speed);
+                } else if (item.type === 'open') {
+                    output += '<' + item.tag + '>';
+                    element.innerHTML = output;
+                    index++;
+                    storyTypewriterTimeout = setTimeout(typeNext, 0);
+                } else if (item.type === 'close') {
+                    output += '</' + item.tag + '>';
+                    element.innerHTML = output;
+                    index++;
+                    storyTypewriterTimeout = setTimeout(typeNext, 0);
+                }
+            }
+            if (storyTypewriterTimeout) {
+                clearTimeout(storyTypewriterTimeout);
+                storyTypewriterTimeout = null;
+            }
+            typeNext();
+        }
+
+        function buildStoryCards() {
+            if (!els.storyCardStack) return;
+            var html = '';
+            for (var i = 0; i < storyTotalCards; i++) {
+                var item = storyData[i];
+                var imgHtml;
+                if (item.img) {
+                    imgHtml = '<img src="' + item.img + '" alt="' + item.title + '" loading="lazy" onclick="event.stopPropagation();openImageOverlay(\'' +
+                        item.img + '\', \'' + item.title + '\')" />';
+                } else {
+                    imgHtml = '<div class="placeholder">📸</div>';
+                }
+
+                html += '<div class="stack-card pos-' + i + '" data-story-index="' + i + '">' +
+                    '<div class="card-face card-front" onclick="flipStoryCard(' + i + ')">' +
+                    '<div class="card-img">' + imgHtml + '</div>' +
+                    '<div class="card-body">' +
+                    '<div class="card-number">#' + item.id + '</div>' +
+                    '<div class="card-title">' + item.title + '</div>' +
+                    '<div class="card-desc">' + item.desc + '</div>' +
+                    '</div>' +
+                    '<button class="nav-btn prev" onclick="event.stopPropagation();switchStoryCard(-1)" aria-label="上一张">' +
+                    '<svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>' +
+                    '</button>' +
+                    '<button class="nav-btn next" onclick="event.stopPropagation();switchStoryCard(1)" aria-label="下一张">' +
+                    '<svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>' +
+                    '</button>' +
+                    '</div>' +
+                    '<div class="card-face card-back" onclick="flipStoryCard(' + i + ')">' +
+                    '<div class="back-header">' +
+                    '<span class="back-number">#' + item.id + '</span>' +
+                    '<span class="back-title">' + item.title + '</span>' +
+                    '</div>' +
+                    '<div class="back-content" id="story-back-content-' + i + '"></div>' +
+                    '<button class="nav-btn prev" onclick="event.stopPropagation();switchStoryCard(-1)" aria-label="上一张">' +
+                    '<svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>' +
+                    '</button>' +
+                    '<button class="nav-btn next" onclick="event.stopPropagation();switchStoryCard(1)" aria-label="下一张">' +
+                    '<svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>' +
+                    '</button>' +
+                    '</div>' +
+                    '</div>';
+            }
+            els.storyCardStack.innerHTML = html;
+            updateStoryButtons();
+            updateStoryCounter();
+        }
+
+        function updateStoryButtons() {
+            var cards = document.querySelectorAll('.stack-card');
+            cards.forEach(function(card, idx) {
+                var isFlipped = card.classList.contains('flipped');
+                var prevBtns = card.querySelectorAll('.nav-btn.prev');
+                var nextBtns = card.querySelectorAll('.nav-btn.next');
+                prevBtns.forEach(function(btn) {
+                    if (idx === 0) { btn.classList.add('hidden'); } else { btn.classList.remove('hidden'); }
+                });
+                nextBtns.forEach(function(btn) {
+                    if (idx === storyTotalCards - 1) { btn.classList.add('hidden'); } else { btn.classList.remove(
+                            'hidden'); }
+                });
+                if (isFlipped) {
+                    var backContent = card.querySelector('.back-content');
+                    if (backContent && backContent.children.length === 0) {
+                        var item = storyData[idx];
+                        storyTypeWriter(backContent, item.detail, 8);
+                    }
+                }
+            });
+        }
+
+        function flipStoryCard(index) {
+            if (storyIsAnimating) return;
+            var cardEl = document.querySelector('.stack-card[data-story-index="' + index + '"]');
+            if (!cardEl) return;
+
+            if (storyFlippedIndex === index) {
+                cardEl.classList.remove('flipped');
+                var backContent = cardEl.querySelector('.back-content');
+                if (backContent) backContent.innerHTML = '';
+                storyFlippedIndex = -1;
+                reorderStoryStack();
+                updateStoryButtons();
+                updateStoryCounter();
+                return;
+            }
+
+            if (storyFlippedIndex !== -1) {
+                var oldCard = document.querySelector('.stack-card[data-story-index="' + storyFlippedIndex + '"]');
+                if (oldCard) {
+                    oldCard.classList.remove('flipped');
+                    var oldBack = oldCard.querySelector('.back-content');
+                    if (oldBack) oldBack.innerHTML = '';
+                }
+                storyFlippedIndex = -1;
+                reorderStoryStack();
+            }
+
+            cardEl.classList.add('flipped');
+            storyFlippedIndex = index;
+            reorderStoryStack();
+
+            requestAnimationFrame(function() {
+                var backContent = document.querySelector('.stack-card[data-story-index="' + index + '"] .back-content');
+                if (backContent && backContent.children.length === 0) {
+                    var item = storyData[index];
+                    storyTypeWriter(backContent, item.detail, 8);
+                }
+                updateStoryButtons();
+                updateStoryCounter();
+            });
+        }
+
+        function switchStoryCard(direction) {
+            if (storyIsAnimating) return;
+            var newIndex = storyCurrentIndex + direction;
+            if (newIndex < 0 || newIndex >= storyTotalCards) return;
+
+            if (storyFlippedIndex !== -1) {
+                var flippedCard = document.querySelector('.stack-card[data-story-index="' + storyFlippedIndex + '"]');
+                if (flippedCard) {
+                    flippedCard.classList.remove('flipped');
+                    var backContent = flippedCard.querySelector('.back-content');
+                    if (backContent) backContent.innerHTML = '';
+                }
+                storyFlippedIndex = -1;
+                reorderStoryStack();
+                updateStoryButtons();
+                updateStoryCounter();
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() {
+                        performStorySwitch(direction, newIndex);
+                    });
+                });
+                return;
+            }
+            performStorySwitch(direction, newIndex);
+        }
+
+        function performStorySwitch(direction, newIndex) {
+            storyIsAnimating = true;
+            var currentCard = document.querySelector('.stack-card[data-story-index="' + storyCurrentIndex + '"]');
+            var nextCard = document.querySelector('.stack-card[data-story-index="' + newIndex + '"]');
+            if (!currentCard || !nextCard) { storyIsAnimating = false; return; }
+
+            var flyClass = direction === 1 ? 'next-direction' : 'prev-direction';
+            currentCard.classList.add('flying-out', flyClass);
+
+            setTimeout(function() {
+                currentCard.classList.remove('flying-out', flyClass);
+                storyCurrentIndex = newIndex;
+                reorderStoryStack();
+                updateStoryButtons();
+                updateStoryCounter();
+                storyIsAnimating = false;
+                if (storyFlippedIndex !== -1) {
+                    var backContent = document.querySelector('.stack-card[data-story-index="' + storyFlippedIndex +
+                        '"] .back-content');
+                    if (backContent && backContent.children.length === 0) {
+                        var item = storyData[storyFlippedIndex];
+                        storyTypeWriter(backContent, item.detail, 8);
+                    }
+                }
+            }, 550);
+        }
+
+        function reorderStoryStack() {
+            var cards = document.querySelectorAll('.stack-card');
+            var activeIndex = storyFlippedIndex !== -1 ? storyFlippedIndex : storyCurrentIndex;
+            cards.forEach(function(card) {
+                var cardIndex = parseInt(card.dataset.storyIndex);
+                var relativePos = (cardIndex - activeIndex + storyTotalCards) % storyTotalCards;
+                var pos = Math.min(relativePos, 5);
+                card.classList.remove('pos-0', 'pos-1', 'pos-2', 'pos-3', 'pos-4', 'pos-5');
+                if (card.classList.contains('flipped')) {
+                    card.classList.add('pos-0');
+                } else {
+                    card.classList.add('pos-' + pos);
+                }
+            });
+            storyCurrentIndex = activeIndex;
+            updateStoryCounter();
+        }
+
+        function updateStoryCounter() {
+            if (!els.storyCounter) return;
+            var displayIndex = storyFlippedIndex !== -1 ? storyFlippedIndex : storyCurrentIndex;
+            els.storyCounter.textContent = (displayIndex + 1);
+        }
+
+        // ==========================================
+        // 键盘和触摸控制（故事卡片）
+        // ==========================================
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') { e.preventDefault();
+                switchStoryCard(-1); } else if (e.key === 'ArrowRight') { e.preventDefault();
+                switchStoryCard(1); } else if (e.key === 'Escape') {
+                if (storyFlippedIndex !== -1) {
+                    var cardEl = document.querySelector('.stack-card[data-story-index="' + storyFlippedIndex + '"]');
+                    if (cardEl) {
+                        cardEl.classList.remove('flipped');
+                        var backContent = cardEl.querySelector('.back-content');
+                        if (backContent) backContent.innerHTML = '';
+                    }
+                    storyFlippedIndex = -1;
+                    reorderStoryStack();
+                    updateStoryButtons();
+                    updateStoryCounter();
+                }
+            }
+        });
+
+        var storyTouchStartX = 0;
+        var storyTouchStartY = 0;
+        if (els.storyCardStack) {
+            els.storyCardStack.addEventListener('touchstart', function(e) {
+                var touch = e.touches[0];
+                storyTouchStartX = touch.clientX;
+                storyTouchStartY = touch.clientY;
+            }, { passive: true });
+
+            els.storyCardStack.addEventListener('touchend', function(e) {
+                var touch = e.changedTouches[0];
+                var deltaX = touch.clientX - storyTouchStartX;
+                var deltaY = touch.clientY - storyTouchStartY;
+                if (Math.abs(deltaX) < 30 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+                if (deltaX < 0) { switchStoryCard(1); } else { switchStoryCard(-1); }
+            }, { passive: true });
+        }
+
+        // ==========================================
+        // 时间线构建（事件页签抽屉）
+        // ==========================================
+        function buildTimelineItems() {
+            var allEvents = backgroundEvents.concat(sharedEvents);
+            var branchData = branchEvents[state.branch || '好线'] || branchEvents['好线'];
+            var allItems = allEvents.concat(branchData);
+            var html = '';
+            for (var i = 0; i < allItems.length; i++) {
+                var item = allItems[i];
+                var imgHtml;
+                if (item.img) {
+                    imgHtml = '<img src="' + item.img + '" alt="' + item.title + '" onclick="openImageOverlay(\'' +
+                        item.img + '\', \'' + item.title + '\')" />';
+                } else {
+                    imgHtml = '<div class="placeholder-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
+                }
+                var onclickAttr = item.img ? ' onclick="openImageOverlay(\'' + item.img + '\', \'' + item.title +
+                    '\')"' : '';
+                var cursorStyle = item.img ? '' : 'cursor:default;';
+                html += '<div class="timeline-item" id="event-item-' + item.id + '" data-id="' + item.id + '">' +
+                    '<div class="row">' +
+                    '<div class="content">' +
+                    '<div class="title"><span class="num">#' + item.id + '</span>' + item.title + '</div>' +
+                    '<div class="desc" id="event-desc-' + item.id + '">' + item.desc + '</div>' +
+                    '</div>' +
+                    '<div class="img-thumb"' + onclickAttr + ' style="' + cursorStyle + '">' +
+                    imgHtml +
+                    '</div>' +
+                    '</div>' +
+                    '</div>';
+            }
+            return html;
+        }
+
+        function updateTimelineStatus() {
+            var progress = state.progress !== undefined ? state.progress : 0;
+            var activeId = progress + 6;
+            for (var id = 1; id <= 23; id++) {
+                var el = document.getElementById('event-item-' + id);
+                if (!el) continue;
+                var isActive = (id === activeId);
+                var isDone = (id < activeId);
+                el.classList.remove('active', 'done');
+                if (isActive) { el.classList.add('active'); } else if (isDone) { el.classList.add('done'); }
+            }
+        }
+
+        function updateBranchDescriptions() {
+            var branch = state.branch || '好线';
+            var branchData = branchEvents[branch] || branchEvents['好线'];
+            for (var i = 0; i < branchData.length; i++) {
+                var item = branchData[i];
+                var descEl = document.getElementById('event-desc-' + item.id);
+                if (descEl) descEl.textContent = item.desc;
+            }
+        }
+
+        // ==========================================
+        // 图片放大（全局）
+        // ==========================================
+        function openImageOverlay(imgSrc, title) {
+            if (!imgSrc) return;
+            els.overlayImg.src = imgSrc;
+            els.overlayLabel.textContent = title || '点击任意位置关闭';
+            els.overlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageOverlay() {
+            els.overlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeImageOverlay();
+        });
+
+        window.openImageOverlay = openImageOverlay;
+        window.closeImageOverlay = closeImageOverlay;
+        window.flipStoryCard = flipStoryCard;
+        window.switchStoryCard = switchStoryCard;
+
+        // ==========================================
+        // 渲染数值
+        // ==========================================
+        function renderValues() {
+            els.scene.textContent = state.scene || '';
+            els.time.textContent = state.time || '';
+            els.day.textContent = state.day !== undefined && state.day !== null ? '第' + state.day + '天' : '';
+
+            els.innerVoiceContent.textContent = state.innerVoice || '';
+
+            var like = state.like !== undefined ? state.like : '';
+            els.likeVal.innerHTML = (like !== '' ? like : '') + '<span class="suffix">/100</span>';
+            els.likeBar.style.width = (like !== '' ? like : 0) + '%';
+
+            var trust = state.trust !== undefined ? state.trust : '';
+            els.trustVal.innerHTML = (trust !== '' ? trust : '') + '<span class="suffix">/100</span>';
+            els.trustBar.style.width = (trust !== '' ? trust : 0) + '%';
+
+            var harm = state.harm !== undefined ? state.harm : '';
+            els.harmVal.innerHTML = (harm !== '' ? harm : '') + '<span class="suffix">/100</span>';
+            els.harmBar.style.width = (harm !== '' ? harm : 0) + '%';
+
+            els.emotionVal.textContent = state.emotion || '';
+            els.emotionTag.textContent = (state.emotion ? state.emotion + ' · ' + getEmotionTag(state.emotion) : '');
+
+            var intimacy = state.intimacy !== undefined ? state.intimacy : '';
+            els.intimacyVal.innerHTML = (intimacy !== '' ? intimacy : '') + '<span class="suffix">/100</span>';
+            els.intimacyBar.style.width = (intimacy !== '' ? intimacy : 0) + '%';
+
+            var gap = state.gap !== undefined ? state.gap : '';
+            els.gapVal.innerHTML = (gap !== '' ? gap : '') + '<span class="suffix">/100</span>';
+            els.gapBar.style.width = (gap !== '' ? gap : 0) + '%';
+
+            els.relationTrustVal.innerHTML = (trust !== '' ? trust : '') + '<span class="suffix">/100</span>';
+            els.relationTrustBar.style.width = (trust !== '' ? trust : 0) + '%';
+
+            els.calloutVal.textContent = state.callout || '';
+
+            var progress = state.progress !== undefined ? state.progress : '';
+            els.progressVal.innerHTML = (progress !== '' ? progress : '') + ' <span class="sub">/ 17</span>';
+            var branch = state.branch || '';
+            els.branchVal.textContent = branch;
+            els.branchVal.className = 'value' + (branch ? ' ' + getBranchClass(branch) : '');
+        }
+
+        function getEmotionTag(emotion) {
+            var map = { '麻木': '低沉', '低落': '压抑', '平静': '稳定', '开心': '温暖', '期待': '微光', '害怕': '不安', '安心': '柔缓' };
+            return map[emotion] || '';
+        }
+
+        function getBranchClass(branch) {
+            var map = { '好线': 'branch-good', '中间线': 'branch-mid', '坏线': 'branch-bad' };
+            return map[branch] || '';
+        }
+
+        function render() {
+            if (els.timelineContainer && els.timelineContainer.children.length === 0) {
+                els.timelineContainer.innerHTML = buildTimelineItems();
+            }
+            updateBranchDescriptions();
+            updateTimelineStatus();
+            renderValues();
+        }
+
+        // ==========================================
+        // 事件绑定（页签切换、折叠、抽屉）
+        // ==========================================
+        document.querySelectorAll('.tab-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+                this.classList.add('active');
+                document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
+                var target = document.getElementById('tab-' + this.dataset.tab);
+                if (target) target.classList.add('active');
+                // 进入故事页签时确保卡片已构建
+                if (this.dataset.tab === 'story' && els.storyCardStack && els.storyCardStack.children.length ===
+                    0) {
+                    buildStoryCards();
+                }
+            });
+        });
+
+        function toggleFold() {
+            els.app.classList.toggle('collapsed');
+        }
+
+        function toggleStory() {
+            var drawer = els.storyDrawer;
+            var toggle = els.storyToggle;
+            drawer.classList.toggle('open');
+            toggle.classList.toggle('open');
+            toggle.innerHTML = drawer.classList.contains('open') ?
+                '<svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg> 收起故事时间线' :
+                '<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg> 展开故事时间线';
+        }
+
+        window.toggleFold = toggleFold;
+        window.toggleStory = toggleStory;
+
+        // ==========================================
+        // 初始化
+        // ==========================================
+        function init() {
+            if (typeof waitGlobalInitialized === 'function') {
+                waitGlobalInitialized('Mvu').then(function() {
+                    fetchStateFromMVU();
+                    render();
+                    if (els.storyCardStack && els.storyCardStack.children.length === 0) {
+                        buildStoryCards();
+                    }
+                })['catch'](function() {
+                    fetchStateFromMVU();
+                    render();
+                    if (els.storyCardStack && els.storyCardStack.children.length === 0) {
+                        buildStoryCards();
+                    }
+                });
+            } else {
+                fetchStateFromMVU();
+                render();
+                if (els.storyCardStack && els.storyCardStack.children.length === 0) {
+                    buildStoryCards();
+                }
+            }
+
+            if (typeof Mvu !== 'undefined' && Mvu.events) {
+                try {
+                    eventOn(Mvu.events.VARIABLE_UPDATE_ENDED, function() {
+                        fetchStateFromMVU();
+                        var currentBranch = state.branch || '好线';
+                        if (window._lastBranch !== currentBranch) {
+                            window._lastBranch = currentBranch;
+                            if (els.timelineContainer) {
+                                els.timelineContainer.innerHTML = buildTimelineItems();
+                            }
+                        }
+                        updateBranchDescriptions();
+                        updateTimelineStatus();
+                        renderValues();
+                    });
+                } catch (e) {}
+            }
+
+            setInterval(function() {
+                fetchStateFromMVU();
+                var currentBranch = state.branch || '好线';
+                if (window._lastBranch !== currentBranch) {
+                    window._lastBranch = currentBranch;
+                    if (els.timelineContainer) {
+                        els.timelineContainer.innerHTML = buildTimelineItems();
+                    }
+                }
+                updateBranchDescriptions();
+                updateTimelineStatus();
+                renderValues();
+            }, 3000);
+
+            setTimeout(function() {
+                if (els.storyCardStack && els.storyCardStack.children.length === 0) {
+                    buildStoryCards();
+                }
+            }, 100);
+        }
+
+        if (typeof errorCatched === 'function') {
+            $(errorCatched(init));
+        } else {
+            $(init);
+        }
+
+        console.log('🌟 合住之后 · 状态栏已加载');
+        console.log('📖 故事卡片翻牌堆叠模式已启用');
+        console.log('💡 点击卡片翻转 · 左右箭头切换 · 按ESC翻回');
+        console.log('📅 顶部栏已添加「第X天」显示，连接变量 世界.当前天数');
+    </script>
+
+</body>
+</html>
