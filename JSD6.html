@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>严厉教师母亲的调教日记 · 状态栏</title>
+    <style>
+        /* 样式完全保留，不做任何改动 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: 25, 60%, 45%;
+            --secondary: 350, 55%, 40%;
+            --bg-dark: 30, 15%, 6%;
+            --bg-card: 30, 12%, 10%;
+            --text-main: 30, 10%, 90%;
+            --text-muted: 30, 8%, 55%;
+        }
+
+        .status-wrapper {
+            max-width: 580px;
+            margin: 1.2rem auto;
+            background: hsla(var(--bg-dark), 0.85);
+            backdrop-filter: blur(24px) saturate(1.6);
+            -webkit-backdrop-filter: blur(24px) saturate(1.6);
+            border-radius: 32px;
+            border: 1px solid hsla(var(--primary), 0.20);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25), inset 0 0 0 1px hsla(var(--primary), 0.05);
+            padding: 20px 18px 16px;
+            font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            color: hsl(var(--text-main));
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .status-wrapper::before {
+            content: '';
+            position: absolute;
+            top: -30%; right: -20%;
+            width: 70%; height: 80%;
+            background: radial-gradient(ellipse, hsla(var(--primary), 0.10), transparent 60%);
+            pointer-events: none;
+            animation: drift 14s infinite alternate ease-in-out;
+        }
+        .status-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: -30%; left: -20%;
+            width: 60%; height: 70%;
+            background: radial-gradient(ellipse, hsla(var(--secondary), 0.06), transparent 60%);
+            pointer-events: none;
+            animation: drift 18s infinite alternate-reverse ease-in-out;
+        }
+        @keyframes drift {
+            0% { transform: translate(0,0) scale(1); opacity: 0.3; }
+            100% { transform: translate(-10%, 8%) scale(1.2); opacity: 0.7; }
+        }
+
+        .status-wrapper > * { position: relative; z-index: 1; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid hsla(var(--primary), 0.06);
+            margin-bottom: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-left .title {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: hsl(var(--secondary));
+            text-shadow: 0 0 30px hsla(var(--secondary), 0.2);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 11px;
+            color: hsl(var(--text-muted));
+        }
+
+        .header-right .loc {
+            color: hsl(var(--text-main), 0.7);
+            display: flex; align-items: center; gap: 4px;
+        }
+        .header-right .loc svg {
+            width: 14px; height: 14px;
+            fill: none; stroke: currentColor; stroke-width: 1.8;
+        }
+
+        .header-right .time {
+            color: hsl(var(--text-muted), 0.6);
+            display: flex; align-items: center; gap: 4px;
+        }
+        .header-right .time svg {
+            width: 14px; height: 14px;
+            fill: none; stroke: currentColor; stroke-width: 1.8;
+        }
+
+        .header-right .dot {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: hsl(var(--secondary));
+            display: inline-block;
+            animation: pulse-dot 1.8s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); box-shadow: 0 0 12px hsla(var(--secondary), 0.4); }
+        }
+
+        .fold-btn {
+            background: none; border: none;
+            color: hsl(var(--text-muted), 0.5);
+            cursor: pointer;
+            padding: 0 2px;
+            display: flex; align-items: center;
+            transition: color 0.3s ease;
+        }
+        .fold-btn:hover {
+            color: hsl(var(--text-main));
+        }
+        .fold-btn svg {
+            width: 16px; height: 16px;
+            fill: none; stroke: currentColor;
+            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .status-wrapper.collapsed .fold-btn svg {
+            transform: rotate(-90deg);
+        }
+        .status-wrapper.collapsed .header {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .status-wrapper.collapsed .cards-container {
+            display: none;
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .char-card {
+            background: hsla(var(--bg-card), 0.4);
+            border: 1px solid hsla(var(--primary), 0.08);
+            border-radius: 20px;
+            padding: 16px 14px 14px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .char-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, hsla(var(--primary), 0.02), hsla(var(--secondary), 0.02));
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .char-card:hover {
+            transform: translateY(-3px);
+            border-color: hsla(var(--primary), 0.2);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+        .char-card:hover::before {
+            opacity: 1;
+        }
+
+        .char-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid hsla(var(--primary), 0.04);
+        }
+
+        .char-header .avatar {
+            flex-shrink: 0;
+            overflow: hidden;
+            border: 2px solid hsla(var(--secondary), 0.2);
+            box-shadow: 0 0 20px hsla(var(--primary), 0.05);
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+        .char-header .avatar:hover {
+            border-color: hsla(var(--secondary), 0.4);
+            box-shadow: 0 0 30px hsla(var(--primary), 0.1);
+        }
+        .char-header .avatar img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+            cursor: pointer;
+        }
+        .char-header .avatar .placeholder {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 18px; color: hsl(var(--text-muted));
+        }
+
+        #linCard .char-header .avatar {
+            width: 74px; height: 106px; border-radius: 6px;
+            background: hsla(var(--primary), 0.2);
+            border: 2px solid hsla(var(--secondary), 0.2);
+            box-shadow: 0 0 30px hsla(var(--primary), 0.08);
+        }
+
+        #userCard .char-header .avatar {
+            width: 54px; height: 54px; border-radius: 50%;
+            background: hsla(var(--primary), 0.2);
+            border: 2px solid hsla(var(--secondary), 0.2);
+            box-shadow: 0 0 20px hsla(var(--primary), 0.05);
+        }
+
+        @media (max-width: 480px) {
+            #linCard .char-header .avatar { width: 62px; height: 88px; border-radius: 4px; }
+            #userCard .char-header .avatar { width: 44px; height: 44px; }
+        }
+
+        .char-header .info {
+            flex: 1; min-width: 0;
+        }
+        .char-header .info .name {
+            font-size: 14px; font-weight: 600; color: hsl(var(--text-main)); letter-spacing: 0.5px;
+        }
+        .char-header .info .action {
+            font-size: 10px; color: hsl(var(--text-muted), 0.7);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-top: 1px; display: flex; align-items: center; gap: 4px;
+        }
+        .char-header .info .action svg {
+            width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.5;
+        }
+
+        .inner-voice-box {
+            background: hsla(var(--bg-dark), 0.5);
+            border-left: 3px solid hsla(var(--secondary), 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: hsl(var(--text-main), 0.8);
+            font-style: italic;
+            min-height: 30px;
+            display: flex; align-items: center; position: relative;
+        }
+        .inner-voice-box .label {
+            font-size: 8px; font-weight: 700;
+            color: hsla(var(--secondary), 0.4);
+            text-transform: uppercase;
+            margin-right: 6px; flex-shrink: 0;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .inner-voice-box .label svg {
+            width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2;
+        }
+        .inner-voice-box::after {
+            content: '"';
+            position: absolute;
+            bottom: 2px; right: 10px;
+            font-size: 28px;
+            color: hsla(var(--primary), 0.05);
+            font-family: Georgia, serif; line-height: 1;
+        }
+
+        .stat-row {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 4px 12px; margin-bottom: 4px;
+        }
+        .stat-item {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 10px; padding: 3px 0;
+            border-bottom: 1px solid hsla(var(--primary), 0.02);
+        }
+        .stat-item .label { color: hsl(var(--text-muted), 0.7); font-weight: 500; letter-spacing: 0.5px; }
+        .stat-item .value { color: hsl(var(--text-main)); font-weight: 600; text-align: right; font-size: 11px; }
+        .stat-item .value.gold { color: hsl(var(--secondary)); }
+        .stat-item .value.pink { color: hsl(var(--primary)); }
+
+        .bar-item {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 10px; padding: 3px 0;
+        }
+        .bar-item .label { color: hsl(var(--text-muted), 0.7); font-weight: 500; min-width: 40px; letter-spacing: 0.5px; }
+        .bar-item .track {
+            flex: 1; height: 3px;
+            background: hsla(var(--primary), 0.08);
+            border-radius: 4px; overflow: hidden; position: relative;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .bar-item .track .fill {
+            height: 100%; border-radius: 4px;
+            transition: width 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+            width: 0%; position: relative;
+        }
+        .bar-item .track .fill::after {
+            content: '';
+            position: absolute; right: 0; top: 0; height: 100%; width: 12px;
+            background: linear-gradient(to right, transparent, hsla(var(--secondary), 0.4));
+            border-radius: 4px;
+        }
+        .bar-item .track .fill.danger { background: linear-gradient(90deg, hsla(350, 60%, 50%, 0.8), hsla(350, 60%, 60%, 0.9)); }
+        .bar-item .track .fill.desire { background: linear-gradient(90deg, hsla(var(--primary), 0.7), hsla(var(--primary), 0.9)); }
+        .bar-item .track .fill.stress { background: linear-gradient(90deg, hsla(30, 50%, 45%, 0.7), hsla(30, 50%, 55%, 0.9)); }
+        .bar-item .track .fill.normal { background: linear-gradient(90deg, hsla(var(--secondary), 0.6), hsla(var(--secondary), 0.8)); }
+        .bar-item .val { color: hsl(var(--text-main)); font-weight: 600; min-width: 22px; text-align: right; font-size: 11px; }
+
+        .desc-block {
+            margin-top: 8px; padding-top: 6px;
+            border-top: 1px solid hsla(var(--primary), 0.04);
+            font-size: 10px; color: hsl(var(--text-muted), 0.6);
+            line-height: 1.6;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .desc-block .desc-row {
+            display: flex; align-items: center; gap: 6px;
+        }
+        .desc-block .tag {
+            display: inline-block;
+            background: hsla(var(--primary), 0.06);
+            padding: 0 6px; border-radius: 4px;
+            color: hsl(var(--secondary), 0.8); font-weight: 500;
+        }
+        .desc-block .value { color: hsl(var(--text-main), 0.8); }
+
+        .intimacy-log {
+            margin-top: 8px; padding-top: 6px;
+            border-top: 1px solid hsla(var(--primary), 0.04);
+            font-size: 9px; color: hsl(var(--text-muted), 0.5);
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .intimacy-log .intimacy-row {
+            display: flex; align-items: center; gap: 4px;
+        }
+        .intimacy-log .label { display: flex; align-items: center; gap: 4px; color: hsl(var(--text-muted), 0.5); }
+        .intimacy-log .label svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+        .intimacy-log .item {
+            background: hsla(var(--primary), 0.06);
+            padding: 1px 10px; border-radius: 20px;
+            border: 1px solid hsla(var(--primary), 0.05);
+            color: hsl(var(--text-main), 0.8); font-size: 9px;
+        }
+
+        .img-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 999999;
+            display: none;
+            align-items: center; justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+        .img-overlay.open {
+            display: flex;
+            opacity: 1;
+        }
+        .img-overlay img {
+            max-width: 85vw;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            cursor: default;
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .img-overlay.open img {
+            transform: scale(1);
+        }
+        .img-overlay .close-hint {
+            position: absolute;
+            bottom: 40px; left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 11px;
+            letter-spacing: 2px;
+            pointer-events: none;
+        }
+
+        @media (max-width: 480px) {
+            .status-wrapper { padding: 14px 12px 12px; border-radius: 24px; }
+            .cards-container { grid-template-columns: 1fr; gap: 10px; }
+            .header-left .title { font-size: 10px; }
+            .header-right { font-size: 10px; gap: 8px; }
+            .char-card { padding: 14px 12px 12px; border-radius: 16px; }
+            .stat-row { grid-template-columns: 1fr 1fr; gap: 2px 8px; }
+            .fold-btn svg { width: 14px; height: 14px; }
+            .img-overlay img { max-width: 90vw; max-height: 75vh; }
+        }
+
+        @media (min-width: 600px) {
+            .status-wrapper { max-width: 620px; padding: 24px 22px 18px; border-radius: 36px; }
+            .cards-container { gap: 16px; }
+            .char-card { padding: 20px 18px 16px; border-radius: 24px; }
+            .header-left .title { font-size: 14px; }
+        }
+
+        .status-wrapper { animation: fadeUp 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; opacity: 0; transform: translateY(20px); }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+        .char-card:nth-child(1) { animation-delay: 0.1s; }
+        .char-card:nth-child(2) { animation-delay: 0.2s; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: hsla(var(--primary), 0.3); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="status-wrapper" id="statusApp">
+    <div id="status-data" style="display: none;">$1</div>
+
+    <div class="header">
+        <div class="header-left">
+            <div class="title">严厉教师母亲的调教日记</div>
+        </div>
+        <div class="header-right">
+            <span class="loc">
+                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span id="display-loc">家中 · 客厅</span>
+            </span>
+            <span class="dot"></span>
+            <span class="time">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span id="display-time">下午</span>
+            </span>
+            <button class="fold-btn" id="toggleFold" aria-label="折叠状态栏">
+                <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="cards-container">
+        <!-- 森田玲子卡片 -->
+        <div class="char-card" id="linCard">
+            <div class="char-header">
+                <div class="avatar" id="linAvatar"><span class="placeholder">玲</span></div>
+                <div class="info">
+                    <div class="name">森田玲子</div>
+                    <div class="action">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                        <span id="linAction">正在...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="inner-voice-box">
+                <span class="label"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 内心</span>
+                <span id="linInner">她正看着你...</span>
+            </div>
+            <div class="stat-row">
+                <div class="bar-item"><span class="label">尊严</span><div class="track"><div class="fill normal" id="linDignityBar"></div></div><span class="val" id="linDignityVal">0</span></div>
+                <div class="bar-item"><span class="label">欲求</span><div class="track"><div class="fill desire" id="linDesireBar"></div></div><span class="val" id="linDesireVal">0</span></div>
+                <div class="bar-item"><span class="label">压力</span><div class="track"><div class="fill stress" id="linStressBar"></div></div><span class="val" id="linStressVal">0</span></div>
+                <div class="bar-item"><span class="label">疲劳</span><div class="track"><div class="fill normal" id="linFatigueBar"></div></div><span class="val" id="linFatigueVal">0</span></div>
+                <div class="bar-item"><span class="label">背德</span><div class="track"><div class="fill danger" id="linSinBar"></div></div><span class="val" id="linSinVal">0</span></div>
+                <div class="bar-item"><span class="label">罪恶</span><div class="track"><div class="fill danger" id="linGuiltBar"></div></div><span class="val" id="linGuiltVal">0</span></div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-item"><span class="label">情绪</span><span class="value" id="linEmotion">平静</span></div>
+                <div class="stat-item"><span class="label">依赖</span><span class="value pink" id="linDependence">中</span></div>
+                <div class="stat-item"><span class="label">占有欲</span><span class="value" id="linPossession">弱</span></div>
+                <div class="stat-item"><span class="label">怀孕风险</span><span class="value gold" id="linPregnancy">安全 (0%)</span></div>
+            </div>
+            <div class="desc-block">
+                <div class="desc-row"><span class="tag">穿搭</span> <span class="value" id="linClothing">家居裙</span></div>
+                <div class="desc-row"><span class="tag">胸部</span> <span class="value" id="linBreast">正常</span></div>
+                <div class="desc-row"><span class="tag">小穴</span> <span class="value" id="linPussy">正常</span></div>
+                <div class="desc-row"><span class="tag">阴蒂</span> <span class="value" id="linClit">正常</span></div>
+                <div class="desc-row"><span class="tag">肛门</span> <span class="value" id="linAsshole">正常</span></div>
+            </div>
+            <div class="intimacy-log">
+                <div class="intimacy-row"><span class="label"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 最近亲密</span></div>
+                <div class="intimacy-row"><span class="item" id="linIntimacy1">无</span></div>
+                <div class="intimacy-row"><span class="item" id="linIntimacy2">无</span></div>
+            </div>
+        </div>
+
+        <!-- {{user}}卡片 -->
+        <div class="char-card" id="userCard">
+            <div class="char-header">
+                <div class="avatar" id="userAvatar"><span class="placeholder">你</span></div>
+                <div class="info">
+                    <div class="name" id="userDisplayName">你</div>
+                    <div class="action">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                        <span id="userAction">正在...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-row" style="margin-top:6px;">
+                <div class="stat-item"><span class="label">精神状态</span><span class="value" id="userMind">正常</span></div>
+                <div class="stat-item"><span class="label">阳具</span><span class="value" id="userCock">平静</span></div>
+                <div class="stat-item"><span class="label">睾丸</span><span class="value" id="userBalls">正常</span></div>
+            </div>
+            <div class="desc-block" style="border-top:none;margin-top:2px;">
+                <div class="desc-row"><span class="tag">穿搭</span> <span class="value" id="userClothing">常服</span></div>
+            </div>
+            <div class="intimacy-log" style="margin-top:4px;">
+                <div class="intimacy-row"><span class="label"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 最近亲密</span></div>
+                <div class="intimacy-row"><span class="item" id="userIntimacy1">无</span></div>
+                <div class="intimacy-row"><span class="item" id="userIntimacy2">无</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 图片放大遮罩 -->
+<div class="img-overlay" id="imageOverlay">
+    <img id="overlayImg" src="" alt="头像" />
+    <div class="close-hint">✦ 点击任意位置关闭 ✦</div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+    var dataContainer = document.getElementById('status-data');
+    if (!dataContainer) return;
+    var rawYaml = dataContainer.textContent.trim();
+
+    function extractVal(lines, key) {
+        for (var i = 0; i < lines.length; i++) {
+            var t = lines[i].trim();
+            if (t.startsWith(key + ':')) {
+                var val = t.substring(key.length + 1).trim();
+                if (val.startsWith('"') && val.endsWith('"')) val = val.substring(1, val.length - 1);
+                if (val.startsWith("'") && val.endsWith("'")) val = val.substring(1, val.length - 1);
+                return val;
+            }
+        }
+        return '';
+    }
+
+    // =============================================================
+    // ★★★ 核心：直接遍历所有块，区分 NPC 和玩家 ★★★
+    // 不依赖两次调用同一个函数，而是直接识别第一个块和最后一个块
+    // =============================================================
+    function parseAllBlocks(lines) {
+        var blocks = [];
+        var currentBlock = null;
+        var blockStart = -1;
+
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            if (line.trim().startsWith('- 用户:')) {
+                if (currentBlock) blocks.push(currentBlock);
+                currentBlock = {};
+                blockStart = i;
+                continue;
+            }
+
+            if (currentBlock && blockStart !== -1) {
+                var tLine = line.trim();
+                if (i > blockStart && !line.startsWith(' ') && tLine !== '' && !tLine.startsWith('-')) {
+                    blockStart = -1;
+                    continue;
+                }
+
+                if (tLine.startsWith('名字:')) {
+                    currentBlock.name = extractVal([line], '名字');
+                } else if (tLine.startsWith('头像:')) {
+                    currentBlock.avatar = extractVal([line], '头像');
+                } else if (tLine.startsWith('行动:')) {
+                    currentBlock.action = extractVal([line], '行动');
+                } else if (tLine.startsWith('内心:')) {
+                    currentBlock.inner = extractVal([line], '内心');
+                } else if (tLine.startsWith('情绪状态:')) {
+                    currentBlock.emotion = extractVal([line], '情绪状态');
+                } else if (tLine.startsWith('身为母亲的尊严:')) {
+                    currentBlock.dignity = parseInt(extractVal([line], '身为母亲的尊严') || 0);
+                } else if (tLine.startsWith('欲求值:')) {
+                    currentBlock.desire = parseInt(extractVal([line], '欲求值') || 0);
+                } else if (tLine.startsWith('压力值:')) {
+                    currentBlock.stress = parseInt(extractVal([line], '压力值') || 0);
+                } else if (tLine.startsWith('疲劳值:')) {
+                    currentBlock.fatigue = parseInt(extractVal([line], '疲劳值') || 0);
+                } else if (tLine.startsWith('背德值:')) {
+                    currentBlock.sin = parseInt(extractVal([line], '背德值') || 0);
+                } else if (tLine.startsWith('罪恶值:')) {
+                    currentBlock.guilt = parseInt(extractVal([line], '罪恶值') || 0);
+                } else if (tLine.startsWith('怀孕风险:')) {
+                    currentBlock.pregnancy = extractVal([line], '怀孕风险');
+                } else if (tLine.startsWith('胸部:')) {
+                    currentBlock.breast = extractVal([line], '胸部');
+                } else if (tLine.startsWith('小穴:')) {
+                    currentBlock.pussy = extractVal([line], '小穴');
+                } else if (tLine.startsWith('阴蒂:')) {
+                    currentBlock.clit = extractVal([line], '阴蒂');
+                } else if (tLine.startsWith('肛门:')) {
+                    currentBlock.asshole = extractVal([line], '肛门');
+                } else if (tLine.startsWith('情感依赖度:')) {
+                    currentBlock.dependence = extractVal([line], '情感依赖度');
+                } else if (tLine.startsWith('占有欲:')) {
+                    currentBlock.possession = extractVal([line], '占有欲');
+                } else if (tLine.startsWith('穿搭:')) {
+                    currentBlock.clothing = extractVal([line], '穿搭');
+                } else if (tLine.startsWith('精神状态:')) {
+                    currentBlock.mind = extractVal([line], '精神状态');
+                } else if (tLine.startsWith('阳具:')) {
+                    currentBlock.cock = extractVal([line], '阳具');
+                } else if (tLine.startsWith('睾丸:')) {
+                    currentBlock.balls = extractVal([line], '睾丸');
+                }
+
+                if (tLine.startsWith('- 亲密行为:')) {
+                    var val = tLine.substring('- 亲密行为:'.length).trim();
+                    if (val.startsWith('"') && val.endsWith('"')) val = val.substring(1, val.length - 1);
+                    if (!currentBlock.intimacy) currentBlock.intimacy = [];
+                    currentBlock.intimacy.push(val || '无');
+                }
+            }
+        }
+        if (currentBlock) blocks.push(currentBlock);
+
+        // =============================================================
+        // ★★★ 核心识别逻辑 ★★★
+        // 如果有名字是 {{user}} 或 你的块，标记为玩家
+        // 否则第一个块是 NPC，最后一个块是玩家
+        // =============================================================
+        var userBlock = null;
+        var npcBlock = null;
+
+        for (var j = 0; j < blocks.length; j++) {
+            var block = blocks[j];
+            // 补默认值
+            if (!block.name) block.name = '未知';
+            if (!block.action) block.action = '...';
+            if (!block.inner) block.inner = '...';
+            if (!block.emotion) block.emotion = '平静';
+            if (!block.clothing) block.clothing = '常服';
+            if (!block.breast) block.breast = '正常';
+            if (!block.pussy) block.pussy = '正常';
+            if (!block.clit) block.clit = '正常';
+            if (!block.asshole) block.asshole = '正常';
+            if (!block.dependence) block.dependence = '中';
+            if (!block.possession) block.possession = '弱';
+            if (!block.mind) block.mind = '正常';
+            if (!block.cock) block.cock = '平静';
+            if (!block.balls) block.balls = '正常';
+            if (!block.pregnancy) block.pregnancy = '安全 (0%)';
+            if (!block.intimacy || block.intimacy.length === 0) block.intimacy = ['无', '无'];
+
+            // 检查是否是玩家
+            if (block.name === '{{user}}' || block.name === '你' || block.name === '玩家') {
+                userBlock = block;
+            }
+        }
+
+        // 如果还没找到玩家，取最后一个块
+        if (!userBlock && blocks.length > 0) {
+            userBlock = blocks[blocks.length - 1];
+        }
+
+        // NPC 取第一个块（如果有多个块，且第一个不是玩家）
+        if (blocks.length > 0) {
+            // 如果第一个块就是玩家，且有多于1个块，取第二个
+            if (blocks[0] === userBlock && blocks.length > 1) {
+                npcBlock = blocks[1];
+            } else {
+                npcBlock = blocks[0];
+            }
+        }
+
+        // 如果 NPC 和玩家是同一个块（只有一个角色），复制一份
+        if (npcBlock === userBlock && npcBlock) {
+            // 深拷贝一份给 NPC
+            npcBlock = JSON.parse(JSON.stringify(npcBlock));
+            // 改个名字以示区分
+            npcBlock.name = '森田玲子';
+        }
+
+        return { npc: npcBlock, user: userBlock };
+    }
+
+    var lines = rawYaml.split('\n');
+    var dateTime = extractVal(lines, '日期和时间') || '...';
+    var location = extractVal(lines, '地点') || '...';
+
+    var result = parseAllBlocks(lines);
+    var linData = result.npc || { name: '森田玲子', action: '...', inner: '...', emotion: '平静', dignity: 0, desire: 0, stress: 0, fatigue: 0, sin: 0, guilt: 0, pregnancy: '安全 (0%)', clothing: '家居裙', breast: '正常', pussy: '正常', clit: '正常', asshole: '正常', dependence: '中', possession: '弱' };
+    var userData = result.user || { name: '你', action: '...', clothing: '常服', mind: '正常', cock: '平静', balls: '正常', intimacy: ['无', '无'] };
+
+    function setText(id, text) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = text || '...';
+    }
+
+    function setBar(id, value) {
+        var el = document.getElementById(id);
+        if (el) {
+            var v = parseInt(value, 10);
+            if (isNaN(v)) v = 0;
+            el.style.width = Math.min(100, Math.max(0, v)) + '%';
+        }
+    }
+
+    document.getElementById('display-time').textContent = dateTime;
+    document.getElementById('display-loc').textContent = location;
+
+    // 森田玲子数据
+    setText('linAction', linData.action);
+    setText('linInner', linData.inner);
+    setBar('linDignityBar', linData.dignity);
+    setText('linDignityVal', linData.dignity);
+    setBar('linDesireBar', linData.desire);
+    setText('linDesireVal', linData.desire);
+    setBar('linStressBar', linData.stress);
+    setText('linStressVal', linData.stress);
+    setBar('linFatigueBar', linData.fatigue);
+    setText('linFatigueVal', linData.fatigue);
+    setBar('linSinBar', linData.sin);
+    setText('linSinVal', linData.sin);
+    setBar('linGuiltBar', linData.guilt);
+    setText('linGuiltVal', linData.guilt);
+    setText('linEmotion', linData.emotion);
+    setText('linDependence', linData.dependence);
+    setText('linPossession', linData.possession);
+    setText('linPregnancy', linData.pregnancy);
+    setText('linClothing', linData.clothing);
+    setText('linBreast', linData.breast);
+    setText('linPussy', linData.pussy);
+    setText('linClit', linData.clit);
+    setText('linAsshole', linData.asshole);
+
+    // 渲染妈妈头像
+    var linAvatarDiv = document.getElementById('linAvatar');
+    var linAvatarUrl = linData.avatar || 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E6%A3%AE%E7%94%B0-%E7%8E%B2%E5%AD%90.jpg';
+    if (linAvatarUrl) {
+        linAvatarDiv.innerHTML = '<img src="' + linAvatarUrl + '" alt="森田玲子" />';
+        var img = linAvatarDiv.querySelector('img');
+        if (img) img.addEventListener('click', function(e) { e.stopPropagation(); openImage(this.src); });
+    } else {
+        linAvatarDiv.innerHTML = '<span class="placeholder">玲</span>';
+    }
+
+    var linInti1 = document.getElementById('linIntimacy1');
+    var linInti2 = document.getElementById('linIntimacy2');
+    if (linInti1 && linData.intimacy && linData.intimacy.length > 0) {
+        linInti1.textContent = linData.intimacy[0] || '无';
+        if (linInti2) linInti2.textContent = linData.intimacy[1] || '无';
+    }
+
+    // {{user}} 数据
+    setText('userDisplayName', userData.name || '你');
+    setText('userAction', userData.action);
+    setText('userMind', userData.mind);
+    setText('userCock', userData.cock);
+    setText('userBalls', userData.balls);
+    setText('userClothing', userData.clothing);
+
+    // 渲染玩家头像
+    var userAvatarDiv = document.getElementById('userAvatar');
+    if (userData.avatar) {
+        userAvatarDiv.innerHTML = '<img src="' + userData.avatar + '" alt="你" />';
+        var img2 = userAvatarDiv.querySelector('img');
+        if (img2) img2.addEventListener('click', function(e) { e.stopPropagation(); openImage(this.src); });
+    } else {
+        userAvatarDiv.innerHTML = '<span class="placeholder">你</span>';
+    }
+
+    var userInti1 = document.getElementById('userIntimacy1');
+    var userInti2 = document.getElementById('userIntimacy2');
+    if (userInti1 && userData.intimacy && userData.intimacy.length > 0) {
+        userInti1.textContent = userData.intimacy[0] || '无';
+        if (userInti2) userInti2.textContent = userData.intimacy[1] || '无';
+    }
+
+    // 折叠功能
+    var foldBtn = document.getElementById('toggleFold');
+    var wrapper = document.getElementById('statusApp');
+    if (foldBtn && wrapper) {
+        var savedState = localStorage.getItem('statusbar_folded') === 'true';
+        if (savedState) wrapper.classList.add('collapsed');
+
+        foldBtn.addEventListener('click', function() {
+            wrapper.classList.toggle('collapsed');
+            localStorage.setItem('statusbar_folded', wrapper.classList.contains('collapsed') ? 'true' : 'false');
+        });
+    }
+
+    // 图片放大
+    var overlay = document.getElementById('imageOverlay');
+    var overlayImg = document.getElementById('overlayImg');
+    window.openImage = function(src) {
+        if (src && overlay && overlayImg) {
+            overlayImg.src = src;
+            overlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+    };
+    function closeImage() {
+        if (overlay) { overlay.classList.remove('open'); document.body.style.overflow = ''; }
+    }
+    overlay.addEventListener('click', closeImage);
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) closeImage();
+    });
+
+})();
+</script>
+
+</body>
+</html>
