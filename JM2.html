@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>与继母的丝袜与日常 · 状态栏</title>
+    <style>
+        /* ================================================================
+           1. 全局变量与重置
+           ================================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: 320, 40%, 35%;
+            --secondary: 340, 50%, 45%;
+            --bg-dark: 320, 15%, 6%;
+            --bg-card: 320, 12%, 12%;
+            --text-main: 320, 10%, 92%;
+            --text-muted: 320, 8%, 60%;
+            --glass-bg: hsla(320, 15%, 10%, 0.65);
+            --glass-border: hsla(340, 50%, 45%, 0.12);
+            --glow: hsla(340, 50%, 45%, 0.15);
+        }
+
+        body {
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        .status-wrapper {
+            max-width: 680px;
+            width: 100%;
+            margin: 0 auto;
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px) saturate(1.8);
+            -webkit-backdrop-filter: blur(24px) saturate(1.8);
+            border-radius: 40px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 0 0 1px hsla(340, 50%, 45%, 0.06);
+            padding: 24px 22px 18px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .status-wrapper::before {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -10%;
+            width: 70%;
+            height: 80%;
+            background: radial-gradient(ellipse, hsla(340, 50%, 45%, 0.08), transparent 60%);
+            pointer-events: none;
+            animation: driftGlow 16s infinite alternate ease-in-out;
+        }
+        .status-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            left: -10%;
+            width: 60%;
+            height: 70%;
+            background: radial-gradient(ellipse, hsla(320, 40%, 35%, 0.06), transparent 60%);
+            pointer-events: none;
+            animation: driftGlow 20s infinite alternate-reverse ease-in-out;
+        }
+        @keyframes driftGlow {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.3;
+            }
+            100% {
+                transform: translate(-6%, 8%) scale(1.3);
+                opacity: 0.7;
+            }
+        }
+
+        .status-wrapper>* {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ===== 顶部标题栏 ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid hsla(340, 50%, 45%, 0.06);
+            margin-bottom: 16px;
+            flex-shrink: 0;
+        }
+        .header-left .title {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: hsl(var(--secondary));
+            text-shadow: 0 0 30px hsla(340, 50%, 45%, 0.15);
+            text-transform: uppercase;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 11px;
+            color: hsl(var(--text-muted));
+        }
+        .header-right .loc,
+        .header-right .time {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: hsl(var(--text-main), 0.7);
+            font-weight: 400;
+        }
+        .header-right .loc svg,
+        .header-right .time svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            opacity: 0.6;
+        }
+        .header-right .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: hsl(var(--secondary));
+            display: inline-block;
+            animation: pulse-dot 1.8s ease-in-out infinite;
+            box-shadow: 0 0 12px hsla(340, 50%, 45%, 0.3);
+        }
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.6);
+                box-shadow: 0 0 20px hsla(340, 50%, 45%, 0.6);
+            }
+        }
+
+        .fold-btn {
+            background: none;
+            border: none;
+            color: hsl(var(--text-muted), 0.5);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s;
+        }
+        .fold-btn:hover {
+            color: hsl(var(--text-main));
+        }
+        .fold-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .status-wrapper.collapsed .fold-btn svg {
+            transform: rotate(-90deg);
+        }
+        .status-wrapper.collapsed .header {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .status-wrapper.collapsed .cards-stack {
+            display: none;
+        }
+
+        /* ===== 层级导航 ===== */
+        .layer-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-shrink: 0;
+        }
+        .layer-btn {
+            flex: 1;
+            padding: 10px 6px;
+            background: hsla(320, 12%, 16%, 0.3);
+            border: 1px solid hsla(340, 50%, 45%, 0.06);
+            border-radius: 16px;
+            color: hsl(var(--text-muted));
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-align: center;
+            font-family: inherit;
+            text-transform: uppercase;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+        .layer-btn:hover {
+            background: hsla(320, 12%, 20%, 0.5);
+            border-color: hsla(340, 50%, 45%, 0.15);
+        }
+        .layer-btn.active {
+            background: hsla(340, 50%, 45%, 0.10);
+            border-color: hsla(340, 50%, 45%, 0.25);
+            color: hsl(var(--text-main));
+            box-shadow: 0 0 30px hsla(340, 50%, 45%, 0.04);
+        }
+        .layer-btn .badge {
+            display: block;
+            font-size: 7px;
+            opacity: 0.4;
+            letter-spacing: 2px;
+            margin-top: 3px;
+            font-weight: 400;
+            text-transform: none;
+        }
+        @media (max-width: 480px) {
+            .layer-btn {
+                font-size: 8px;
+                padding: 8px 4px;
+            }
+            .layer-btn .badge {
+                font-size: 6px;
+            }
+        }
+
+        /* ===== 卡片堆叠容器 ===== */
+        .cards-stack {
+            position: relative;
+            min-height: 560px;
+            transition: min-height 0.4s ease;
+        }
+
+        .char-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            border-radius: 28px;
+            padding: 24px 20px 20px;
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            overflow: hidden;
+            border: 1px solid transparent;
+            background: hsla(320, 12%, 14%, 0.35);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 1px hsla(340, 50%, 45%, 0.04);
+            opacity: 0;
+            transform: translateY(16px) scale(0.96);
+            pointer-events: none;
+        }
+
+        .char-card:not(#wardrobeCard) {
+            max-height: none;
+            overflow: visible;
+        }
+
+        #wardrobeCard {
+            height: 480px;
+            overflow-y: scroll !important;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: hsla(340, 50%, 45%, 0.2) transparent;
+            padding-bottom: 12px;
+            padding-right: 6px;
+        }
+        #wardrobeCard::-webkit-scrollbar {
+            width: 5px;
+        }
+        #wardrobeCard::-webkit-scrollbar-track {
+            background: hsla(340, 50%, 45%, 0.04);
+            border-radius: 10px;
+        }
+        #wardrobeCard::-webkit-scrollbar-thumb {
+            background: hsla(340, 50%, 45%, 0.25);
+            border-radius: 10px;
+        }
+
+        .char-card.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+            border-color: hsla(340, 50%, 45%, 0.10);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 1px hsla(340, 50%, 45%, 0.06);
+            z-index: 10;
+        }
+        .char-card.inactive {
+            opacity: 0;
+            transform: translateY(24px) scale(0.92);
+            pointer-events: none;
+            border-color: transparent;
+            box-shadow: none;
+            background: transparent;
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
+            max-height: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* ===== 卡片头部 ===== */
+        .char-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-shrink: 0;
+        }
+        .char-header .avatar {
+            flex-shrink: 0;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid hsla(340, 50%, 45%, 0.25);
+            box-shadow: 0 0 30px hsla(340, 50%, 45%, 0.08);
+            background: hsla(320, 40%, 35%, 0.15);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .char-header .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .char-header .avatar img:hover {
+            transform: scale(1.05);
+        }
+        .char-header .avatar .placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+            color: hsl(var(--text-muted));
+            background: hsla(320, 12%, 18%, 0.4);
+        }
+        .char-header .info {
+            flex: 1;
+            min-width: 0;
+        }
+        .char-header .info .name {
+            font-size: 18px;
+            font-weight: 700;
+            color: hsl(var(--text-main));
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .char-header .info .name .header-tag {
+            font-size: 9px;
+            font-weight: 600;
+            padding: 2px 12px;
+            border-radius: 30px;
+            background: hsla(340, 50%, 45%, 0.10);
+            color: hsl(var(--secondary));
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        .char-header .info .action {
+            font-size: 11px;
+            color: hsl(var(--text-muted), 0.7);
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .char-header .info .action svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            opacity: 0.6;
+        }
+
+        /* ===== 内心话 ===== */
+        .inner-voice-box {
+            background: hsla(320, 12%, 10%, 0.5);
+            border-left: 4px solid hsl(var(--secondary));
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+            position: relative;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            box-shadow: inset 0 0 20px hsla(340, 50%, 45%, 0.02);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .inner-voice-box::before {
+            content: '\201C';
+            font-size: 32px;
+            line-height: 1;
+            color: hsl(var(--secondary), 0.15);
+            font-family: Georgia, serif;
+            flex-shrink: 0;
+            margin-top: -4px;
+        }
+        .inner-voice-box .voice-text {
+            font-size: 13px;
+            line-height: 1.7;
+            color: hsl(var(--text-main), 0.85);
+            font-style: italic;
+            letter-spacing: 0.2px;
+        }
+        .inner-voice-box .voice-text .label {
+            font-size: 8px;
+            font-weight: 700;
+            color: hsla(340, 50%, 45%, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: inline-block;
+            margin-right: 6px;
+            font-style: normal;
+        }
+
+        /* ===== 属性区域 ===== */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 20px;
+            margin-bottom: 12px;
+        }
+
+        .bar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 10px;
+            padding: 4px 0;
+        }
+        .bar-item .label {
+            color: hsl(var(--text-muted), 0.6);
+            font-weight: 500;
+            letter-spacing: 0.8px;
+            font-size: 9px;
+            min-width: 34px;
+            text-transform: uppercase;
+        }
+        .bar-item .track {
+            flex: 1;
+            height: 4px;
+            background: hsla(320, 40%, 35%, 0.10);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        .bar-item .track .fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+            width: 0%;
+            position: relative;
+        }
+        .bar-item .track .fill.desire {
+            background: linear-gradient(90deg, hsla(320, 40%, 35%, 0.7), hsla(320, 40%, 35%, 0.9));
+            box-shadow: 0 0 12px hsla(320, 40%, 35%, 0.2);
+        }
+        .bar-item .track .fill.honest {
+            background: linear-gradient(90deg, hsla(340, 50%, 45%, 0.6), hsla(340, 50%, 45%, 0.85));
+            box-shadow: 0 0 12px hsla(340, 50%, 45%, 0.2);
+        }
+        .bar-item .val {
+            color: hsl(var(--text-main));
+            font-weight: 600;
+            min-width: 22px;
+            text-align: right;
+            font-size: 11px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 10px;
+            padding: 6px 12px;
+            background: hsla(320, 12%, 18%, 0.15);
+            border-radius: 8px;
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            transition: background 0.3s;
+        }
+        .stat-item:hover {
+            background: hsla(320, 12%, 22%, 0.25);
+        }
+        .stat-item .label {
+            color: hsl(var(--text-muted), 0.5);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            font-size: 9px;
+            text-transform: uppercase;
+        }
+        .stat-item .value {
+            color: hsl(var(--text-main));
+            font-weight: 600;
+            font-size: 11px;
+        }
+        .stat-item .value.gold {
+            color: hsl(var(--secondary));
+        }
+        .stat-item .value.pink {
+            color: hsl(var(--primary));
+        }
+
+        /* ===== 身体标签 ===== */
+        .body-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid hsla(340, 50%, 45%, 0.04);
+        }
+        .body-tag {
+            font-size: 9px;
+            padding: 3px 12px;
+            border-radius: 30px;
+            background: hsla(320, 40%, 35%, 0.06);
+            border: 1px solid hsla(340, 50%, 45%, 0.04);
+            color: hsl(var(--text-muted), 0.7);
+            letter-spacing: 0.3px;
+        }
+        .body-tag .tag-label {
+            color: hsla(340, 50%, 45%, 0.4);
+            margin-right: 4px;
+            font-weight: 500;
+        }
+        .body-tag .tag-value {
+            color: hsl(var(--text-main), 0.8);
+        }
+
+        /* ===== 亲密记录 ===== */
+        .intimacy-log {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid hsla(340, 50%, 45%, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .intimacy-log .intimacy-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .intimacy-log .intimacy-row .label {
+            color: hsl(var(--text-muted), 0.25);
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            font-size: 7px;
+            text-transform: uppercase;
+            min-width: 60px;
+        }
+        .intimacy-log .intimacy-row .item {
+            background: hsla(340, 50%, 45%, 0.04);
+            padding: 2px 14px;
+            border-radius: 30px;
+            border: 1px solid hsla(340, 50%, 45%, 0.04);
+            color: hsl(var(--text-main), 0.6);
+            font-size: 9px;
+        }
+
+        /* ===== 衣柜专用样式 ===== */
+        .portrait-area {
+            position: relative;
+            width: 100%;
+            max-width: 220px;
+            aspect-ratio: 3 / 4;
+            margin: 0 auto 14px auto;
+            border-radius: 16px;
+            overflow: hidden;
+            background: hsla(320, 12%, 10%, 0.5);
+            border: 1px solid hsla(340, 50%, 45%, 0.06);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+        .portrait-area .portrait-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .portrait-area .portrait-label {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            color: hsla(320, 10%, 92%, 0.5);
+            letter-spacing: 2px;
+            background: hsla(320, 15%, 6%, 0.6);
+            padding: 3px 14px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+            border: 1px solid hsla(340, 50%, 45%, 0.04);
+            white-space: nowrap;
+            text-align: center;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .portrait-area .portrait-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: hsla(320, 8%, 60%, 0.3);
+            font-size: 12px;
+            letter-spacing: 2px;
+            background: hsla(320, 15%, 6%, 0.3);
+        }
+        .portrait-area .portrait-placeholder .placeholder-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+            opacity: 0.3;
+        }
+
+        .drawer-entries {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+        .drawer-entry {
+            padding: 10px 8px;
+            background: hsla(320, 12%, 12%, 0.3);
+            border: 1px solid hsla(340, 50%, 45%, 0.06);
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            color: hsl(320, 10%, 92%);
+            pointer-events: auto !important;
+        }
+        .drawer-entry:hover {
+            background: hsla(320, 12%, 18%, 0.5);
+            border-color: hsla(340, 50%, 45%, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        .drawer-entry .entry-icon {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .drawer-entry .entry-label {
+            font-size: 9px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+        .drawer-entry .entry-count {
+            font-size: 7px;
+            color: hsla(320, 8%, 60%, 0.3);
+            display: block;
+            margin-top: 1px;
+        }
+
+        .drawer-content {
+            max-height: 0 !important;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, margin 0.3s ease;
+            opacity: 0;
+            margin-top: 0;
+            pointer-events: none;
+        }
+        .drawer-content.open {
+            max-height: 800px !important;
+            opacity: 1;
+            margin-top: 8px;
+            pointer-events: auto;
+        }
+
+        .clothes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            padding: 4px 0;
+        }
+        .clothes-item {
+            background: hsla(320, 12%, 12%, 0.25);
+            border: 1px solid hsla(340, 50%, 45%, 0.04);
+            border-radius: 12px;
+            padding: 8px 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            color: hsl(320, 10%, 92%);
+        }
+        .clothes-item:hover {
+            background: hsla(320, 12%, 18%, 0.4);
+            border-color: hsla(340, 50%, 45%, 0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .clothes-item .item-icon {
+            font-size: 18px;
+            display: block;
+        }
+        .clothes-item .item-name {
+            font-size: 8px;
+            font-weight: 400;
+            color: hsla(320, 10%, 92%, 0.7);
+            letter-spacing: 0.3px;
+            margin-top: 2px;
+        }
+        .clothes-item .item-status {
+            font-size: 6px;
+            color: hsla(320, 8%, 60%, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            margin-top: 1px;
+        }
+        .clothes-item .item-status .dot {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+        }
+        .dot-worn {
+            background: hsl(140, 50%, 50%);
+        }
+        .dot-closet {
+            background: hsl(30, 50%, 50%);
+        }
+        .dot-drying {
+            background: hsl(200, 50%, 50%);
+        }
+        .dot-drawer {
+            background: hsl(340, 50%, 50%);
+        }
+
+        .clothes-detail {
+            display: none;
+            padding: 4px 0;
+            animation: fadeSlideIn 0.4s ease;
+        }
+        .clothes-detail.active {
+            display: block;
+        }
+        @keyframes fadeSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .clothes-detail .detail-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .clothes-detail .detail-header .detail-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: hsl(320, 10%, 92%);
+            letter-spacing: 1px;
+        }
+        .clothes-detail .detail-header .detail-back {
+            font-size: 8px;
+            color: hsla(320, 8%, 60%, 0.4);
+            cursor: pointer;
+            padding: 4px 12px;
+            border: 1px solid hsla(340, 50%, 45%, 0.06);
+            border-radius: 20px;
+            background: hsla(320, 15%, 6%, 0.2);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        .clothes-detail .detail-header .detail-back:hover {
+            border-color: hsla(340, 50%, 45%, 0.12);
+            color: hsl(320, 10%, 92%);
+        }
+
+        .clothes-detail .detail-body {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+        .clothes-detail .detail-body .detail-portrait {
+            flex-shrink: 0;
+            width: 90px;
+            height: 120px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: hsla(320, 12%, 12%, 0.4);
+            border: 1px solid hsla(340, 50%, 45%, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .clothes-detail .detail-body .detail-portrait img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .clothes-detail .detail-body .detail-portrait .portrait-placeholder-sm {
+            font-size: 36px;
+            color: hsla(320, 8%, 60%, 0.2);
+        }
+        .clothes-detail .detail-body .detail-text {
+            flex: 1;
+            font-size: 10px;
+            line-height: 1.8;
+            color: hsla(320, 10%, 92%, 0.75);
+            letter-spacing: 0.3px;
+            min-height: 80px;
+            position: relative;
+        }
+        .clothes-detail .detail-body .detail-text .typewriter-content {
+            display: inline;
+        }
+        .clothes-detail .detail-body .detail-text .typewriter-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 0.9em;
+            background: hsla(340, 50%, 45%, 0.5);
+            margin-left: 1px;
+            vertical-align: text-bottom;
+            animation: blink 0.9s step-end infinite;
+        }
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+        .clothes-detail .detail-body .detail-text .typewriter-cursor.done {
+            animation: blink 1.2s step-end infinite;
+            opacity: 0.4;
+        }
+
+        /* ===== 图片放大遮罩 ===== */
+        .img-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 999999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+        .img-overlay.open {
+            display: flex;
+            opacity: 1;
+        }
+        .img-overlay img {
+            max-width: 85vw;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            cursor: default;
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .img-overlay.open img {
+            transform: scale(1);
+        }
+        .img-overlay .close-hint {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 11px;
+            letter-spacing: 2px;
+            pointer-events: none;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 480px) {
+            .status-wrapper {
+                padding: 16px 14px 14px;
+                border-radius: 28px;
+            }
+            .cards-stack {
+                min-height: 620px;
+            }
+            .char-card {
+                padding: 18px 14px 14px;
+                border-radius: 20px;
+            }
+            #wardrobeCard {
+                height: 400px;
+            }
+            .stat-grid {
+                grid-template-columns: 1fr;
+                gap: 6px 0;
+            }
+            .char-header .avatar {
+                width: 50px;
+                height: 50px;
+            }
+            .char-header .info .name {
+                font-size: 16px;
+            }
+            .header-left .title {
+                font-size: 11px;
+            }
+            .header-right {
+                font-size: 10px;
+                gap: 10px;
+            }
+            .inner-voice-box {
+                padding: 12px 14px;
+            }
+            .inner-voice-box::before {
+                font-size: 24px;
+            }
+            .inner-voice-box .voice-text {
+                font-size: 12px;
+            }
+            .clothes-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .clothes-detail .detail-body {
+                flex-direction: column;
+                align-items: center;
+            }
+            .clothes-detail .detail-body .detail-portrait {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 3/4;
+                max-height: 160px;
+            }
+            .clothes-detail .detail-body .detail-text {
+                font-size: 9px;
+                min-height: 60px;
+            }
+            .drawer-entries {
+                gap: 6px;
+            }
+            .drawer-entry {
+                padding: 8px 6px;
+            }
+            .drawer-entry .entry-icon {
+                font-size: 16px;
+            }
+            .drawer-entry .entry-label {
+                font-size: 8px;
+            }
+            .portrait-area {
+                max-width: 160px;
+            }
+        }
+
+        @media (min-width: 600px) {
+            .status-wrapper {
+                max-width: 680px;
+                padding: 28px 26px 20px;
+                border-radius: 44px;
+            }
+            .char-card {
+                padding: 28px 24px 20px;
+                border-radius: 32px;
+            }
+            #wardrobeCard {
+                height: 480px;
+            }
+            .portrait-area {
+                max-width: 250px;
+            }
+            .clothes-detail .detail-body .detail-portrait {
+                width: 110px;
+                height: 146px;
+            }
+        }
+
+        .status-wrapper {
+            animation: fadeUp 0.7s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+            opacity: 0;
+            transform: translateY(24px);
+        }
+        @keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: hsla(340, 50%, 45%, 0.15);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="status-wrapper" id="statusApp">
+        <!-- ★★★ 数据容器 ★★★ -->
+        <div id="status-data" style="display: none;">$1</div>
+
+        <!-- ===== 顶部标题栏 ===== -->
+        <div class="header">
+            <div class="header-left">
+                <div class="title">✦ 继母与丝袜 · 日常</div>
+            </div>
+            <div class="header-right">
+                <span class="loc">
+                    <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span id="display-loc">家中 · 客厅</span>
+                </span>
+                <span class="dot"></span>
+                <span class="time">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span id="display-time">傍晚</span>
+                </span>
+                <button class="fold-btn" id="toggleFold" aria-label="折叠状态栏">
+                    <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== 层级导航 ===== -->
+        <div class="layer-nav" id="layerNav">
+            <button class="layer-btn active" data-layer="0">
+                继母
+                <span class="badge">✦ 三条美咲</span>
+            </button>
+            <button class="layer-btn" data-layer="1">
+                继子
+                <span class="badge">✦ {{user}}</span>
+            </button>
+            <button class="layer-btn" data-layer="2">
+                衣柜
+                <span class="badge">✦ 衣橱与抽屉</span>
+            </button>
+        </div>
+
+        <!-- ===== 卡片容器 ===== -->
+        <div class="cards-stack">
+
+            <!-- ============================================================ -->
+            <!-- L0 · 继母卡片 -->
+            <!-- ============================================================ -->
+            <div class="char-card active" data-layer="0" id="linCard">
+                <div class="char-header">
+                    <div class="avatar" id="linAvatar">
+                        <span class="placeholder">三</span>
+                    </div>
+                    <div class="info">
+                        <div class="name">
+                            三条美咲
+                            <span class="header-tag">继母</span>
+                        </div>
+                        <div class="action">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                            <span id="linAction">窝在沙发里，黑丝包裹的双腿交叠着</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="inner-voice-box">
+                    <div class="voice-text">
+                        <span class="label">内心</span>
+                        <span id="linInner">「他刚才看了一眼我的腿……看到了呢。」</span>
+                    </div>
+                </div>
+
+                <div class="stat-grid">
+                    <div class="bar-item">
+                        <span class="label">欲望</span>
+                        <div class="track"><div class="fill desire" id="linDesireBar" style="width:55%"></div></div>
+                        <span class="val" id="linDesireVal">55</span>
+                    </div>
+                    <div class="bar-item">
+                        <span class="label">坦诚</span>
+                        <div class="track"><div class="fill honest" id="linHonestBar" style="width:35%"></div></div>
+                        <span class="val" id="linHonestVal">35</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">情绪</span>
+                        <span class="value" id="linEmotion">懒散玩味</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">依赖</span>
+                        <span class="value pink" id="linDependence">中</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">占有</span>
+                        <span class="value gold" id="linPossession">中</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">状态</span>
+                        <span class="value" id="linStatus">日常 · 试探中</span>
+                    </div>
+                </div>
+
+                <div class="body-tags">
+                    <span class="body-tag"><span class="tag-label">穿搭</span> <span class="tag-value" id="linClothing">白色薄衫 · 黑丝</span></span>
+                    <span class="body-tag"><span class="tag-label">胸部</span> <span class="tag-value" id="linBreast">薄纱下轮廓隐约</span></span>
+                    <span class="body-tag"><span class="tag-label">小穴</span> <span class="tag-value" id="linPussy">正常</span></span>
+                    <span class="body-tag"><span class="tag-label">阴蒂</span> <span class="tag-value" id="linClit">正常</span></span>
+                    <span class="body-tag"><span class="tag-label">肛门</span> <span class="tag-value" id="linAsshole">正常</span></span>
+                </div>
+
+                <div class="intimacy-log">
+                    <div class="intimacy-row">
+                        <span class="label">最近亲密</span>
+                        <span class="item" id="linIntimacy1">无</span>
+                    </div>
+                    <div class="intimacy-row">
+                        <span class="label"></span>
+                        <span class="item" id="linIntimacy2">无</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- L1 · 继子卡片 -->
+            <!-- ============================================================ -->
+            <div class="char-card inactive" data-layer="1" id="userCard">
+                <div class="char-header">
+                    <div class="avatar" id="userAvatar">
+                        <span class="placeholder">继</span>
+                    </div>
+                    <div class="info">
+                        <div class="name">
+                            <span id="userDisplayName">{{user}}</span>
+                            <span class="header-tag">继子</span>
+                        </div>
+                        <div class="action">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                            <span id="userAction">站在客厅边缘，视线不自然地移开</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-grid" style="margin-top:6px;">
+                    <div class="stat-item">
+                        <span class="label">精神状态</span>
+                        <span class="value" id="userMind">局促</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">阳具</span>
+                        <span class="value gold" id="userCock">半勃起</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">睾丸</span>
+                        <span class="value" id="userBalls">微微发胀</span>
+                    </div>
+                </div>
+
+                <div class="body-tags">
+                    <span class="body-tag"><span class="tag-label">穿搭</span> <span class="tag-value" id="userClothing">校服衬衫 · 长裤</span></span>
+                </div>
+
+                <div class="intimacy-log" style="margin-top:4px;">
+                    <div class="intimacy-row">
+                        <span class="label">最近亲密</span>
+                        <span class="item" id="userIntimacy1">无</span>
+                    </div>
+                    <div class="intimacy-row">
+                        <span class="label"></span>
+                        <span class="item" id="userIntimacy2">无</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- L2 · 衣柜卡片 -->
+            <!-- ============================================================ -->
+            <div class="char-card inactive" data-layer="2" id="wardrobeCard">
+                <div class="char-header">
+                    <div class="avatar" style="width:48px;height:48px;border-radius:50%;background:hsla(320,40%,35%,0.10);border:2px solid hsla(340,50%,45%,0.08);display:flex;align-items:center;justify-content:center;font-size:20px;color:hsla(340,50%,45%,0.4);">
+                        👗
+                    </div>
+                    <div class="info">
+                        <div class="name">衣柜 · 衣帽间</div>
+                        <div class="action">继母的衣橱 · 立绘随穿搭变化</div>
+                    </div>
+                    <span class="header-tag">✦ 衣橱</span>
+                </div>
+
+                <!-- 立绘区域 -->
+                <div class="portrait-area" id="portraitArea">
+                    <div class="portrait-placeholder" id="portraitPlaceholder">
+                        <span class="placeholder-icon">👤</span>
+                        <span class="placeholder-text">穿搭立绘</span>
+                        <span style="font-size:8px;margin-top:4px;opacity:0.5;">根据「穿搭」自动切换</span>
+                    </div>
+                    <img class="portrait-img" id="portraitImg" style="display:none;" alt="立绘" />
+                    <span class="portrait-label" id="portraitLabel">当前穿搭</span>
+                </div>
+
+                <!-- 抽屉按钮 -->
+                <div class="drawer-entries">
+                    <button class="drawer-entry" onclick="window.toggleDrawer('daily')">
+                        <span class="entry-icon">🧥</span>
+                        <span class="entry-label">家常衣物</span>
+                        <span class="entry-count">6 件</span>
+                    </button>
+                    <button class="drawer-entry" onclick="window.toggleDrawer('intimate')">
+                        <span class="entry-icon">🖤</span>
+                        <span class="entry-label">情趣抽屉</span>
+                        <span class="entry-count">9 件</span>
+                    </button>
+                </div>
+
+                <!-- 抽屉内容 -->
+                <div class="drawer-content" id="drawerDaily">
+                    <div class="clothes-grid" id="dailyClothes"></div>
+                    <div class="clothes-detail" id="dailyDetail">
+                        <div class="detail-header">
+                            <span class="detail-title" id="dailyDetailTitle">衣物名称</span>
+                            <button class="detail-back" data-back="daily">← 返回列表</button>
+                        </div>
+                        <div class="detail-body">
+                            <div class="detail-portrait" id="dailyDetailPortrait">
+                                <div class="portrait-placeholder-sm" id="dailyDetailPlaceholder">🧦</div>
+                            </div>
+                            <div class="detail-text" id="dailyDetailText">
+                                <span class="typewriter-content"></span>
+                                <span class="typewriter-cursor"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="drawer-content" id="drawerIntimate">
+                    <div class="clothes-grid" id="intimateClothes"></div>
+                    <div class="clothes-detail" id="intimateDetail">
+                        <div class="detail-header">
+                            <span class="detail-title" id="intimateDetailTitle">衣物名称</span>
+                            <button class="detail-back" data-back="intimate">← 返回列表</button>
+                        </div>
+                        <div class="detail-body">
+                            <div class="detail-portrait" id="intimateDetailPortrait">
+                                <div class="portrait-placeholder-sm" id="intimateDetailPlaceholder">🖤</div>
+                            </div>
+                            <div class="detail-text" id="intimateDetailText">
+                                <span class="typewriter-content"></span>
+                                <span class="typewriter-cursor"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /cards-stack -->
+
+    </div><!-- /status-wrapper -->
+
+    <!-- 图片放大遮罩 -->
+    <div class="img-overlay" id="imageOverlay">
+        <img id="overlayImg" src="" alt="头像" />
+        <div class="close-hint">✦ 点击任意位置关闭 ✦</div>
+    </div>
+
+    <script>
+        // ================================================================
+        // 1. 层级切换
+        // ================================================================
+        (function() {
+            var navBtns = document.querySelectorAll('.layer-btn');
+            var cards = document.querySelectorAll('.char-card');
+
+            function setLayer(index) {
+                navBtns.forEach(function(btn, i) {
+                    btn.classList.toggle('active', i === index);
+                });
+                cards.forEach(function(card, i) {
+                    card.classList.remove('active', 'inactive');
+                    if (i === index) {
+                        card.classList.add('active');
+                    } else {
+                        card.classList.add('inactive');
+                    }
+                });
+                if (index === 2) {
+                    var wc = document.getElementById('wardrobeCard');
+                    if (wc) wc.scrollTop = 0;
+                }
+            }
+
+            navBtns.forEach(function(btn, index) {
+                btn.addEventListener('click', function() {
+                    setLayer(index);
+                });
+            });
+            setLayer(0);
+        })();
+
+        // ================================================================
+        // 2. 立绘映射表（所有图片链接已替换）
+        // ================================================================
+        (function() {
+            var portraitMap = {
+                // === 日常衣物 ===
+                '黑丝': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(1).jpg',
+                '丝袜': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(1).jpg',
+                '连裤袜': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(1).jpg',
+
+                '蕾丝内裤': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(15).jpg',
+                '三角裤': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(15).jpg',
+
+                '家居服': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(14).jpg',
+                '薄家居服': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(14).jpg',
+
+                '旧T恤': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(13).jpg',
+                'T恤': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(13).jpg',
+
+                '风衣': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(12).jpg',
+                '米白风衣': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(12).jpg',
+
+                '吊带睡裙': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(11).jpg',
+                '黑睡裙': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(11).jpg',
+
+                // === 情趣衣物 ===
+                '蕾丝文胸': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(10).jpg',
+                '丁字裤': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(10).jpg',
+                '情趣内衣': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(10).jpg',
+
+                '大腿袜': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(9).jpg',
+                '蕾丝大腿袜': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(9).jpg',
+
+                '薄款': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(7).jpg',
+
+                'Babydoll': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(8).jpg',
+                '白睡裙': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(8).jpg',
+
+                '开裆连裤袜': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(6).jpg',
+                '开裆袜': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(6).jpg',
+
+                '细带内裤': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(5).jpg',
+                '细带': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(5).jpg',
+
+                '红蕾丝': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(4).jpg',
+                '酒红内裤': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(4).jpg',
+
+                '睡袍': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(3).jpg',
+                '浴袍': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(3).jpg',
+
+                '过膝袜': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(2).jpg',
+                '蕾丝过膝袜': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(2).jpg',
+
+                // === 默认 ===
+                '默认': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(1).jpg'
+            };
+
+            window.updatePortrait = function(clothingText) {
+                var img = document.getElementById('portraitImg');
+                var placeholder = document.getElementById('portraitPlaceholder');
+                var label = document.getElementById('portraitLabel');
+
+                if (!img || !placeholder || !label) return;
+
+                var matchedUrl = null;
+                var matchedKey = null;
+
+                var keys = Object.keys(portraitMap);
+                for (var i = 0; i < keys.length; i++) {
+                    var key = keys[i];
+                    if (key === '默认') continue;
+                    if (clothingText.includes(key)) {
+                        matchedUrl = portraitMap[key];
+                        matchedKey = key;
+                        break;
+                    }
+                }
+
+                if (!matchedUrl) {
+                    matchedUrl = portraitMap['默认'];
+                    matchedKey = '默认';
+                }
+
+                img.style.display = 'block';
+                img.src = matchedUrl;
+                placeholder.style.display = 'none';
+                label.textContent = '当前穿搭：' + clothingText;
+
+                img.onerror = function() {
+                    img.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                    placeholder.innerHTML =
+                        '<span class="placeholder-icon">🖼️</span><span class="placeholder-text">立绘加载失败</span><span style="font-size:8px;margin-top:4px;opacity:0.5;">关键词：' +
+                        matchedKey + '</span>';
+                    label.textContent = '当前穿搭：' + clothingText;
+                };
+            };
+
+            window._portraitMap = portraitMap;
+        })();
+
+        // ================================================================
+        // 3. 数据解析 + 渲染
+        // ================================================================
+        (function() {
+            'use strict';
+
+            var dataContainer = document.getElementById('status-data');
+            if (!dataContainer) return;
+            var rawYaml = dataContainer.textContent.trim();
+
+            function extractVal(lines, key) {
+                for (var i = 0; i < lines.length; i++) {
+                    var t = lines[i].trim();
+                    if (t.startsWith(key + ':')) {
+                        var val = t.substring(key.length + 1).trim();
+                        if (val.startsWith('"') && val.endsWith('"')) val = val.substring(1, val.length - 1);
+                        if (val.startsWith("'") && val.endsWith("'")) val = val.substring(1, val.length - 1);
+                        return val;
+                    }
+                }
+                return '';
+            }
+
+            function parseAllBlocks(lines) {
+                var blocks = [];
+                var currentBlock = null;
+                var blockStart = -1;
+
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i];
+                    if (line.trim().startsWith('- 用户:')) {
+                        if (currentBlock) blocks.push(currentBlock);
+                        currentBlock = {};
+                        blockStart = i;
+                        continue;
+                    }
+                    if (currentBlock && blockStart !== -1) {
+                        var tLine = line.trim();
+                        if (i > blockStart && !line.startsWith(' ') && tLine !== '' && !tLine.startsWith('-')) {
+                            blockStart = -1;
+                            continue;
+                        }
+                        if (tLine.startsWith('名字:')) {
+                            currentBlock.name = extractVal([line], '名字');
+                        } else if (tLine.startsWith('头像:')) {
+                            currentBlock.avatar = extractVal([line], '头像');
+                        } else if (tLine.startsWith('行动:')) {
+                            currentBlock.action = extractVal([line], '行动');
+                        } else if (tLine.startsWith('内心:')) {
+                            currentBlock.inner = extractVal([line], '内心');
+                        } else if (tLine.startsWith('情绪状态:')) {
+                            currentBlock.emotion = extractVal([line], '情绪状态');
+                        } else if (tLine.startsWith('欲望值:')) {
+                            currentBlock.desire = parseInt(extractVal([line], '欲望值') || 0);
+                        } else if (tLine.startsWith('坦诚值:')) {
+                            currentBlock.honest = parseInt(extractVal([line], '坦诚值') || 0);
+                        } else if (tLine.startsWith('胸部:')) {
+                            currentBlock.breast = extractVal([line], '胸部');
+                        } else if (tLine.startsWith('小穴:')) {
+                            currentBlock.pussy = extractVal([line], '小穴');
+                        } else if (tLine.startsWith('阴蒂:')) {
+                            currentBlock.clit = extractVal([line], '阴蒂');
+                        } else if (tLine.startsWith('肛门:')) {
+                            currentBlock.asshole = extractVal([line], '肛门');
+                        } else if (tLine.startsWith('情感依赖度:')) {
+                            currentBlock.dependence = extractVal([line], '情感依赖度');
+                        } else if (tLine.startsWith('占有欲:')) {
+                            currentBlock.possession = extractVal([line], '占有欲');
+                        } else if (tLine.startsWith('穿搭:')) {
+                            currentBlock.clothing = extractVal([line], '穿搭');
+                        } else if (tLine.startsWith('精神状态:')) {
+                            currentBlock.mind = extractVal([line], '精神状态');
+                        } else if (tLine.startsWith('阳具:')) {
+                            currentBlock.cock = extractVal([line], '阳具');
+                        } else if (tLine.startsWith('睾丸:')) {
+                            currentBlock.balls = extractVal([line], '睾丸');
+                        }
+                        if (tLine.startsWith('- 亲密行为:')) {
+                            var val = tLine.substring('- 亲密行为:'.length).trim();
+                            if (val.startsWith('"') && val.endsWith('"')) val = val.substring(1, val.length - 1);
+                            if (!currentBlock.intimacy) currentBlock.intimacy = [];
+                            currentBlock.intimacy.push(val || '无');
+                        }
+                    }
+                }
+                if (currentBlock) blocks.push(currentBlock);
+
+                function fillDefaults(block) {
+                    if (!block) return {};
+                    if (!block.name) block.name = '未知';
+                    if (!block.action) block.action = '...';
+                    if (!block.inner) block.inner = '...';
+                    if (!block.emotion) block.emotion = '平静';
+                    if (!block.clothing) block.clothing = '常服';
+                    if (!block.breast) block.breast = '正常';
+                    if (!block.pussy) block.pussy = '正常';
+                    if (!block.clit) block.clit = '正常';
+                    if (!block.asshole) block.asshole = '正常';
+                    if (!block.dependence) block.dependence = '中';
+                    if (!block.possession) block.possession = '中';
+                    if (!block.mind) block.mind = '正常';
+                    if (!block.cock) block.cock = '平静';
+                    if (!block.balls) block.balls = '正常';
+                    if (!block.intimacy || block.intimacy.length === 0) block.intimacy = ['无', '无'];
+                    if (block.desire === undefined || isNaN(block.desire)) block.desire = 0;
+                    if (block.honest === undefined || isNaN(block.honest)) block.honest = 0;
+                    return block;
+                }
+
+                var userBlock = null;
+                var npcBlock = null;
+
+                for (var j = 0; j < blocks.length; j++) {
+                    var block = blocks[j];
+                    var name = block.name || '';
+                    if (name === '{{user}}' || name === '你' || name === '继子' || name === '儿子') {
+                        userBlock = fillDefaults(block);
+                        break;
+                    }
+                }
+                if (!userBlock && blocks.length > 0) {
+                    userBlock = fillDefaults(blocks[blocks.length - 1]);
+                }
+                if (blocks.length > 0) {
+                    if (blocks[0] === userBlock && blocks.length > 1) {
+                        npcBlock = fillDefaults(blocks[1]);
+                    } else {
+                        npcBlock = fillDefaults(blocks[0]);
+                    }
+                }
+                if (npcBlock === userBlock && npcBlock) {
+                    npcBlock = JSON.parse(JSON.stringify(npcBlock));
+                    npcBlock.name = '三条美咲';
+                }
+                return { npc: npcBlock, user: userBlock };
+            }
+
+            try {
+                var lines = rawYaml.split('\n');
+                var dateTime = extractVal(lines, '日期和时间') || '傍晚';
+                var location = extractVal(lines, '地点') || '家中 · 客厅';
+
+                var result = parseAllBlocks(lines);
+                var linData = result.npc || { name: '三条美咲', action: '...', inner: '...', emotion: '懒散玩味',
+                    desire: 0, honest: 0, breast: '正常', pussy: '正常', clit: '正常', asshole: '正常',
+                    dependence: '中', possession: '中', clothing: '白色薄衫 · 黑丝', intimacy: ['无', '无'] };
+                var userData = result.user || { name: '{{user}}', action: '...', clothing: '校服衬衫 · 长裤',
+                    mind: '局促', cock: '平静', balls: '正常', intimacy: ['无', '无'] };
+
+                function setText(id, text) {
+                    var el = document.getElementById(id);
+                    if (el) el.textContent = text || '...';
+                }
+
+                function setBar(id, value) {
+                    var el = document.getElementById(id);
+                    if (el) {
+                        var v = parseInt(value, 10);
+                        if (isNaN(v)) v = 0;
+                        el.style.width = Math.min(100, Math.max(0, v)) + '%';
+                    }
+                }
+
+                document.getElementById('display-time').textContent = dateTime;
+                document.getElementById('display-loc').textContent = location;
+
+                // 继母头像（动态从 YAML 读取）
+                var linAvatarDiv = document.getElementById('linAvatar');
+                if (linAvatarDiv) {
+                    var avatarUrl = linData.avatar || '';
+                    if (avatarUrl) {
+                        linAvatarDiv.innerHTML = '<img src="' + avatarUrl + '" alt="三条美咲" />';
+                        var img = linAvatarDiv.querySelector('img');
+                        if (img) {
+                            img.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                openImage(this.src);
+                            });
+                        }
+                    } else {
+                        linAvatarDiv.innerHTML = '<span class="placeholder">三</span>';
+                    }
+                }
+
+                // 继母数据
+                setText('linAction', linData.action);
+                setText('linInner', linData.inner);
+                setText('linEmotion', linData.emotion);
+                setText('linDependence', linData.dependence);
+                setText('linPossession', linData.possession);
+                setText('linClothing', linData.clothing);
+                setText('linBreast', linData.breast);
+                setText('linPussy', linData.pussy);
+                setText('linClit', linData.clit);
+                setText('linAsshole', linData.asshole);
+                setBar('linDesireBar', linData.desire);
+                setText('linDesireVal', linData.desire);
+                setBar('linHonestBar', linData.honest);
+                setText('linHonestVal', linData.honest);
+
+                var linInti1 = document.getElementById('linIntimacy1');
+                var linInti2 = document.getElementById('linIntimacy2');
+                if (linInti1 && linData.intimacy && linData.intimacy.length > 0) {
+                    linInti1.textContent = linData.intimacy[0] || '无';
+                    if (linInti2) linInti2.textContent = linData.intimacy[1] || '无';
+                }
+
+                // 继子头像
+                var userAvatarDiv = document.getElementById('userAvatar');
+                if (userAvatarDiv) {
+                    var userAvatarUrl = userData.avatar || '';
+                    if (userAvatarUrl) {
+                        userAvatarDiv.innerHTML = '<img src="' + userAvatarUrl + '" alt="{{user}}" />';
+                    } else {
+                        userAvatarDiv.innerHTML = '<span class="placeholder">继</span>';
+                    }
+                }
+
+                setText('userDisplayName', userData.name || '{{user}}');
+                setText('userAction', userData.action);
+                setText('userMind', userData.mind);
+                setText('userCock', userData.cock);
+                setText('userBalls', userData.balls);
+                setText('userClothing', userData.clothing);
+
+                var userInti1 = document.getElementById('userIntimacy1');
+                var userInti2 = document.getElementById('userIntimacy2');
+                if (userInti1 && userData.intimacy && userData.intimacy.length > 0) {
+                    userInti1.textContent = userData.intimacy[0] || '无';
+                    if (userInti2) userInti2.textContent = userData.intimacy[1] || '无';
+                }
+
+                // ★★★ 根据穿搭字段更新立绘 ★★★
+                if (typeof window.updatePortrait === 'function') {
+                    window.updatePortrait(linData.clothing || '默认');
+                }
+
+                // ★★★ 抽屉详情图片更新 ★★★
+                updateDrawerPortraits();
+
+            } catch (e) {
+                console.warn('数据解析失败，使用默认显示:', e);
+            }
+        })();
+
+        // ================================================================
+        // 4. 抽屉详情图片映射 + 更新
+        // ================================================================
+        (function() {
+            // 每件衣服对应的图片链接（按顺序 1-15）
+            var drawerImageMap = {
+                // 日常抽屉（6件）
+                'daily_1': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(1).jpg',
+                'daily_2': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(15).jpg',
+                'daily_3': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(14).jpg',
+                'daily_4': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(13).jpg',
+                'daily_5': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(12).jpg',
+                'daily_6': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(11).jpg',
+
+                // 情趣抽屉（9件）
+                'intimate_1': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(10).jpg',
+                'intimate_2': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(9).jpg',
+                'intimate_3': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(7).jpg',
+                'intimate_4': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(8).jpg',
+                'intimate_5': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(6).jpg',
+                'intimate_6': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(5).jpg',
+                'intimate_7': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(4).jpg',
+                'intimate_8': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(3).jpg',
+                'intimate_9': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E7%BB%A7%E6%AF%8D%E7%8A%B6%E6%80%81%E6%A0%8F%20(2).jpg'
+            };
+
+            window.updateDrawerPortraits = function() {
+                // 更新日常抽屉详情图片
+                for (var key in drawerImageMap) {
+                    if (key.startsWith('daily_')) {
+                        var detailContainer = document.getElementById('dailyDetailPortrait');
+                        if (detailContainer) {
+                            detailContainer.innerHTML = '<img src="' + drawerImageMap[key] +
+                                '" alt="衣物图片" style="width:100%;height:100%;object-fit:cover;" />';
+                        }
+                        break; // 只需要设置第一张，后续通过点击切换
+                    }
+                }
+                // 更新情趣抽屉详情图片
+                for (var key in drawerImageMap) {
+                    if (key.startsWith('intimate_')) {
+                        var detailContainer = document.getElementById('intimateDetailPortrait');
+                        if (detailContainer) {
+                            detailContainer.innerHTML = '<img src="' + drawerImageMap[key] +
+                                '" alt="衣物图片" style="width:100%;height:100%;object-fit:cover;" />';
+                        }
+                        break;
+                    }
+                }
+            };
+
+            // 在 showDetail 中调用，切换图片
+            var originalShowDetail = window._showDetail || function() {};
+            window._showDetail = function(drawerType, itemId) {
+                var portraitContainer = document.getElementById(drawerType === 'daily' ? 'dailyDetailPortrait' :
+                    'intimateDetailPortrait');
+                if (portraitContainer && drawerImageMap[itemId]) {
+                    portraitContainer.innerHTML = '<img src="' + drawerImageMap[itemId] +
+                        '" alt="衣物图片" style="width:100%;height:100%;object-fit:cover;" />';
+                }
+            };
+
+            // 重写 backToList 以恢复默认占位符
+            var originalBackToList = window._backToList || function() {};
+            window._backToList = function(drawerType) {
+                var portraitContainer = document.getElementById(drawerType === 'daily' ? 'dailyDetailPortrait' :
+                    'intimateDetailPortrait');
+                if (portraitContainer) {
+                    var icon = drawerType === 'daily' ? '🧦' : '🖤';
+                    portraitContainer.innerHTML =
+                    '<div class="portrait-placeholder-sm" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:36px;color:hsla(320,8%,60%,0.2);">' +
+                    icon + '</div>';
+                }
+            };
+
+            window._drawerImageMap = drawerImageMap;
+        })();
+
+        // ================================================================
+        // 5. 衣柜抽屉交互
+        // ================================================================
+        (function() {
+            var dailyClothes = [
+                { id: 'daily_1', icon: '🧦', name: '黑色连裤丝袜', status: '今天穿了', statusClass: 'dot-worn',
+                    desc: '她最常穿的那双黑色连裤丝袜，袜口微微卷起，包裹着大腿的曲线。灯光下泛着细密的丝光，膝盖后面有一处小小的勾丝——她发现了，但没换。' },
+                { id: 'daily_2', icon: '👙', name: '黑色蕾丝三角裤', status: '在衣柜里', statusClass: 'dot-closet',
+                    desc: '一条黑色蕾丝三角裤，面料轻薄，边缘是细密的蕾丝花边。她穿在裙子下面的时候不会刻意藏起来，洗衣篮里也常出现它的身影。' },
+                { id: 'daily_3', icon: '👚', name: '白色薄家居服', status: '今天穿了', statusClass: 'dot-worn',
+                    desc: '白色薄棉家居服，领口微微松弛，布料很软，贴着身体的曲线。不穿内衣的时候，乳头的轮廓会若隐若现地透出来。' },
+                { id: 'daily_4', icon: '👕', name: '旧T恤（洗旧款）', status: '晾晒中', statusClass: 'dot-drying',
+                    desc: '一件洗了很多次的灰色T恤，领口已经有些松了，布料被洗得发软。她在家的时候常穿它当睡衣，袖口蹭到了她的身体乳，有一股淡淡的花香。' },
+                { id: 'daily_5', icon: '🧥', name: '米白风衣', status: '挂衣架上', statusClass: 'dot-closet',
+                    desc: '米白色风衣，长度到膝弯，腰带有系过的痕迹。她出门会穿它，风衣内侧口袋里还装着一张便利店的收据，日期是上周的。' },
+                { id: 'daily_6', icon: '🛏️', name: '黑色吊带睡裙', status: '最下层抽屉', statusClass: 'dot-drawer',
+                    desc: '黑色细肩带睡裙，裙摆到大腿根部，面料是半透明的薄纱。她偶尔会洗完澡穿着它在客厅里走动，像是完全没注意到自己穿了什么。' }
+            ];
+
+            var intimateClothes = [
+                { id: 'intimate_1', icon: '🖤', name: '黑色蕾丝文胸+丁字裤', status: '在抽屉里', statusClass: 'dot-drawer',
+                    desc: '一套黑色蕾丝三点式内衣。文胸是半杯设计，托高但不过分聚拢；丁字裤背面只有一条细带，腰侧是蕾丝镂空。她穿在衣服里面的时候，只有自己知道。' },
+                { id: 'intimate_2', icon: '🧦', name: '蕾丝边大腿袜', status: '在抽屉里', statusClass: 'dot-drawer',
+                    desc: '大腿中部的蕾丝长袜，袜口有一圈黑色蕾丝花边，会微微陷入大腿皮肤。她会在秋冬穿在裙子下面，或者越界后的私密场合穿。' },
+                { id: 'intimate_3', icon: '🖤', name: '黑色吊带睡裙（薄款）', status: '在抽屉里', statusClass: 'dot-drawer',
+                    desc: '细肩带，裙摆到大腿根部，面料是半透明的黑色薄纱。身体曲线会在走动时透出轮廓，肩带偶尔会滑落。' },
+                { id: 'intimate_4', icon: '🤍', name: '白色Babydoll睡裙', status: '在抽屉里', statusClass: 'dot-drawer',
+                    desc: '白色蕾丝babydoll款，胸部以下蓬松展开，裙摆堪堪遮住大腿根。配有一条白色蕾丝内裤，她穿得少，但每一次穿都是故意的。' },
+                { id: 'intimate_5', icon: '🕸️', name: '黑色开裆连裤袜', status: '在抽屉里', statusClass: 'dot-drawer',
+                    desc: '黑色连裤袜，裆部有开口。她买的时候觉得太露了，试过一次就收起来了，但一直留着没有扔。' },
+                { id: 'intimate_6', icon: '🎀', name: '黑色细带内裤', status: '在抽屉里', statusClass: 'dot-drawer',
+                    desc: '两条极细带子的内裤，腰部两侧只有绳子系着，前面一小块三角形布料，背面什么都没有。她穿在裙子下面的时候，弯腰时会露出细带。' },
+                { id: 'intimate_7', icon: '❤️', name: '红色蕾丝内裤', status: '在抽屉里', statusClass: 'dot-drawer',
+                    desc: '一条酒红色蕾丝三角裤，颜色比黑色更少见，更「特意」。她会在重要的日子穿它——比如两人约好晚上见面的时候。' },
+                { id: 'intimate_8', icon: '🤍', name: '白色缎面睡袍', status: '在抽屉里', statusClass: 'dot-drawer',
+                    desc: '白色缎面浴袍，腰带系得随意，领口敞开大片。她洗完澡穿它出来的时候，里面什么都不穿——重点是「看起来像正常的浴袍，但里面是空的」。' },
+                { id: 'intimate_9', icon: '🧦', name: '黑色过膝袜（蕾丝款）', status: '在抽屉里', statusClass: 'dot-drawer',
+                    desc: '一双蕾丝过膝袜，袜口到大腿中上部，边缘是花纹镂空蕾丝。她喜欢穿丝袜的感觉，这双是她留在特殊场合穿的那双。' }
+            ];
+
+            function renderClothes(containerId, items, drawerType) {
+                var container = document.getElementById(containerId);
+                if (!container) return;
+                var html = '';
+                items.forEach(function(item) {
+                    html += '<div class="clothes-item" data-id="' + item.id + '" data-drawer="' + drawerType + '">' +
+                        '<span class="item-icon">' + item.icon + '</span>' +
+                        '<span class="item-name">' + item.name + '</span>' +
+                        '<span class="item-status"><span class="dot ' + item.statusClass + '"></span> ' + item.status +
+                        '</span>' +
+                        '</div>';
+                });
+                container.innerHTML = html;
+
+                container.querySelectorAll('.clothes-item').forEach(function(el) {
+                    el.addEventListener('click', function() {
+                        var id = this.dataset.id;
+                        var drawer = this.dataset.drawer;
+                        showDetail(drawer, id);
+                    });
+                });
+            }
+
+            function showDetail(drawerType, itemId) {
+                var items = drawerType === 'daily' ? dailyClothes : intimateClothes;
+                var item = items.find(function(i) { return i.id === itemId; });
+                if (!item) return;
+
+                var listContainer = document.getElementById(drawerType === 'daily' ? 'dailyClothes' : 'intimateClothes');
+                var detailContainer = document.getElementById(drawerType === 'daily' ? 'dailyDetail' : 'intimateDetail');
+
+                if (!listContainer || !detailContainer) return;
+
+                listContainer.style.display = 'none';
+                detailContainer.classList.add('active');
+
+                var titleEl = document.getElementById(drawerType === 'daily' ? 'dailyDetailTitle' : 'intimateDetailTitle');
+                var textEl = document.getElementById(drawerType === 'daily' ? 'dailyDetailText' : 'intimateDetailText');
+
+                if (titleEl) titleEl.textContent = item.name;
+
+                // ★★★ 更新详情图片 ★★★
+                var portraitContainer = document.getElementById(drawerType === 'daily' ? 'dailyDetailPortrait' :
+                    'intimateDetailPortrait');
+                if (portraitContainer && window._drawerImageMap && window._drawerImageMap[itemId]) {
+                    portraitContainer.innerHTML = '<img src="' + window._drawerImageMap[itemId] +
+                        '" alt="衣物图片" style="width:100%;height:100%;object-fit:cover;" />';
+                }
+
+                if (textEl) {
+                    var contentSpan = textEl.querySelector('.typewriter-content');
+                    var cursorSpan = textEl.querySelector('.typewriter-cursor');
+                    if (contentSpan && cursorSpan) {
+                        startTypewriter(contentSpan, cursorSpan, item.desc);
+                    }
+                }
+            }
+
+            function backToList(drawerType) {
+                var listContainer = document.getElementById(drawerType === 'daily' ? 'dailyClothes' : 'intimateClothes');
+                var detailContainer = document.getElementById(drawerType === 'daily' ? 'dailyDetail' : 'intimateDetail');
+
+                if (!listContainer || !detailContainer) return;
+
+                listContainer.style.display = '';
+                detailContainer.classList.remove('active');
+
+                // ★★★ 恢复占位符图片 ★★★
+                var portraitContainer = document.getElementById(drawerType === 'daily' ? 'dailyDetailPortrait' :
+                    'intimateDetailPortrait');
+                if (portraitContainer) {
+                    var icon = drawerType === 'daily' ? '🧦' : '🖤';
+                    portraitContainer.innerHTML =
+                        '<div class="portrait-placeholder-sm" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:36px;color:hsla(320,8%,60%,0.2);">' +
+                        icon + '</div>';
+                }
+
+                var textEl = document.getElementById(drawerType === 'daily' ? 'dailyDetailText' : 'intimateDetailText');
+                if (textEl) {
+                    var contentSpan = textEl.querySelector('.typewriter-content');
+                    var cursorSpan = textEl.querySelector('.typewriter-cursor');
+                    if (contentSpan && cursorSpan) {
+                        if (window._typewriterTimer) {
+                            clearTimeout(window._typewriterTimer);
+                            window._typewriterTimer = null;
+                        }
+                        contentSpan.textContent = '';
+                        cursorSpan.className = 'typewriter-cursor';
+                    }
+                }
+            }
+
+            function startTypewriter(contentEl, cursorEl, text) {
+                if (!contentEl || !cursorEl) return;
+
+                if (window._typewriterTimer) {
+                    clearTimeout(window._typewriterTimer);
+                    window._typewriterTimer = null;
+                }
+
+                contentEl.textContent = '';
+                cursorEl.className = 'typewriter-cursor';
+
+                var index = 0;
+                var charInterval = 35;
+
+                function typeNext() {
+                    if (index < text.length) {
+                        contentEl.textContent += text.charAt(index);
+                        index++;
+                        window._typewriterTimer = setTimeout(typeNext, charInterval);
+                    } else {
+                        cursorEl.className = 'typewriter-cursor done';
+                        window._typewriterTimer = null;
+                    }
+                }
+                window._typewriterTimer = setTimeout(typeNext, 300);
+            }
+
+            document.querySelectorAll('.detail-back').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var drawerType = this.dataset.back;
+                    backToList(drawerType);
+                });
+            });
+
+            window.toggleDrawer = function(drawerType) {
+                var content = document.getElementById(drawerType === 'daily' ? 'drawerDaily' : 'drawerIntimate');
+                if (!content) return;
+
+                var wardrobeCard = document.getElementById('wardrobeCard');
+                if (!wardrobeCard) return;
+
+                if (content.classList.contains('open')) {
+                    content.classList.remove('open');
+                    var otherType = drawerType === 'daily' ? 'intimate' : 'daily';
+                    var otherContent = document.getElementById(otherType === 'daily' ? 'drawerDaily' : 'drawerIntimate');
+                    if (otherContent && otherContent.classList.contains('open')) {
+                        otherContent.classList.remove('open');
+                    }
+                    return;
+                }
+
+                var otherType = drawerType === 'daily' ? 'intimate' : 'daily';
+                var otherContent = document.getElementById(otherType === 'daily' ? 'drawerDaily' : 'drawerIntimate');
+                if (otherContent && otherContent.classList.contains('open')) {
+                    otherContent.classList.remove('open');
+                }
+
+                var listContainer = document.getElementById(drawerType === 'daily' ? 'dailyClothes' : 'intimateClothes');
+                if (listContainer && listContainer.children.length === 0) {
+                    var items = drawerType === 'daily' ? dailyClothes : intimateClothes;
+                    renderClothes(listContainer.id, items, drawerType);
+                }
+
+                content.classList.add('open');
+
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() {
+                        var targetScroll = content.offsetTop - 20;
+                        if (targetScroll < 0) targetScroll = 0;
+                        wardrobeCard.scrollTop = targetScroll;
+                    });
+                });
+            };
+
+            renderClothes('dailyClothes', dailyClothes, 'daily');
+            renderClothes('intimateClothes', intimateClothes, 'intimate');
+
+            window._backToList = backToList;
+            window._showDetail = showDetail;
+
+        })();
+
+        // ================================================================
+        // 6. 折叠
+        // ================================================================
+        (function() {
+            var foldBtn = document.getElementById('toggleFold');
+            var wrapper = document.getElementById('statusApp');
+            if (foldBtn && wrapper) {
+                var savedState = localStorage.getItem('statusbar_folded') === 'true';
+                if (savedState) wrapper.classList.add('collapsed');
+
+                foldBtn.addEventListener('click', function() {
+                    wrapper.classList.toggle('collapsed');
+                    localStorage.setItem('statusbar_folded', wrapper.classList.contains('collapsed') ? 'true' : 'false');
+                });
+            }
+        })();
+
+        // ================================================================
+        // 7. 图片放大
+        // ================================================================
+        (function() {
+            var overlay = document.getElementById('imageOverlay');
+            var overlayImg = document.getElementById('overlayImg');
+
+            window.openImage = function(src) {
+                if (src && overlay && overlayImg) {
+                    overlayImg.src = src;
+                    overlay.classList.add('open');
+                    document.body.style.overflow = 'hidden';
+                }
+            };
+
+            function closeImage() {
+                if (overlay) {
+                    overlay.classList.remove('open');
+                    document.body.style.overflow = '';
+                }
+            }
+            overlay.addEventListener('click', closeImage);
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && overlay.classList.contains('open')) closeImage();
+            });
+        })();
+    </script>
+
+</body>
+</html>
