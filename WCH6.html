@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>为了让我考上高校 · 状态栏</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+
+    <style>
+        /* ============================================================
+               【全局重置 · 王春凤专属 · 旧式信笺】
+               设计理念：这是一封被打开的信，记录着不该被记录的私密。
+               主色：宣纸黄底，暗红印泥，旧金边框，墨黑文字。
+               ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* 主色系：中式复古 */
+            --paper: 45, 18%, 88%;
+            --paper-dark: 42, 15%, 78%;
+            --ink: 0, 0%, 8%;
+            --ink-light: 0, 0%, 35%;
+            --cinnabar: 350, 55%, 40%;
+            --cinnabar-light: 350, 45%, 55%;
+            --old-gold: 38, 45%, 50%;
+            --old-gold-light: 38, 35%, 65%;
+            --bg-dark: 0, 0%, 6%;
+            --border-fade: 350, 35%, 25%;
+
+            /* 信笺尺寸参数 */
+            --envelope-padding: 24px 22px 18px;
+            --card-radius: 4px;
+            --border-width: 1.5px;
+        }
+
+        /* ===== 信笺容器 ===== */
+        .status-wrapper {
+            max-width: 620px;
+            margin: 1.4rem auto;
+            background: hsla(var(--paper), 0.92);
+            /* 背景图占位 —— 用户自行替换链接 */
+            background-image: url('【此处替换为你的状态栏背景图链接】');
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: overlay;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: var(--border-width) solid hsla(var(--cinnabar), 0.25);
+            border-radius: var(--card-radius);
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.35),
+                inset 0 0 0 1px hsla(var(--old-gold), 0.08);
+            padding: var(--envelope-padding);
+            font-family: 'Noto Serif SC', 'Inter', 'PingFang SC', serif;
+            color: hsl(var(--ink));
+            position: relative;
+            transition: all 0.3s ease;
+
+            /* 信纸纹理（极浅） */
+            background-image: url('【此处替换为你的状态栏背景图链接】'), repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.003) 2px,
+                    rgba(0, 0, 0, 0.003) 4px);
+            background-size: cover, 100% 100%;
+            background-blend-mode: overlay, normal;
+        }
+
+        /* 信封折痕效果（侧边暗影） */
+        .status-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            width: 80%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    rgba(0, 0, 0, 0.01) 48%,
+                    rgba(0, 0, 0, 0.015) 50%,
+                    rgba(0, 0, 0, 0.01) 52%,
+                    transparent 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .status-wrapper>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== 四角回形纹（清晰可见） ===== */
+        .corner-border {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .corner-border::before,
+        .corner-border::after {
+            content: '';
+            position: absolute;
+            background: hsla(var(--cinnabar), 0.12);
+            border: 1px solid hsla(var(--cinnabar), 0.08);
+        }
+        /* 左上 */
+        .corner-tl {
+            top: 8px;
+            left: 8px;
+        }
+        .corner-tl::before {
+            top: 0;
+            left: 0;
+            width: 10px;
+            height: 4px;
+            border-bottom: none;
+            border-right: none;
+        }
+        .corner-tl::after {
+            bottom: 0;
+            right: 0;
+            width: 4px;
+            height: 10px;
+            border-top: none;
+            border-left: none;
+        }
+        /* 右上 */
+        .corner-tr {
+            top: 8px;
+            right: 8px;
+        }
+        .corner-tr::before {
+            top: 0;
+            right: 0;
+            width: 10px;
+            height: 4px;
+            border-bottom: none;
+            border-left: none;
+        }
+        .corner-tr::after {
+            bottom: 0;
+            left: 0;
+            width: 4px;
+            height: 10px;
+            border-top: none;
+            border-right: none;
+        }
+        /* 左下 */
+        .corner-bl {
+            bottom: 8px;
+            left: 8px;
+        }
+        .corner-bl::before {
+            bottom: 0;
+            left: 0;
+            width: 10px;
+            height: 4px;
+            border-top: none;
+            border-right: none;
+        }
+        .corner-bl::after {
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 10px;
+            border-bottom: none;
+            border-left: none;
+        }
+        /* 右下 */
+        .corner-br {
+            bottom: 8px;
+            right: 8px;
+        }
+        .corner-br::before {
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 4px;
+            border-top: none;
+            border-left: none;
+        }
+        .corner-br::after {
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 10px;
+            border-bottom: none;
+            border-right: none;
+        }
+
+        /* ===== 顶部装饰线（信笺头） ===== */
+        .header-deco {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid hsla(var(--cinnabar), 0.08);
+            position: relative;
+        }
+        .header-deco .line-left,
+        .header-deco .line-right {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, hsla(var(--cinnabar), 0.12) 30%, hsla(var(--cinnabar), 0.12) 70%, transparent);
+        }
+        .header-deco .diamond {
+            width: 6px;
+            height: 6px;
+            background: hsla(var(--cinnabar), 0.10);
+            transform: rotate(45deg);
+            flex-shrink: 0;
+            border: 1px solid hsla(var(--cinnabar), 0.04);
+        }
+        .header-deco .dot {
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: hsla(var(--cinnabar), 0.06);
+            flex-shrink: 0;
+        }
+
+        /* ===== 主标题栏 ===== */
+        .header-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid hsla(var(--cinnabar), 0.04);
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .header-main .title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: hsl(var(--cinnabar));
+            text-shadow: 0 0 30px hsla(var(--cinnabar), 0.02);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header-main .title .seal {
+            display: inline-block;
+            font-size: 9px;
+            background: hsla(var(--cinnabar), 0.04);
+            border: 1px solid hsla(var(--cinnabar), 0.06);
+            padding: 1px 10px;
+            border-radius: 2px;
+            letter-spacing: 2px;
+            color: hsla(var(--cinnabar), 0.4);
+        }
+        .header-main .meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 10px;
+            color: hsl(var(--ink-light), 0.5);
+            letter-spacing: 0.5px;
+        }
+        .header-main .meta .loc {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .header-main .meta .loc svg {
+            width: 12px;
+            height: 12px;
+            fill: none;
+            stroke: hsla(var(--cinnabar), 0.2);
+            stroke-width: 1.5;
+        }
+        .header-main .meta .time {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .header-main .meta .time svg {
+            width: 12px;
+            height: 12px;
+            fill: none;
+            stroke: hsla(var(--cinnabar), 0.2);
+            stroke-width: 1.5;
+        }
+        .header-main .meta .dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: hsla(var(--cinnabar), 0.15);
+            display: inline-block;
+        }
+        .fold-btn {
+            background: none;
+            border: none;
+            color: hsl(var(--ink-light), 0.2);
+            cursor: pointer;
+            padding: 2px 4px;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s ease;
+            font-size: 12px;
+        }
+        .fold-btn:hover {
+            color: hsl(var(--ink-light), 0.4);
+        }
+        .fold-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform 0.3s ease;
+        }
+        .status-wrapper.collapsed .fold-btn svg {
+            transform: rotate(-90deg);
+        }
+        .status-wrapper.collapsed .body-content {
+            display: none;
+        }
+        .status-wrapper.collapsed .header-main {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .status-wrapper.collapsed .header-deco {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        /* ===== 主体内容（折叠控制） ===== */
+        .body-content {
+            display: block;
+        }
+
+        /* ===== 双栏网格（人物并排） ===== */
+        .person-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        /* ===== 人物卡片 ===== */
+        .person-card {
+            background: hsla(var(--paper-dark), 0.15);
+            border: 1px solid hsla(var(--cinnabar), 0.04);
+            border-radius: var(--card-radius);
+            padding: 14px 14px 10px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .person-card:hover {
+            border-color: hsla(var(--cinnabar), 0.08);
+            background: hsla(var(--paper-dark), 0.20);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+        }
+
+        .person-card .card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid hsla(var(--cinnabar), 0.02);
+        }
+
+        /* 头像：王春凤（竖版） */
+        .person-card .avatar {
+            flex-shrink: 0;
+            overflow: hidden;
+            border: 1px solid hsla(var(--cinnabar), 0.06);
+            background: hsla(var(--paper), 0.3);
+            transition: all 0.3s ease;
+            cursor: default;
+            width: 48px;
+            height: 64px;
+            border-radius: 2px;
+        }
+        .person-card .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+        }
+        .person-card .avatar .placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Noto Serif SC', serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: hsla(var(--cinnabar), 0.15);
+        }
+
+        /* 玩家头像（圆形） */
+        #userCard .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: hsla(var(--paper), 0.2);
+        }
+        #userCard .avatar .placeholder {
+            font-size: 16px;
+            color: hsla(var(--ink-light), 0.15);
+        }
+
+        .person-card .info {
+            flex: 1;
+            min-width: 0;
+        }
+        .person-card .info .name {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: hsl(var(--ink));
+            letter-spacing: 2px;
+        }
+        .person-card .info .name .sub {
+            font-size: 9px;
+            font-weight: 400;
+            color: hsl(var(--ink-light), 0.3);
+            letter-spacing: 1px;
+            margin-left: 4px;
+        }
+        .person-card .info .action-line {
+            font-size: 10px;
+            color: hsl(var(--ink-light), 0.4);
+            letter-spacing: 0.3px;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 1px;
+        }
+        .person-card .info .action-line svg {
+            width: 10px;
+            height: 10px;
+            fill: none;
+            stroke: hsla(var(--cinnabar), 0.12);
+            stroke-width: 1.5;
+            flex-shrink: 0;
+        }
+        .person-card .info .emotion-tag {
+            display: inline-block;
+            font-size: 9px;
+            color: hsla(var(--cinnabar), 0.5);
+            background: hsla(var(--cinnabar), 0.02);
+            border: 1px solid hsla(var(--cinnabar), 0.02);
+            padding: 0 8px;
+            border-radius: 2px;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        /* ===== 内心话区域（独立通栏） ===== */
+        .inner-section {
+            background: hsla(var(--paper-dark), 0.10);
+            border-left: 2px solid hsla(var(--cinnabar), 0.08);
+            border-right: 2px solid hsla(var(--cinnabar), 0.04);
+            padding: 10px 16px;
+            margin-bottom: 14px;
+            border-radius: var(--card-radius);
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .inner-section .inner-mark {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 20px;
+            color: hsla(var(--cinnabar), 0.06);
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .inner-section .inner-text {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 12px;
+            color: hsl(var(--ink-light), 0.65);
+            line-height: 1.7;
+            letter-spacing: 0.5px;
+            font-style: italic;
+            flex: 1;
+            min-height: 22px;
+        }
+        .inner-section .inner-label {
+            font-size: 8px;
+            color: hsla(var(--cinnabar), 0.12);
+            letter-spacing: 3px;
+            writing-mode: vertical-rl;
+            flex-shrink: 0;
+            padding: 2px 0;
+        }
+        /* 内心话装饰——两侧小点 */
+        .inner-section::before,
+        .inner-section::after {
+            content: '';
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: hsla(var(--cinnabar), 0.02);
+        }
+        .inner-section::before {
+            top: 4px;
+            left: 6px;
+        }
+        .inner-section::after {
+            bottom: 4px;
+            right: 6px;
+        }
+
+        /* ===== 数值与身体描述区域（左右并排） ===== */
+        .stats-body-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        /* ===== 数值区：竖排印章样式 ===== */
+        .stats-section {
+            background: hsla(var(--paper-dark), 0.08);
+            border: 1px solid hsla(var(--cinnabar), 0.02);
+            border-radius: var(--card-radius);
+            padding: 10px 12px 8px;
+        }
+        .stats-section .stats-title {
+            font-size: 8px;
+            letter-spacing: 4px;
+            color: hsla(var(--cinnabar), 0.12);
+            text-transform: uppercase;
+            padding-bottom: 4px;
+            border-bottom: 1px solid hsla(var(--cinnabar), 0.02);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .stats-section .stats-title .seal-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: hsla(var(--cinnabar), 0.04);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 3px 0;
+            border-bottom: 1px solid hsla(var(--cinnabar), 0.01);
+            font-size: 10.5px;
+        }
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        .stat-item .stat-label {
+            font-family: 'Noto Serif SC', serif;
+            color: hsl(var(--ink-light), 0.3);
+            letter-spacing: 1px;
+            font-weight: 400;
+        }
+        .stat-item .stat-value {
+            font-weight: 700;
+            font-size: 12px;
+            color: hsl(var(--cinnabar));
+            font-variant-numeric: tabular-nums;
+        }
+        .stat-item .stat-value.mask {
+            color: hsl(var(--ink-light), 0.6);
+        }
+        .stat-item .stat-value.dark {
+            color: hsl(var(--cinnabar-light));
+        }
+
+        /* ===== 身体描述区 ===== */
+        .body-section {
+            background: hsla(var(--paper-dark), 0.08);
+            border: 1px solid hsla(var(--cinnabar), 0.02);
+            border-radius: var(--card-radius);
+            padding: 10px 12px 8px;
+        }
+        .body-section .body-title {
+            font-size: 8px;
+            letter-spacing: 4px;
+            color: hsla(var(--cinnabar), 0.12);
+            text-transform: uppercase;
+            padding-bottom: 4px;
+            border-bottom: 1px solid hsla(var(--cinnabar), 0.02);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .body-section .body-title .seal-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: hsla(var(--cinnabar), 0.04);
+        }
+
+        .body-item {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            padding: 2px 0;
+            font-size: 9.5px;
+            color: hsl(var(--ink-light), 0.5);
+            line-height: 1.6;
+            border-bottom: 1px solid hsla(var(--cinnabar), 0.005);
+        }
+        .body-item:last-child {
+            border-bottom: none;
+        }
+        .body-item .body-tag {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 8px;
+            color: hsla(var(--cinnabar), 0.15);
+            letter-spacing: 1px;
+            flex-shrink: 0;
+            width: 28px;
+        }
+        .body-item .body-desc {
+            font-size: 9.5px;
+            color: hsl(var(--ink-light), 0.45);
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        /* ===== 底部亲密行为（通栏） ===== */
+        .intimacy-section {
+            background: hsla(var(--paper-dark), 0.05);
+            border-top: 1px solid hsla(var(--cinnabar), 0.02);
+            padding-top: 10px;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .intimacy-section .intimacy-label {
+            font-size: 8px;
+            letter-spacing: 4px;
+            color: hsla(var(--cinnabar), 0.10);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .intimacy-section .intimacy-label svg {
+            width: 12px;
+            height: 12px;
+            fill: none;
+            stroke: hsla(var(--cinnabar), 0.06);
+            stroke-width: 1.5;
+        }
+        .intimacy-section .intimacy-items {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .intimacy-section .intimacy-item {
+            font-size: 9px;
+            color: hsl(var(--ink-light), 0.25);
+            letter-spacing: 0.5px;
+            background: hsla(var(--paper), 0.2);
+            border: 1px solid hsla(var(--cinnabar), 0.02);
+            padding: 1px 12px;
+            border-radius: 20px;
+            line-height: 1.8;
+        }
+
+        /* ===== 折叠时隐藏 ===== */
+        .status-wrapper.collapsed .body-content {
+            display: none;
+        }
+
+        /* ===== 图片放大遮罩 ===== */
+        .img-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 999999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+        .img-overlay.open {
+            display: flex;
+            opacity: 1;
+        }
+        .img-overlay img {
+            max-width: 85vw;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            cursor: default;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        .img-overlay.open img {
+            transform: scale(1);
+        }
+        .img-overlay .close-hint {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 10px;
+            letter-spacing: 2px;
+            pointer-events: none;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 520px) {
+            .status-wrapper {
+                padding: 14px 12px 12px;
+                border-radius: 2px;
+                margin: 0.6rem auto;
+            }
+            .person-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            .stats-body-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            .header-main .title {
+                font-size: 11px;
+                letter-spacing: 2px;
+                gap: 6px;
+            }
+            .header-main .title .seal {
+                font-size: 7px;
+                padding: 0 6px;
+            }
+            .header-main .meta {
+                font-size: 8px;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .inner-section {
+                padding: 6px 10px;
+            }
+            .inner-section .inner-text {
+                font-size: 10px;
+            }
+            .inner-section .inner-mark {
+                font-size: 14px;
+            }
+            .inner-section .inner-label {
+                font-size: 6px;
+            }
+            .person-card {
+                padding: 10px 10px 8px;
+            }
+            .person-card .card-header {
+                gap: 8px;
+            }
+            .person-card .avatar {
+                width: 40px;
+                height: 54px;
+            }
+            #userCard .avatar {
+                width: 36px;
+                height: 36px;
+            }
+            .person-card .info .name {
+                font-size: 11px;
+            }
+            .person-card .info .action-line {
+                font-size: 9px;
+            }
+            .person-card .info .emotion-tag {
+                font-size: 8px;
+            }
+            .stats-section {
+                padding: 8px 8px 6px;
+            }
+            .stat-item {
+                font-size: 9px;
+            }
+            .stat-item .stat-value {
+                font-size: 10px;
+            }
+            .body-section {
+                padding: 8px 8px 6px;
+            }
+            .body-item {
+                font-size: 8.5px;
+            }
+            .body-item .body-tag {
+                font-size: 7px;
+                width: 24px;
+            }
+            .body-item .body-desc {
+                font-size: 8.5px;
+            }
+            .intimacy-section {
+                padding-top: 8px;
+                gap: 8px;
+            }
+            .intimacy-section .intimacy-label {
+                font-size: 7px;
+            }
+            .intimacy-section .intimacy-item {
+                font-size: 8px;
+                padding: 0 10px;
+            }
+            .corner-border {
+                display: none;
+            }
+            .header-deco .line-left,
+            .header-deco .line-right {
+                flex: 0.5;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .status-wrapper {
+                padding: 10px 8px 8px;
+            }
+            .header-main .title {
+                font-size: 9px;
+                letter-spacing: 1px;
+            }
+            .header-main .meta {
+                font-size: 7px;
+            }
+            .person-card .info .name {
+                font-size: 10px;
+            }
+            .person-card .avatar {
+                width: 34px;
+                height: 46px;
+            }
+            #userCard .avatar {
+                width: 30px;
+                height: 30px;
+            }
+            .inner-section .inner-text {
+                font-size: 9px;
+            }
+            .stat-item {
+                font-size: 8px;
+            }
+            .stat-item .stat-value {
+                font-size: 9px;
+            }
+            .body-item .body-desc {
+                font-size: 7.5px;
+            }
+            .intimacy-section .intimacy-item {
+                font-size: 7px;
+                padding: 0 8px;
+            }
+        }
+
+        @media (min-width: 600px) {
+            .status-wrapper {
+                padding: 28px 26px 22px;
+                border-radius: 4px;
+            }
+            .person-card .avatar {
+                width: 56px;
+                height: 74px;
+            }
+            #userCard .avatar {
+                width: 52px;
+                height: 52px;
+            }
+            .inner-section .inner-text {
+                font-size: 13px;
+            }
+            .stat-item {
+                font-size: 11px;
+            }
+            .stat-item .stat-value {
+                font-size: 13px;
+            }
+            .body-item .body-desc {
+                font-size: 10px;
+            }
+            .header-main .title {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================================
+    状态栏主体
+    ============================================================ -->
+    <div class="status-wrapper" id="statusApp">
+        <!-- 数据容器 -->
+        <div id="status-data" style="display: none;">$1</div>
+
+        <!-- 四角回形纹 -->
+        <div class="corner-border corner-tl"></div>
+        <div class="corner-border corner-tr"></div>
+        <div class="corner-border corner-bl"></div>
+        <div class="corner-border corner-br"></div>
+
+        <!-- 顶部装饰线 -->
+        <div class="header-deco">
+            <span class="line-left"></span>
+            <span class="diamond"></span>
+            <span class="dot"></span>
+            <span class="diamond"></span>
+            <span class="dot"></span>
+            <span class="diamond"></span>
+            <span class="line-right"></span>
+        </div>
+
+        <!-- 主标题栏 -->
+        <div class="header-main">
+            <div class="title">
+                为了让我考上高校
+                <span class="seal">王春凤</span>
+            </div>
+            <div class="meta">
+                <span class="loc">
+                    <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span id="display-loc">公寓客厅</span>
+                </span>
+                <span class="dot"></span>
+                <span class="time">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span id="display-time">下午</span>
+                </span>
+                <button class="fold-btn" id="toggleFold" aria-label="折叠状态栏">
+                    <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- 主体内容（折叠控制） -->
+        <div class="body-content">
+
+            <!-- 人物网格 -->
+            <div class="person-grid">
+                <!-- 王春凤 -->
+                <div class="person-card" id="linCard">
+                    <div class="card-header">
+                        <div class="avatar" id="linAvatar"><span class="placeholder">凤</span></div>
+                        <div class="info">
+                            <div class="name">
+                                王春凤
+                                <span class="sub">母亲</span>
+                            </div>
+                            <div class="action-line">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                                <span id="linAction">正在...</span>
+                            </div>
+                            <div class="emotion-tag" id="linEmotion">端庄严肃</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- {{user}} -->
+                <div class="person-card" id="userCard">
+                    <div class="card-header">
+                        <div class="avatar" id="userAvatar"><span class="placeholder">子</span></div>
+                        <div class="info">
+                            <div class="name">
+                                {{user}}
+                                <span class="sub">儿子</span>
+                            </div>
+                            <div class="action-line">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                                <span id="userAction">正在...</span>
+                            </div>
+                            <div class="emotion-tag" id="userMind" style="color:hsla(0,0%,35%,0.3);border-color:hsla(0,0%,35%,0.02);">正常</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 内心话（独立通栏） -->
+            <div class="inner-section">
+                <span class="inner-mark">「</span>
+                <span class="inner-text" id="linInner">为了他的前途……就这一次……</span>
+                <span class="inner-label">心 声</span>
+            </div>
+
+            <!-- 数值 + 身体描述 -->
+            <div class="stats-body-grid">
+                <!-- 五维数值 -->
+                <div class="stats-section">
+                    <div class="stats-title">
+                        <span class="seal-dot"></span> 五维
+                        <span class="seal-dot"></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">母职面具</span>
+                        <span class="stat-value mask" id="linMaskVal">62</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">沉沦值</span>
+                        <span class="stat-value dark" id="linDesireVal">18</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">欲求值</span>
+                        <span class="stat-value dark" id="linLustVal">32</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">羞耻值</span>
+                        <span class="stat-value mask" id="linShameVal">45</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">身体诚实度</span>
+                        <span class="stat-value dark" id="linHonestyVal">28</span>
+                    </div>
+                </div>
+
+                <!-- 身体描述 -->
+                <div class="body-section">
+                    <div class="body-title">
+                        <span class="seal-dot"></span> 身体
+                        <span class="seal-dot"></span>
+                    </div>
+                    <div class="body-item">
+                        <span class="body-tag">胸</span>
+                        <span class="body-desc" id="linBreast">沉甸甸地坠着，乳晕发胀</span>
+                    </div>
+                    <div class="body-item">
+                        <span class="body-tag">穴</span>
+                        <span class="body-desc" id="linPussy">内裤中心湿透了，黏在皮肤上</span>
+                    </div>
+                    <div class="body-item">
+                        <span class="body-tag">蒂</span>
+                        <span class="body-desc" id="linClit">包皮里发胀，蹭到内裤时会颤</span>
+                    </div>
+                    <div class="body-item">
+                        <span class="body-tag">肛</span>
+                        <span class="body-desc" id="linAsshole">干燥，随着呼吸轻轻收缩</span>
+                    </div>
+                    <div class="body-item" style="border-bottom:none;">
+                        <span class="body-tag">衣</span>
+                        <span class="body-desc" id="linClothing">蓝色高开叉旗袍，盘扣松了一颗</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部亲密行为 -->
+            <div class="intimacy-section">
+                <div class="intimacy-label">
+                    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    最近亲密
+                </div>
+                <div class="intimacy-items">
+                    <span class="intimacy-item" id="linIntimacy1">无</span>
+                    <span class="intimacy-item" id="linIntimacy2">无</span>
+                </div>
+            </div>
+
+        </div><!-- /body-content -->
+    </div><!-- /status-wrapper -->
+
+    <!-- 图片放大遮罩 -->
+    <div class="img-overlay" id="imageOverlay">
+        <img id="overlayImg" src="" alt="头像" />
+        <div class="close-hint">✦ 点击任意位置关闭 ✦</div>
+    </div>
+
+    <!-- ============================================================
+    JavaScript 引擎
+    ============================================================ -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ===== 1. 数据获取 =====
+            const dataContainer = document.getElementById('status-data');
+            if (!dataContainer) return;
+            const rawYaml = dataContainer.textContent.trim();
+
+            function extractVal(lines, key) {
+                for (let line of lines) {
+                    let t = line.trim();
+                    if (t.startsWith(key + ':')) {
+                        let val = t.substring(key.length + 1).trim();
+                        if (val.startsWith('"') && val.endsWith('"')) val = val.substring(1, val.length - 1);
+                        if (val.startsWith("'") && val.endsWith("'")) val = val.substring(1, val.length - 1);
+                        return val;
+                    }
+                }
+                return '';
+            }
+
+            // ===== 2. 智能解析（NPC位置匹配，玩家名字特征匹配） =====
+            function parseAllBlocks(lines) {
+                var blocks = [];
+                var currentBlock = null;
+                var blockStart = -1;
+
+                var m = {
+                    name: '名字',
+                    avatar: '头像',
+                    action: '行动',
+                    inner: '内心',
+                    emotion: '情绪状态',
+                    clothing: '穿搭',
+                    mask: '母职面具',
+                    desire: '沉沦值',
+                    lust: '欲求值',
+                    shame: '羞耻值',
+                    honesty: '身体诚实度',
+                    breast: '胸部',
+                    pussy: '小穴',
+                    clit: '阴蒂',
+                    asshole: '肛门',
+                    mind: '精神状态',
+                    cock: '阳具',
+                    balls: '睾丸',
+                    intimacy: '亲密行为'
+                };
+
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i];
+                    if (line.trim().startsWith('- 用户:')) {
+                        if (currentBlock) blocks.push(currentBlock);
+                        currentBlock = {};
+                        blockStart = i;
+                        continue;
+                    }
+
+                    if (currentBlock && blockStart !== -1) {
+                        var tLine = line.trim();
+                        if (i > blockStart && !line.startsWith(' ') && tLine !== '' && !tLine.startsWith('-')) {
+                            blockStart = -1;
+                            continue;
+                        }
+
+                        if (tLine.startsWith(m.name + ':')) currentBlock.name = extractVal([line], m.name);
+                        else if (tLine.startsWith(m.avatar + ':')) currentBlock.avatar = extractVal([line], m.avatar);
+                        else if (tLine.startsWith(m.action + ':')) currentBlock.action = extractVal([line], m.action);
+                        else if (tLine.startsWith(m.inner + ':')) currentBlock.inner = extractVal([line], m.inner);
+                        else if (tLine.startsWith(m.emotion + ':')) currentBlock.emotion = extractVal([line], m.emotion);
+                        else if (tLine.startsWith(m.mask + ':')) currentBlock.mask = parseInt(extractVal([line], m.mask) ||
+                            0);
+                        else if (tLine.startsWith(m.desire + ':')) currentBlock.desire = parseInt(extractVal([line], m
+                            .desire) || 0);
+                        else if (tLine.startsWith(m.lust + ':')) currentBlock.lust = parseInt(extractVal([line], m.lust) ||
+                            0);
+                        else if (tLine.startsWith(m.shame + ':')) currentBlock.shame = parseInt(extractVal([line], m
+                            .shame) || 0);
+                        else if (tLine.startsWith(m.honesty + ':')) currentBlock.honesty = parseInt(extractVal([line], m
+                            .honesty) || 0);
+                        else if (tLine.startsWith(m.breast + ':')) currentBlock.breast = extractVal([line], m.breast);
+                        else if (tLine.startsWith(m.pussy + ':')) currentBlock.pussy = extractVal([line], m.pussy);
+                        else if (tLine.startsWith(m.clit + ':')) currentBlock.clit = extractVal([line], m.clit);
+                        else if (tLine.startsWith(m.asshole + ':')) currentBlock.asshole = extractVal([line], m.asshole);
+                        else if (tLine.startsWith(m.clothing + ':')) currentBlock.clothing = extractVal([line], m
+                        .clothing);
+                        else if (tLine.startsWith(m.mind + ':')) currentBlock.mind = extractVal([line], m.mind);
+                        else if (tLine.startsWith(m.cock + ':')) currentBlock.cock = extractVal([line], m.cock);
+                        else if (tLine.startsWith(m.balls + ':')) currentBlock.balls = extractVal([line], m.balls);
+
+                        if (tLine.startsWith('- ' + m.intimacy + ':')) {
+                            var val = tLine.substring(('- ' + m.intimacy + ':').length).trim();
+                            if (val.startsWith('"') && val.endsWith('"')) val = val.substring(1, val.length - 1);
+                            if (!currentBlock.intimacy) currentBlock.intimacy = [];
+                            currentBlock.intimacy.push(val || '无');
+                        }
+                    }
+                }
+                if (currentBlock) blocks.push(currentBlock);
+
+                function fillDefaults(block) {
+                    if (!block) return {};
+                    if (!block.name) block.name = '未知';
+                    if (!block.action) block.action = '...';
+                    if (!block.inner) block.inner = '...';
+                    if (!block.emotion) block.emotion = '平静';
+                    if (!block.clothing) block.clothing = '常服';
+                    if (!block.breast) block.breast = '正常';
+                    if (!block.pussy) block.pussy = '正常';
+                    if (!block.clit) block.clit = '正常';
+                    if (!block.asshole) block.asshole = '正常';
+                    if (!block.mind) block.mind = '正常';
+                    if (!block.cock) block.cock = '平静';
+                    if (!block.balls) block.balls = '正常';
+                    if (!block.intimacy || block.intimacy.length === 0) block.intimacy = ['无', '无'];
+                    // 数值默认
+                    if (block.mask === undefined || isNaN(block.mask)) block.mask = 60;
+                    if (block.desire === undefined || isNaN(block.desire)) block.desire = 10;
+                    if (block.lust === undefined || isNaN(block.lust)) block.lust = 15;
+                    if (block.shame === undefined || isNaN(block.shame)) block.shame = 20;
+                    if (block.honesty === undefined || isNaN(block.honesty)) block.honesty = 10;
+                    return block;
+                }
+
+                var userBlock = null;
+                var npcBlock = null;
+
+                for (var j = 0; j < blocks.length; j++) {
+                    var block = blocks[j];
+                    if (block.name === '{{user}}' || block.name === '你' || block.name === '玩家') {
+                        userBlock = fillDefaults(block);
+                        break;
+                    }
+                }
+
+                if (!userBlock && blocks.length > 0) {
+                    userBlock = fillDefaults(blocks[blocks.length - 1]);
+                }
+
+                if (blocks.length > 0) {
+                    if (blocks[0] === userBlock && blocks.length > 1) {
+                        npcBlock = fillDefaults(blocks[1]);
+                    } else {
+                        npcBlock = fillDefaults(blocks[0]);
+                    }
+                }
+
+                if (npcBlock === userBlock && npcBlock) {
+                    npcBlock = JSON.parse(JSON.stringify(npcBlock));
+                    npcBlock.name = '王春凤';
+                }
+
+                return { npc: npcBlock, user: userBlock };
+            }
+
+            // ===== 3. 解析与渲染 =====
+            const lines = rawYaml.split('\n');
+            const dateTime = extractVal(lines, '日期和时间') || '...';
+            const location = extractVal(lines, '地点') || '...';
+
+            const result = parseAllBlocks(lines);
+            const linData = result.npc || {
+                name: '王春凤',
+                action: '...',
+                inner: '...',
+                emotion: '端庄严肃',
+                mask: 60,
+                desire: 10,
+                lust: 15,
+                shame: 20,
+                honesty: 10,
+                breast: '正常',
+                pussy: '正常',
+                clit: '正常',
+                asshole: '正常',
+                clothing: '常服',
+                intimacy: ['无', '无']
+            };
+            const userData = result.user || {
+                name: '{{user}}',
+                action: '...',
+                mind: '正常',
+                cock: '平静',
+                balls: '正常',
+                clothing: '常服',
+                intimacy: ['无', '无']
+            };
+
+            function setText(id, text) {
+                const el = document.getElementById(id);
+                if (el) el.textContent = text || '...';
+            }
+
+            document.getElementById('display-time').textContent = dateTime;
+            document.getElementById('display-loc').textContent = location;
+
+            // 王春凤
+            setText('linAction', linData.action || '...');
+            setText('linInner', linData.inner || '...');
+            setText('linEmotion', linData.emotion || '端庄严肃');
+            setText('linMaskVal', linData.mask !== undefined ? linData.mask : 60);
+            setText('linDesireVal', linData.desire !== undefined ? linData.desire : 10);
+            setText('linLustVal', linData.lust !== undefined ? linData.lust : 15);
+            setText('linShameVal', linData.shame !== undefined ? linData.shame : 20);
+            setText('linHonestyVal', linData.honesty !== undefined ? linData.honesty : 10);
+            setText('linBreast', linData.breast || '正常');
+            setText('linPussy', linData.pussy || '正常');
+            setText('linClit', linData.clit || '正常');
+            setText('linAsshole', linData.asshole || '正常');
+            setText('linClothing', linData.clothing || '常服');
+
+            // 头像
+            const linAvatarDiv = document.getElementById('linAvatar');
+            if (linData.avatar) {
+                linAvatarDiv.innerHTML = `<img src="${linData.avatar}" alt="王春凤" />`;
+                const img = linAvatarDiv.querySelector('img');
+                if (img) img.addEventListener('click', function(e) { e.stopPropagation();
+                    openImage(this.src); });
+            } else {
+                linAvatarDiv.innerHTML = `<span class="placeholder">凤</span>`;
+            }
+
+            // 亲密
+            const linInti1 = document.getElementById('linIntimacy1');
+            const linInti2 = document.getElementById('linIntimacy2');
+            if (linInti1 && linData.intimacy && linData.intimacy.length > 0) {
+                linInti1.textContent = linData.intimacy[0] || '无';
+                if (linInti2) linInti2.textContent = linData.intimacy[1] || '无';
+            }
+
+            // {{user}}
+            setText('userAction', userData.action || '...');
+            setText('userMind', userData.mind || '正常');
+
+            const userAvatarDiv = document.getElementById('userAvatar');
+            if (userData.avatar) {
+                userAvatarDiv.innerHTML = `<img src="${userData.avatar}" alt="{{user}}" />`;
+                const img = userAvatarDiv.querySelector('img');
+                if (img) img.addEventListener('click', function(e) { e.stopPropagation();
+                    openImage(this.src); });
+            } else {
+                userAvatarDiv.innerHTML = `<span class="placeholder">子</span>`;
+            }
+
+            // ===== 4. 折叠功能 =====
+            const foldBtn = document.getElementById('toggleFold');
+            const wrapper = document.getElementById('statusApp');
+            if (foldBtn && wrapper) {
+                const savedState = localStorage.getItem('statusbar_folded_wcf') === 'true';
+                if (savedState) wrapper.classList.add('collapsed');
+
+                foldBtn.addEventListener('click', function() {
+                    wrapper.classList.toggle('collapsed');
+                    localStorage.setItem('statusbar_folded_wcf', wrapper.classList.contains('collapsed') ?
+                        'true' : 'false');
+                });
+            }
+
+            // ===== 5. 图片放大功能 =====
+            const overlay = document.getElementById('imageOverlay');
+            const overlayImg = document.getElementById('overlayImg');
+            window.openImage = function(src) {
+                if (src && overlay && overlayImg) {
+                    overlayImg.src = src;
+                    overlay.classList.add('open');
+                    document.body.style.overflow = 'hidden';
+                }
+            };
+
+            function closeImage() {
+                if (overlay) {
+                    overlay.classList.remove('open');
+                    document.body.style.overflow = '';
+                }
+            }
+            overlay.addEventListener('click', closeImage);
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && overlay.classList.contains('open')) closeImage();
+            });
+
+            console.log('📜 王春凤状态栏已加载（旧式信笺风格）');
+        })();
+    </script>
+
+</body>
+</html>
