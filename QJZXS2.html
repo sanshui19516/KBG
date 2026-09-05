@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>选项栏 · 转校生</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ==========================================
+           body：完全透明，露出酒馆壁纸
+           ========================================== */
+        body {
+            background: transparent;
+            padding: 4px 0;
+            font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+
+        /* ==========================================
+           配色：继承星宫状态栏
+           ========================================== */
+        :root {
+            --gold: hsl(35, 60%, 55%);
+            --gold-bright: hsl(35, 70%, 70%);
+            --gold-dim: hsla(35, 60%, 55%, 0.2);
+            --gold-glow: hsla(35, 60%, 55%, 0.06);
+            --bg-glass: hsla(240, 20%, 8%, 0.55);
+            --text-light: #ffffff;
+            --radius: 12px;
+            --blur: 16px;
+        }
+
+        /* ===== 选项模块（透明容器） ===== */
+        .options-module {
+            width: 100%;
+            max-width: 580px;
+            margin: 0 auto;
+            position: relative;
+            border-radius: 32px;
+            border: 1px solid var(--gold-dim);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25), inset 0 0 0 1px hsla(35, 60%, 55%, 0.04);
+            padding: 18px 16px 16px;
+            color: var(--text-light);
+            overflow: hidden;
+            animation: fadeUp 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+            min-height: 60px;
+            /* 关键：容器本身透明，毛玻璃背景由 ::before 承载 */
+            background: transparent;
+        }
+
+        /* ===== 毛玻璃背景（状态栏同款） ===== */
+        .options-module::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--bg-glass);
+            backdrop-filter: blur(var(--blur)) saturate(1.6);
+            -webkit-backdrop-filter: blur(var(--blur)) saturate(1.6);
+            border-radius: 32px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ===== 金色光晕 ===== */
+        .options-module::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, var(--gold-glow), transparent 60%);
+            animation: shimmer 12s ease-in-out infinite alternate;
+            z-index: 0;
+            pointer-events: none;
+            border-radius: 32px;
+        }
+        @keyframes shimmer {
+            0% { transform: translate(-5%, -5%) scale(1); opacity: 0.3; }
+            100% { transform: translate(5%, 5%) scale(1.1); opacity: 0.8; }
+        }
+        @keyframes fadeUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .options-module > * { position: relative; z-index: 1; }
+
+        /* ===== 顶栏 ===== */
+        .options-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--gold-dim);
+            margin-bottom: 14px;
+        }
+
+        .options-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+        }
+        .options-title svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: var(--gold);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .options-hint {
+            font-size: 11px;
+            color: hsla(35, 60%, 55%, 0.35);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .options-hint svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* ===== 三列网格 ===== */
+        .options-inner {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 2px 0;
+        }
+
+        /* ===== 选项按钮（纯透明 + 毛玻璃质感） ===== */
+        .opt-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 8px;
+            background: hsla(240, 20%, 8%, 0.3);
+            border: 1px solid hsla(35, 60%, 55%, 0.1);
+            border-radius: var(--radius);
+            color: var(--text-light);
+            font-size: 12px;
+            font-weight: 450;
+            line-height: 1.4;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            gap: 4px;
+            position: relative;
+            font-family: inherit;
+            text-shadow: 0 1px 8px rgba(0,0,0,0.3);
+        }
+
+        .opt-btn .badge {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: hsla(35, 60%, 55%, 0.25);
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
+        }
+
+        .opt-btn:hover {
+            background: hsla(35, 60%, 55%, 0.08);
+            border-color: hsla(35, 60%, 55%, 0.3);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 0 40px hsla(35, 60%, 55%, 0.05);
+        }
+        .opt-btn:hover .badge {
+            color: var(--gold);
+        }
+
+        .opt-btn:active {
+            transform: scale(0.94) translateY(0);
+            transition-duration: 0.05s;
+        }
+
+        .opt-btn.disabled {
+            opacity: 0.35;
+            pointer-events: none;
+            transform: none !important;
+        }
+
+        .options-empty {
+            color: hsla(35, 60%, 55%, 0.15);
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-align: center;
+            width: 100%;
+            padding: 10px 0;
+            grid-column: 1 / -1;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 520px) {
+            .options-inner { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 440px) {
+            .options-inner { grid-template-columns: 1fr; }
+            .opt-btn {
+                flex-direction: row;
+                justify-content: flex-start;
+                padding: 12px 16px;
+                text-align: left;
+            }
+            .opt-btn .badge { margin-right: 8px; }
+        }
+
+        @media (max-width: 480px) {
+            .options-module { padding: 12px 10px 14px; border-radius: 24px; }
+            .options-title { font-size: 12px; }
+            .options-hint { font-size: 10px; }
+        }
+
+        @media (min-width: 600px) {
+            .options-module { max-width: 620px; padding: 22px 20px 20px; }
+            .opt-btn { padding: 16px 10px; font-size: 14px; }
+        }
+
+        @media (min-width: 900px) {
+            .options-module { max-width: 660px; padding: 24px 22px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="options-module" id="options-root">
+    <div class="options-header">
+        <div class="options-title">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            选择你的行动
+        </div>
+        <div class="options-hint">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12.01" y2="16"/><line x1="12" y1="12" x2="12" y2="8"/></svg>
+            点击触发
+        </div>
+    </div>
+    <div class="options-inner" id="options-list"></div>
+</div>
+
+<!-- 外链模式专用隐藏容器 -->
+<div id="options-data" style="display:none;">$1</div>
+
+<script>
+(function() {
+    'use strict';
+
+    var dataContainer = document.getElementById('options-data');
+    var raw = dataContainer ? dataContainer.textContent.trim() : '$1'.trim();
+
+    var container = document.getElementById('options-list');
+    if (!container) return;
+
+    function sendOption(text) {
+        if (!text) return;
+        if (typeof triggerSlash === 'function') {
+            triggerSlash('/send ' + text + '|/trigger');
+            return;
+        }
+        var textarea = document.querySelector('#send_textarea') ||
+            (window.parent && window.parent.document.querySelector('#send_textarea'));
+        if (textarea) {
+            textarea.value = text;
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+            var sendBtn = document.querySelector('#send_button') || document.querySelector('#send_btn');
+            if (sendBtn) setTimeout(function() { sendBtn.click(); }, 80);
+        }
+    }
+
+    var items = raw ? raw.split('|').map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; }) : [];
+
+    if (items.length === 0) {
+        container.innerHTML = '<div class="options-empty">✦ 等待行动选项 ✦</div>';
+        return;
+    }
+
+    var html = '';
+    var badges = ['①', '②', '③'];
+
+    items.forEach(function(opt, index) {
+        if (index >= 3) return;
+        var safeText = opt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        html += '<button class="opt-btn" data-opt="' + safeText + '"><span class="badge">' + badges[index] + '</span><span>' + safeText + '</span></button>';
+    });
+
+    container.innerHTML = html;
+
+    container.addEventListener('click', function(e) {
+        var btn = e.target.closest('.opt-btn');
+        if (!btn || btn.classList.contains('disabled')) return;
+        var text = btn.getAttribute('data-opt');
+        if (text) {
+            var allBtns = document.querySelectorAll('.opt-btn');
+            allBtns.forEach(function(b) { b.classList.add('disabled'); });
+            sendOption(text);
+            setTimeout(function() {
+                var allBtns2 = document.querySelectorAll('.opt-btn');
+                allBtns2.forEach(function(b) { b.classList.remove('disabled'); });
+            }, 5000);
+        }
+    });
+
+    container.addEventListener('touchstart', function(e) {
+        var btn = e.target.closest('.opt-btn');
+        if (!btn) return;
+        btn.style.transition = 'none';
+        btn.style.transform = 'scale(0.96)';
+        setTimeout(function() { btn.style.transition = ''; btn.style.transform = ''; }, 100);
+    }, { passive: true });
+
+    console.log('🌟 透明毛玻璃选项栏已加载');
+})();
+</script>
+
+</body>
+</html>
