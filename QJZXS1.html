@@ -1,0 +1,2760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>星宫 · 状态栏</title>
+
+    <!-- 花体字体 -->
+    <style>
+        @font-face {
+            font-family: "ZSFT-ga";
+            src: url("https://fontsapi.zeoseven.com/ga/main.woff2") format("woff2");
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+        }
+
+        body {
+            font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+
+        /* ==========================================
+           全局重置
+           ========================================== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: auto;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            background: transparent;
+            padding: 20px;
+        }
+
+        /* ==========================================
+           主容器
+           ========================================== */
+
+        .status-container {
+            width: 100%;
+            max-width: 520px;
+            border-radius: 32px;
+            border: 1px solid hsla(0, 0%, 100%, 0.06);
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+            padding: 20px 20px 16px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.4s ease;
+            background-image: url('https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E7%8A%B6%E6%80%81%E6%A0%8F-%E6%98%9F%E5%AE%AB%E5%A4%B4%E5%83%8F.jpg');
+            background-size: cover;
+            background-position: center 30%;
+            background-repeat: no-repeat;
+        }
+
+        .status-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: hsla(240, 20%, 8%, 0.55);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .status-container::after {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            background: radial-gradient(ellipse at 30% 20%, hsla(35, 70%, 55%, 0.04), transparent 60%);
+            animation: shimmer 10s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translate(-5%, -5%) scale(1);
+                opacity: 0.5;
+            }
+            100% {
+                transform: translate(5%, 5%) scale(1.15);
+                opacity: 1;
+            }
+        }
+
+        .status-container>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ==========================================
+           折叠状态
+           ========================================== */
+        .status-container.collapsed .scene-banner,
+        .status-container.collapsed .inner-voice,
+        .status-container.collapsed .tabs,
+        .status-container.collapsed .tab-content {
+            display: none;
+        }
+
+        .status-container.collapsed .header {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .status-container.collapsed .fold-btn {
+            transform: rotate(-90deg);
+        }
+
+        .status-container.collapsed .header-title {
+            display: none;
+        }
+
+        .status-container.collapsed .header-info .scene,
+        .status-container.collapsed .header-info .time,
+        .status-container.collapsed .header-info .dot {
+            display: none;
+        }
+
+        /* ==========================================
+           折叠时花体标题（默认隐藏）
+           ========================================== */
+        .header-title-collapsed {
+            display: none;
+            font-family: "ZSFT-ga", "Georgia", serif;
+            font-size: 22px;
+            font-weight: 400;
+            letter-spacing: 4px;
+            color: hsl(35, 70%, 70%);
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5), 0 0 60px hsla(35, 60%, 50%, 0.06);
+            position: relative;
+            padding: 0 8px;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .status-container.collapsed .header-title-collapsed {
+            display: flex;
+        }
+
+        /* 左侧装饰线条 */
+        .header-title-collapsed .line-left,
+        .header-title-collapsed .line-right {
+            flex: 1;
+            height: 1px;
+            min-width: 18px;
+            background: linear-gradient(90deg, transparent, hsl(35, 50%, 40%, 0.3));
+            position: relative;
+        }
+
+        .header-title-collapsed .line-right {
+            background: linear-gradient(90deg, hsl(35, 50%, 40%, 0.3), transparent);
+        }
+
+        /* 两端角花装饰 (SVG) */
+        .header-title-collapsed .ornament-left,
+        .header-title-collapsed .ornament-right {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            opacity: 0.5;
+        }
+
+        .header-title-collapsed .ornament-left svg,
+        .header-title-collapsed .ornament-right svg {
+            width: 100%;
+            height: 100%;
+            stroke: hsl(35, 60%, 55%);
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        .header-title-collapsed .title-text {
+            white-space: nowrap;
+            background: linear-gradient(135deg, hsl(35, 70%, 70%), hsl(35, 40%, 50%));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ==========================================
+           顶部栏
+           ========================================== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 14px;
+            border-bottom: 1px solid hsla(0, 0%, 100%, 0.06);
+            margin-bottom: 14px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+            min-height: 44px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .header-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: hsl(35, 60%, 60%);
+            text-transform: uppercase;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+        }
+
+        .header-title svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: hsl(35, 60%, 50%);
+            stroke-width: 2;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 12px;
+            font-weight: 500;
+            color: hsla(0, 0%, 100%, 0.5);
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+            flex-shrink: 0;
+        }
+
+        .header-info .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: hsl(35, 60%, 55%);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 0.2;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.5);
+            }
+        }
+
+        .header-info .scene {
+            color: hsla(0, 0%, 100%, 0.75);
+        }
+        .header-info .time {
+            color: hsla(0, 0%, 100%, 0.4);
+        }
+
+        .fold-btn {
+            background: none;
+            border: none;
+            color: hsla(0, 0%, 100%, 0.25);
+            cursor: pointer;
+            padding: 4px;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .fold-btn:hover {
+            color: hsla(0, 0%, 100%, 0.5);
+        }
+
+        .fold-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform 0.3s ease;
+        }
+
+        /* ==========================================
+           场景配图横幅
+           ========================================== */
+        .scene-banner {
+            width: 100%;
+            height: 80px;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 14px;
+            flex-shrink: 0;
+            border: 1px solid hsla(0, 0%, 100%, 0.04);
+            background: hsla(0, 0%, 100%, 0.02);
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .scene-banner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .scene-banner .placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: hsla(0, 0%, 100%, 0.06);
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        /* ==========================================
+           内心话（竖图矩形头像）
+           ========================================== */
+        .inner-voice {
+            background: linear-gradient(135deg, hsla(35, 60%, 20%, 0.2), hsla(35, 40%, 15%, 0.08));
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 18px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            border-left: 4px solid hsl(35, 60%, 50%);
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .inner-voice .avatar {
+            flex-shrink: 0;
+            width: 56px;
+            height: 76px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid hsla(35, 60%, 55%, 0.25);
+            background: hsla(35, 60%, 55%, 0.1);
+            transition: all 0.4s ease;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .inner-voice .avatar:hover {
+            border-color: hsla(35, 60%, 55%, 0.5);
+            transform: scale(1.04);
+        }
+
+        .inner-voice .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .inner-voice .voice-content {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .inner-voice .text {
+            font-size: 15px;
+            line-height: 1.7;
+            color: hsla(0, 0%, 100%, 0.92);
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .inner-voice .text .quote-mark {
+            color: hsl(35, 60%, 45%);
+            font-weight: 700;
+            font-size: 18px;
+            font-family: Georgia, serif;
+        }
+
+        .inner-voice .name-tag {
+            font-size: 11px;
+            font-weight: 500;
+            color: hsla(35, 60%, 55%, 0.5);
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ==========================================
+           页签栏
+           ========================================== */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: hsla(0, 0%, 0%, 0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 14px;
+            padding: 4px;
+            margin-bottom: 16px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px 0;
+            border: none;
+            background: transparent;
+            color: hsla(0, 0%, 100%, 0.25);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .tab-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .tab-btn:hover {
+            color: hsla(0, 0%, 100%, 0.45);
+        }
+
+        .tab-btn.active {
+            background: hsla(35, 60%, 45%, 0.2);
+            color: hsl(35, 60%, 60%);
+            box-shadow: 0 0 24px hsla(35, 60%, 50%, 0.05);
+        }
+
+        /* ===== 用户状态页签：手机端显示，电脑端隐藏 ===== */
+        .tab-user-status-btn {
+            display: none;
+        }
+
+        /* ==========================================
+           页签内容
+           ========================================== */
+        .tab-content {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .tab-pane {
+            display: none;
+            animation: paneIn 0.35s ease forwards;
+            height: 100%;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .tab-pane::-webkit-scrollbar {
+            width: 3px;
+        }
+        .tab-pane::-webkit-scrollbar-track {
+            background: hsla(0, 0%, 100%, 0.02);
+            border-radius: 4px;
+        }
+        .tab-pane::-webkit-scrollbar-thumb {
+            background: hsla(35, 60%, 55%, 0.2);
+            border-radius: 4px;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        @keyframes paneIn {
+            0% {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ==========================================
+           状态页签
+           ========================================== */
+        .state-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .state-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .card-affection {
+            flex: 2;
+            min-width: 140px;
+            background: linear-gradient(135deg, hsla(35, 70%, 40%, 0.2), hsla(35, 50%, 25%, 0.08));
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 16px;
+            padding: 16px 18px 14px;
+            border: 1px solid hsla(35, 60%, 50%, 0.15);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card-affection:hover {
+            border-color: hsla(35, 60%, 55%, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .card-affection .label {
+            font-size: 10px;
+            font-weight: 600;
+            color: hsl(35, 60%, 50%);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-affection .label svg {
+            width: 14px;
+            height: 14px;
+            stroke: hsl(35, 60%, 50%);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .card-affection .value {
+            font-size: 32px;
+            font-weight: 800;
+            color: hsl(35, 70%, 70%);
+            letter-spacing: -1px;
+            line-height: 1.1;
+            text-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-affection .value .suffix {
+            font-size: 16px;
+            font-weight: 500;
+            color: hsla(35, 60%, 50%, 0.3);
+            margin-left: 2px;
+        }
+
+        .card-affection .bar {
+            width: 100%;
+            height: 4px;
+            background: hsla(35, 60%, 50%, 0.12);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .card-affection .bar .fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, hsl(35, 60%, 40%), hsl(35, 70%, 60%));
+            transition: width 0.6s ease;
+            width: 25%;
+        }
+
+        .card-stage {
+            flex: 1;
+            min-width: 80px;
+            background: hsla(270, 40%, 40%, 0.15);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 14px;
+            padding: 12px 14px 12px;
+            border: 1px solid hsla(270, 40%, 50%, 0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .card-stage:hover {
+            border-color: hsla(270, 40%, 50%, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .card-stage .label {
+            font-size: 9px;
+            font-weight: 600;
+            color: hsla(270, 30%, 50%, 0.5);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-stage .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: hsl(270, 30%, 70%);
+            margin-top: 2px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-emotion {
+            flex: 1.5;
+            min-width: 110px;
+            background: hsla(200, 40%, 40%, 0.12);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 14px;
+            padding: 14px 16px 12px;
+            border: 1px solid hsla(200, 40%, 50%, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .card-emotion:hover {
+            border-color: hsla(200, 40%, 50%, 0.16);
+            transform: translateY(-2px);
+        }
+
+        .card-emotion .label {
+            font-size: 9px;
+            font-weight: 600;
+            color: hsla(200, 30%, 50%, 0.5);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-emotion .value {
+            font-size: 20px;
+            font-weight: 700;
+            color: hsla(0, 0%, 100%, 0.9);
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 1px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-emotion .value .emotion-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid hsla(200, 40%, 50%, 0.15);
+            flex-shrink: 0;
+            background: hsla(0, 0%, 0%, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .card-emotion .value .emotion-avatar:hover {
+            transform: scale(1.08);
+            border-color: hsla(200, 40%, 50%, 0.3);
+        }
+
+        .card-emotion .value .emotion-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .card-emotion .value .emotion-text {
+            flex: 1;
+        }
+
+        .card-emotion .sub {
+            font-size: 12px;
+            font-weight: 400;
+            color: hsla(200, 30%, 50%, 0.35);
+            margin-top: 2px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-trust {
+            flex: 1;
+            min-width: 80px;
+            background: hsla(140, 40%, 40%, 0.12);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 14px;
+            padding: 14px 16px 12px;
+            border: 1px solid hsla(140, 40%, 50%, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .card-trust:hover {
+            border-color: hsla(140, 40%, 50%, 0.16);
+            transform: translateY(-2px);
+        }
+
+        .card-trust .label {
+            font-size: 9px;
+            font-weight: 600;
+            color: hsla(140, 30%, 50%, 0.5);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-trust .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: hsl(140, 30%, 65%);
+            margin-top: 2px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-trust .value .suffix {
+            font-size: 12px;
+            font-weight: 400;
+            color: hsla(140, 30%, 50%, 0.3);
+        }
+
+        .card-inner-summary {
+            width: 100%;
+            background: hsla(0, 0%, 0%, 0.2);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 14px;
+            padding: 12px 16px;
+            border: 1px solid hsla(0, 0%, 100%, 0.05);
+            font-size: 13px;
+            color: hsla(0, 0%, 100%, 0.6);
+            font-style: italic;
+            letter-spacing: 0.2px;
+            line-height: 1.5;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-inner-summary .label {
+            font-size: 9px;
+            font-weight: 600;
+            color: hsla(0, 0%, 100%, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* ==========================================
+           关系页签
+           ========================================== */
+        .relation-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .relation-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .card-intimacy {
+            flex: 2;
+            min-width: 140px;
+            background: linear-gradient(135deg, hsla(35, 50%, 30%, 0.15), hsla(35, 40%, 20%, 0.06));
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 16px;
+            padding: 14px 18px 14px;
+            border: 1px solid hsla(35, 50%, 40%, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .card-intimacy:hover {
+            border-color: hsla(35, 50%, 50%, 0.16);
+            transform: translateY(-2px);
+        }
+
+        .card-intimacy .label {
+            font-size: 9px;
+            font-weight: 600;
+            color: hsla(35, 40%, 50%, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-intimacy .value {
+            font-size: 26px;
+            font-weight: 800;
+            color: hsl(35, 50%, 65%);
+            margin-top: 2px;
+            text-shadow: 0 1px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-intimacy .value .suffix {
+            font-size: 14px;
+            font-weight: 500;
+            color: hsla(35, 40%, 50%, 0.25);
+        }
+
+        .card-intimacy .bar {
+            width: 100%;
+            height: 3px;
+            background: hsla(35, 50%, 40%, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .card-intimacy .bar .fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, hsl(35, 50%, 35%), hsl(35, 50%, 55%));
+            transition: width 0.6s ease;
+            width: 15%;
+        }
+
+        .card-callout {
+            flex: 1;
+            min-width: 90px;
+            background: hsla(270, 30%, 40%, 0.12);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 14px;
+            padding: 14px 16px 12px;
+            border: 1px solid hsla(270, 30%, 50%, 0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .card-callout:hover {
+            border-color: hsla(270, 30%, 50%, 0.16);
+            transform: translateY(-2px);
+        }
+
+        .card-callout .label {
+            font-size: 9px;
+            font-weight: 600;
+            color: hsla(270, 30%, 50%, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-callout .value {
+            font-size: 20px;
+            font-weight: 700;
+            color: hsl(270, 30%, 70%);
+            margin-top: 2px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-mid {
+            flex: 1;
+            min-width: 80px;
+            background: hsla(0, 0%, 100%, 0.04);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 12px;
+            padding: 12px 14px 12px;
+            border: 1px solid hsla(0, 0%, 100%, 0.05);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .card-mid:hover {
+            border-color: hsla(0, 0%, 100%, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .card-mid .label {
+            font-size: 9px;
+            font-weight: 600;
+            color: hsla(0, 0%, 100%, 0.25);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-mid .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: hsla(0, 0%, 100%, 0.75);
+            margin-top: 2px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-mid .value .suffix {
+            font-size: 12px;
+            font-weight: 400;
+            color: hsla(0, 0%, 100%, 0.2);
+        }
+
+        /* ==========================================
+           {{user}} 数据区块（电脑端显示，手机端隐藏）
+           ========================================== */
+        .user-data-in-relation {
+            display: block;
+        }
+
+        /* ==========================================
+           用户状态页签（手机端显示，电脑端隐藏）
+           ========================================== */
+        .tab-pane#tab-userstatus {
+            display: none;
+        }
+        .tab-pane#tab-userstatus.active {
+            display: block;
+        }
+
+        .user-status-tab-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .user-status-tab-content .relation-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .user-status-tab-content .card-mid {
+            flex: 1;
+            min-width: 80px;
+            background: hsla(0, 0%, 100%, 0.04);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 12px;
+            padding: 12px 14px 12px;
+            border: 1px solid hsla(0, 0%, 100%, 0.05);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .user-status-tab-content .card-mid:hover {
+            border-color: hsla(0, 0%, 100%, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .user-status-tab-content .card-mid .label {
+            font-size: 9px;
+            font-weight: 600;
+            color: hsla(0, 0%, 100%, 0.25);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-status-tab-content .card-mid .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: hsla(0, 0%, 100%, 0.75);
+            margin-top: 2px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-status-tab-content .card-mid .value .suffix {
+            font-size: 12px;
+            font-weight: 400;
+            color: hsla(0, 0%, 100%, 0.2);
+        }
+
+        .user-status-tab-content .card-mid-full {
+            flex: 1;
+            min-width: 100%;
+            background: hsla(0, 0%, 100%, 0.04);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 12px;
+            padding: 12px 14px 12px;
+            border: 1px solid hsla(0, 0%, 100%, 0.05);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .user-status-tab-content .card-mid-full:hover {
+            border-color: hsla(0, 0%, 100%, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .user-status-tab-content .card-mid-full .label {
+            font-size: 9px;
+            font-weight: 600;
+            color: hsla(0, 0%, 100%, 0.25);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-status-tab-content .card-mid-full .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: hsla(0, 0%, 100%, 0.75);
+            margin-top: 2px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ==========================================
+           事件页签
+           ========================================== */
+        .event-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .event-progress {
+            background: linear-gradient(135deg, hsla(35, 50%, 30%, 0.15), hsla(35, 40%, 20%, 0.06));
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 16px;
+            padding: 14px 18px 14px;
+            border: 1px solid hsla(35, 50%, 40%, 0.08);
+            width: 100%;
+        }
+
+        .event-progress .label {
+            font-size: 9px;
+            font-weight: 600;
+            color: hsla(35, 40%, 50%, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .event-progress .value {
+            font-size: 24px;
+            font-weight: 800;
+            color: hsl(35, 50%, 65%);
+            margin-top: 2px;
+            text-shadow: 0 1px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .event-progress .value .suffix {
+            font-size: 14px;
+            font-weight: 500;
+            color: hsla(35, 40%, 50%, 0.25);
+        }
+
+        .event-progress .bar {
+            width: 100%;
+            height: 3px;
+            background: hsla(35, 50%, 40%, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .event-progress .bar .fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, hsl(35, 50%, 35%), hsl(35, 50%, 55%));
+            transition: width 0.6s ease;
+            width: 0%;
+        }
+
+        .event-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .event-card {
+            flex: 1;
+            min-width: 100px;
+            background: hsla(0, 0%, 0%, 0.15);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1px solid hsla(0, 0%, 100%, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .event-card:hover {
+            border-color: hsla(0, 0%, 100%, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .event-card .label {
+            font-size: 9px;
+            font-weight: 600;
+            color: hsla(0, 0%, 100%, 0.25);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .event-card .value {
+            font-size: 14px;
+            font-weight: 600;
+            color: hsla(0, 0%, 100%, 0.65);
+            margin-top: 2px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .event-card .value.highlight {
+            color: hsl(35, 60%, 60%);
+        }
+
+        .story-toggle {
+            width: 100%;
+            padding: 10px 0;
+            background: none;
+            border: none;
+            border-top: 1px solid hsla(0, 0%, 100%, 0.05);
+            color: hsla(0, 0%, 100%, 0.25);
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 4px;
+            flex-shrink: 0;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .story-toggle:hover {
+            color: hsla(0, 0%, 100%, 0.5);
+        }
+
+        .story-toggle svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            transition: transform 0.3s ease;
+        }
+
+        .story-toggle.open svg {
+            transform: rotate(180deg);
+        }
+
+        .story-drawer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease, opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .story-drawer.open {
+            max-height: 40vh;
+            opacity: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .story-drawer::-webkit-scrollbar {
+            width: 3px;
+        }
+        .story-drawer::-webkit-scrollbar-track {
+            background: hsla(0, 0%, 100%, 0.02);
+            border-radius: 4px;
+        }
+        .story-drawer::-webkit-scrollbar-thumb {
+            background: hsla(35, 60%, 55%, 0.2);
+            border-radius: 4px;
+        }
+
+        /* ==========================================
+           时间线
+           ========================================== */
+        .timeline {
+            padding: 12px 0 4px;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 8px;
+            bottom: 8px;
+            width: 1.5px;
+            background: hsla(35, 60%, 55%, 0.1);
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 14px;
+            padding-bottom: 12px;
+            padding-left: 18px;
+            position: relative;
+            align-items: center;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 4px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: hsla(35, 60%, 55%, 0.08);
+            border: 1.5px solid hsla(35, 60%, 55%, 0.12);
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item.active::before {
+            background: hsl(35, 60%, 55%);
+            border-color: hsl(35, 60%, 55%);
+            box-shadow: 0 0 16px hsla(35, 60%, 55%, 0.15);
+        }
+
+        .timeline-item.done::before {
+            background: hsla(35, 60%, 55%, 0.3);
+            border-color: hsla(35, 60%, 55%, 0.2);
+        }
+
+        .timeline-item .thumb {
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: hsla(0, 0%, 0%, 0.2);
+            border: 1px solid hsla(0, 0%, 100%, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .timeline-item .thumb:hover {
+            border-color: hsla(35, 60%, 55%, 0.15);
+            transform: scale(1.02);
+        }
+
+        .timeline-item .thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .timeline-item .thumb .placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: hsla(0, 0%, 100%, 0.06);
+            font-size: 18px;
+        }
+
+        .timeline-item .content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .timeline-item .title {
+            font-size: 12px;
+            font-weight: 600;
+            color: hsla(0, 0%, 100%, 0.65);
+            letter-spacing: 0.2px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .timeline-item .title .num {
+            font-size: 10px;
+            font-weight: 400;
+            color: hsla(0, 0%, 100%, 0.15);
+            margin-right: 4px;
+        }
+
+        .timeline-item .desc {
+            font-size: 10px;
+            color: hsla(0, 0%, 100%, 0.3);
+            line-height: 1.4;
+            margin-top: 1px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ==========================================
+           作者页签
+           ========================================== */
+        .author-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 200px;
+        }
+
+        .author-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 24px 20px 20px;
+            background: hsla(0, 0%, 0%, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid hsla(0, 0%, 100%, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .author-card:hover {
+            background: hsla(0, 0%, 0%, 0.25);
+            border-color: hsla(35, 60%, 55%, 0.08);
+        }
+
+        .author-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid hsla(35, 60%, 55%, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .author-avatar:hover {
+            border-color: hsla(35, 60%, 55%, 0.2);
+            transform: scale(1.02);
+        }
+
+        .author-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .author-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: hsla(0, 0%, 100%, 0.65);
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .author-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: hsla(35, 60%, 50%, 0.4);
+            text-decoration: none;
+            padding: 6px 16px;
+            border-radius: 8px;
+            border: 1px solid hsla(35, 60%, 50%, 0.06);
+            background: hsla(35, 60%, 50%, 0.04);
+            transition: all 0.3s ease;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .author-link:hover {
+            color: hsl(35, 60%, 60%);
+            border-color: hsla(35, 60%, 50%, 0.15);
+            background: hsla(35, 60%, 50%, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .author-link svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            flex-shrink: 0;
+        }
+
+        .author-footer {
+            font-size: 10px;
+            color: hsla(0, 0%, 100%, 0.15);
+            letter-spacing: 0.3px;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        /* ==========================================
+           图片放大遮罩
+           ========================================== */
+        .image-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999999;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            cursor: pointer;
+        }
+
+        .image-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .image-overlay .close-btn {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: hsla(0, 0%, 100%, 0.06);
+            border-radius: 50%;
+            color: hsla(0, 0%, 100%, 0.4);
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Inter", sans-serif;
+            font-weight: 300;
+        }
+
+        .image-overlay .close-btn:hover {
+            background: hsla(0, 0%, 100%, 0.12);
+            color: hsla(0, 0%, 100%, 0.8);
+            transform: rotate(90deg);
+        }
+
+        .image-overlay .overlay-content {
+            max-width: 90vw;
+            max-height: 85vh;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+            transform: scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: default;
+        }
+
+        .image-overlay.active .overlay-content {
+            transform: scale(1);
+        }
+
+        .image-overlay .overlay-content img {
+            width: 100%;
+            height: 100%;
+            max-width: 90vw;
+            max-height: 85vh;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* ==========================================
+           响应式
+           ========================================== */
+        @media (max-width: 460px) {
+            .status-container {
+                padding: 14px 14px 12px;
+                border-radius: 24px;
+                max-height: 96vh;
+            }
+
+            .header-title {
+                font-size: 11px;
+            }
+            .header-title-collapsed {
+                font-size: 16px !important;
+                gap: 8px !important;
+            }
+            .header-title-collapsed .ornament-left,
+            .header-title-collapsed .ornament-right {
+                width: 14px !important;
+                height: 14px !important;
+            }
+            .header-title-collapsed .line-left,
+            .header-title-collapsed .line-right {
+                min-width: 10px !important;
+            }
+            .header-info {
+                font-size: 10px;
+                gap: 8px;
+            }
+
+            .scene-banner {
+                height: 56px;
+                border-radius: 12px;
+            }
+
+            .inner-voice {
+                padding: 12px 14px;
+                gap: 10px;
+            }
+            .inner-voice .avatar {
+                width: 44px;
+                height: 60px;
+                border-radius: 8px;
+            }
+            .inner-voice .text {
+                font-size: 13px;
+            }
+
+            .card-affection .value {
+                font-size: 26px;
+            }
+            .card-stage .value {
+                font-size: 15px;
+            }
+            .card-emotion .value {
+                font-size: 17px;
+            }
+            .card-emotion .value .emotion-avatar {
+                width: 32px;
+                height: 32px;
+            }
+            .card-trust .value {
+                font-size: 15px;
+            }
+            .card-intimacy .value {
+                font-size: 22px;
+            }
+            .card-callout .value {
+                font-size: 17px;
+            }
+            .card-mid .value {
+                font-size: 15px;
+            }
+
+            .state-row,
+            .relation-row,
+            .event-row {
+                gap: 6px;
+            }
+            .card-affection,
+            .card-intimacy {
+                flex: 1 1 100%;
+                min-width: 0;
+            }
+            .card-stage,
+            .card-emotion,
+            .card-trust,
+            .card-callout,
+            .card-mid {
+                flex: 1 1 calc(50% - 4px);
+                min-width: 0;
+            }
+
+            .timeline-item .thumb {
+                width: 36px;
+                height: 36px;
+            }
+            .timeline-item .title {
+                font-size: 11px;
+            }
+
+            .story-drawer.open {
+                max-height: 30vh;
+            }
+
+            .tab-btn {
+                font-size: 10px;
+                padding: 6px 0;
+            }
+            .tab-btn svg {
+                width: 12px;
+                height: 12px;
+            }
+
+            .image-overlay .close-btn {
+                top: 12px;
+                right: 12px;
+                width: 36px;
+                height: 36px;
+                font-size: 20px;
+            }
+            .image-overlay .overlay-content {
+                max-width: 95vw;
+                max-height: 80vh;
+            }
+
+            /* ===== 手机端：显示用户状态页签按钮，隐藏关系页签内的user数据 ===== */
+            .tab-user-status-btn {
+                display: flex !important;
+            }
+
+            .user-data-in-relation {
+                display: none !important;
+            }
+
+            .tab-pane#tab-userstatus {
+                display: none;
+            }
+            .tab-pane#tab-userstatus.active {
+                display: block;
+            }
+
+            /* ===== 手机端用户状态页签：双列网格布局 ===== */
+            .user-status-tab-content .relation-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+
+            .user-status-tab-content .card-mid {
+                flex: unset;
+                min-width: 0;
+                padding: 10px 8px;
+                border-radius: 10px;
+            }
+
+            .user-status-tab-content .card-mid .value {
+                font-size: 16px;
+            }
+
+            .user-status-tab-content .card-mid .label {
+                font-size: 8px;
+            }
+
+            .user-status-tab-content .card-mid-full {
+                flex: unset;
+                grid-column: 1 / -1;
+                padding: 10px 8px;
+                border-radius: 10px;
+            }
+
+            .user-status-tab-content .card-mid-full .value {
+                font-size: 16px;
+            }
+
+            .user-status-tab-content .card-mid-full .label {
+                font-size: 8px;
+            }
+
+            /* 手机端标题字号微调 */
+            .user-status-tab-content>div:first-child {
+                font-size: 10px !important;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .card-stage,
+            .card-emotion,
+            .card-trust,
+            .card-callout,
+            .card-mid {
+                flex: 1 1 100%;
+            }
+
+            .inner-voice .text {
+                font-size: 12px;
+            }
+            .card-affection .value {
+                font-size: 22px;
+            }
+            .event-progress .value {
+                font-size: 20px;
+            }
+            .card-emotion .value .emotion-avatar {
+                width: 28px;
+                height: 28px;
+            }
+
+            .scene-banner {
+                height: 44px;
+            }
+            .header-title-collapsed {
+                font-size: 14px !important;
+                gap: 6px !important;
+            }
+            .header-title-collapsed .ornament-left,
+            .header-title-collapsed .ornament-right {
+                width: 12px !important;
+                height: 12px !important;
+            }
+            .header-title-collapsed .line-left,
+            .header-title-collapsed .line-right {
+                min-width: 6px !important;
+            }
+
+            .inner-voice .avatar {
+                width: 36px;
+                height: 50px;
+            }
+
+            /* 超小屏手机双列变单列 */
+            .user-status-tab-content .relation-row {
+                grid-template-columns: 1fr;
+            }
+
+            .user-status-tab-content .card-mid-full {
+                grid-column: 1;
+            }
+        }
+
+        @media (min-width: 600px) {
+            .status-container {
+                max-width: 560px;
+                padding: 24px 24px 20px;
+                border-radius: 36px;
+            }
+
+            .card-affection .value {
+                font-size: 38px;
+            }
+            .card-intimacy .value {
+                font-size: 30px;
+            }
+            .inner-voice .text {
+                font-size: 17px;
+            }
+
+            .state-row,
+            .relation-row,
+            .event-row {
+                gap: 12px;
+            }
+
+            .card-emotion .value .emotion-avatar {
+                width: 44px;
+                height: 44px;
+            }
+
+            .scene-banner {
+                height: 100px;
+            }
+            .header-title-collapsed {
+                font-size: 26px !important;
+                gap: 20px !important;
+            }
+            .header-title-collapsed .ornament-left,
+            .header-title-collapsed .ornament-right {
+                width: 22px !important;
+                height: 22px !important;
+            }
+
+            .inner-voice .avatar {
+                width: 64px;
+                height: 86px;
+            }
+        }
+
+        @media (min-width: 900px) {
+            .status-container {
+                max-width: 600px;
+            }
+        }
+
+        /* ==========================================
+           电脑端：用户状态页签强制隐藏
+           ========================================== */
+        @media (min-width: 461px) {
+            .tab-user-status-btn {
+                display: none !important;
+            }
+            .tab-pane#tab-userstatus {
+                display: none !important;
+            }
+            .user-data-in-relation {
+                display: block !important;
+            }
+
+            /* ===== 电脑端：user数据区块增加间距，呼吸感 ===== */
+            .user-data-in-relation {
+                margin-top: 4px;
+            }
+
+            .user-data-in-relation .relation-row {
+                margin-bottom: 6px;
+            }
+
+            .user-data-in-relation .relation-row:last-child {
+                margin-bottom: 0;
+            }
+
+            .user-data-in-relation .card-mid {
+                padding: 14px 16px 14px;
+            }
+        }
+
+        /* ==========================================
+           手机端用户状态页签双列网格增强
+           ========================================== */
+        @media (max-width: 460px) and (min-width: 361px) {
+            .user-status-tab-content .relation-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+
+            .user-status-tab-content .card-mid {
+                padding: 10px 8px;
+                border-radius: 10px;
+                min-height: 65px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            .user-status-tab-content .card-mid .value {
+                font-size: 15px;
+            }
+
+            .user-status-tab-content .card-mid .label {
+                font-size: 8px;
+            }
+
+            .user-status-tab-content .card-mid-full {
+                grid-column: 1 / -1;
+                padding: 10px 8px;
+                border-radius: 10px;
+                min-height: 55px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            .user-status-tab-content .card-mid-full .value {
+                font-size: 15px;
+            }
+
+            .user-status-tab-content .card-mid-full .label {
+                font-size: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 图片放大遮罩 ===== -->
+    <div class="image-overlay" id="imageOverlay" onclick="closeImageOverlay()">
+        <button class="close-btn" onclick="closeImageOverlay()">✕</button>
+        <div class="overlay-content" onclick="event.stopPropagation()">
+            <img id="overlayImage" src="" alt="放大预览" />
+        </div>
+    </div>
+
+    <div class="status-container" id="app">
+
+        <!-- ===== 顶部栏 ===== -->
+        <div class="header">
+            <div class="header-left">
+                <!-- 普通标题 -->
+                <div class="header-title">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    秋季转校生
+                </div>
+                <!-- 折叠时花体标题 -->
+                <span class="header-title-collapsed">
+                    <span class="ornament-left">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><circle cx="12" cy="12" r="8"/><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                    </span>
+                    <span class="line-left"></span>
+                    <span class="title-text">Autumn Transfer Student</span>
+                    <span class="line-right"></span>
+                    <span class="ornament-right">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><circle cx="12" cy="12" r="8"/><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                    </span>
+                </span>
+            </div>
+            <div class="header-info">
+                <span class="scene" id="sceneDisplay">公寓客厅</span>
+                <span class="dot"></span>
+                <span class="time" id="timeDisplay">上午</span>
+                <button class="fold-btn" onclick="toggleFold()" aria-label="折叠">
+                    <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== 场景配图横幅 ===== -->
+        <div class="scene-banner" id="sceneBanner">
+            <img id="sceneBannerImg" src="" alt="当前场景" style="display:none;" />
+            <div class="placeholder" id="sceneBannerPlaceholder">🌅 场景配图</div>
+        </div>
+
+        <!-- ===== 内心话（竖图矩形头像） ===== -->
+        <div class="inner-voice" id="innerVoice">
+            <div class="avatar" id="voiceAvatar" onclick="openImageOverlay(this.querySelector('img').src)">
+                <img src="https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E7%8A%B6%E6%80%81%E6%A0%8F-%E6%98%9F%E5%AE%AB%E5%A4%B4%E5%83%8F.jpg" alt="星宫" id="voiceAvatarImg" />
+            </div>
+            <div class="voice-content">
+                <div class="text" id="innerText">
+                    <span class="quote-mark">"</span>
+                    <span id="innerTextContent">……他今天应该会主动跟我说话吧。</span>
+                    <span class="quote-mark">"</span>
+                </div>
+                <div class="name-tag" id="innerNameTag">—— 星宫 · 此刻</div>
+            </div>
+        </div>
+
+        <!-- ===== 页签栏 ===== -->
+        <div class="tabs" id="tabs">
+            <button class="tab-btn active" data-tab="status">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                状态
+            </button>
+            <button class="tab-btn" data-tab="relation">
+                <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                关系
+            </button>
+            <!-- ===== 用户状态页签按钮：手机端显示，电脑端隐藏 ===== -->
+            <button class="tab-btn tab-user-status-btn" data-tab="userstatus">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                用户状态
+            </button>
+            <button class="tab-btn" data-tab="event">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                事件
+            </button>
+            <button class="tab-btn" data-tab="author">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                作者
+            </button>
+        </div>
+
+        <!-- ===== 页签内容 ===== -->
+        <div class="tab-content">
+
+            <!-- ====== 状态页签 ====== -->
+            <div class="tab-pane active" id="tab-status">
+                <div class="state-layout">
+                    <div class="state-row">
+                        <div class="card-affection">
+                            <div class="label">
+                                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                                好感度
+                            </div>
+                            <div class="value" id="affectionVal">25<span class="suffix">/500</span></div>
+                            <div class="bar"><div class="fill" id="affectionBar" style="width:5%"></div></div>
+                        </div>
+
+                        <div class="card-stage">
+                            <div class="label">阶段</div>
+                            <div class="value" id="stageVal">疏离</div>
+                        </div>
+                    </div>
+
+                    <div class="state-row">
+                        <div class="card-emotion">
+                            <div class="label">当前情绪</div>
+                            <div class="value" id="emotionVal">
+                                <span class="emotion-avatar" id="emotionAvatarWrap" onclick="openImageOverlay(this.querySelector('img').src)">
+                                    <img src="https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E6%83%85%E7%BB%AA%E5%A4%B4%E5%83%8F-%E5%B9%B3%E9%9D%99.jpg" alt="情绪" id="emotionAvatarImg" />
+                                </span>
+                                <span class="emotion-text" id="emotionText">平静</span>
+                            </div>
+                            <div class="sub" id="emotionSub">· 日常</div>
+                        </div>
+
+                        <div class="card-trust">
+                            <div class="label">依赖</div>
+                            <div class="value" id="trustVal">20<span class="suffix">/200</span></div>
+                        </div>
+                    </div>
+
+                    <div class="card-inner-summary">
+                        <span class="label">💭 此刻心声</span>
+                        <span id="innerSummary">*……他今天应该会主动跟我说话吧。*</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====== 关系页签 ====== -->
+            <div class="tab-pane" id="tab-relation">
+                <div class="relation-layout">
+                    <div class="relation-row">
+                        <div class="card-intimacy">
+                            <div class="label">亲密度</div>
+                            <div class="value" id="intimacyVal">15<span class="suffix">/100</span></div>
+                            <div class="bar"><div class="fill" id="intimacyBar" style="width:15%"></div></div>
+                        </div>
+
+                        <div class="card-callout">
+                            <div class="label">称呼</div>
+                            <div class="value" id="calloutVal">{{user}}</div>
+                        </div>
+                    </div>
+
+                    <div class="relation-row">
+                        <div class="card-mid">
+                            <div class="label">默契</div>
+                            <div class="value" id="synergyVal">10<span class="suffix">/100</span></div>
+                        </div>
+
+                        <div class="card-mid">
+                            <div class="label">吃醋</div>
+                            <div class="value" id="jealousVal">20<span class="suffix">/100</span></div>
+                        </div>
+
+                        <div class="card-mid">
+                            <div class="label">靠近次数</div>
+                            <div class="value" id="approachVal">0</div>
+                        </div>
+                    </div>
+
+                    <!-- ===== {{user}} 数据区块（电脑端显示，手机端隐藏） ===== -->
+                    <div class="user-data-in-relation">
+                        <!-- 分隔线 -->
+                        <hr style="border: none; border-top: 1px solid hsla(35, 60%, 55%, 0.2); margin: 12px 0 6px 0;" />
+
+                        <!-- {{user}} 标题 -->
+                        <div style="font-size: 10px; font-weight: 600; color: hsla(35, 60%, 55%, 0.5); letter-spacing: 2px; text-align: center; margin-bottom: 8px;">✦ {{user}} 状态 ✦</div>
+
+                        <div class="relation-row">
+                            <div class="card-mid">
+                                <div class="label">情感认知度</div>
+                                <div class="value" id="userEmotionCognitionVal">15<span class="suffix">/100</span></div>
+                            </div>
+
+                            <div class="card-mid">
+                                <div class="label">犹豫值</div>
+                                <div class="value" id="userHesitationVal">30<span class="suffix">/100</span></div>
+                            </div>
+
+                            <div class="card-mid">
+                                <div class="label">迟钝值</div>
+                                <div class="value" id="userObliviousVal">60<span class="suffix">/100</span></div>
+                            </div>
+                        </div>
+
+                        <div class="relation-row">
+                            <div class="card-mid">
+                                <div class="label">主动值</div>
+                                <div class="value" id="userActiveVal">25<span class="suffix">/100</span></div>
+                            </div>
+
+                            <div class="card-mid">
+                                <div class="label">专注力</div>
+                                <div class="value" id="userFocusVal">80<span class="suffix">/100</span></div>
+                            </div>
+
+                            <div class="card-mid">
+                                <div class="label">直球值</div>
+                                <div class="value" id="userStraightVal">20<span class="suffix">/100</span></div>
+                            </div>
+                        </div>
+
+                        <div class="relation-row">
+                            <div class="card-mid" style="flex: 1; min-width: 100%;">
+                                <div class="label">当前情绪</div>
+                                <div class="value" id="userEmotionVal" style="font-size: 16px;">平静</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====== 用户状态页签（手机端专用） ====== -->
+            <div class="tab-pane" id="tab-userstatus">
+                <div class="user-status-tab-content">
+                    <div style="font-size: 11px; font-weight: 600; color: hsla(35, 60%, 55%, 0.6); letter-spacing: 2px; text-align: center; margin-bottom: 6px;">✦ {{user}} 状态 ✦</div>
+
+                    <div class="relation-row">
+                        <div class="card-mid">
+                            <div class="label">情感认知度</div>
+                            <div class="value" id="userEmotionCognitionVal2">15<span class="suffix">/100</span></div>
+                        </div>
+
+                        <div class="card-mid">
+                            <div class="label">犹豫值</div>
+                            <div class="value" id="userHesitationVal2">30<span class="suffix">/100</span></div>
+                        </div>
+                    </div>
+
+                    <div class="relation-row">
+                        <div class="card-mid">
+                            <div class="label">迟钝值</div>
+                            <div class="value" id="userObliviousVal2">60<span class="suffix">/100</span></div>
+                        </div>
+
+                        <div class="card-mid">
+                            <div class="label">主动值</div>
+                            <div class="value" id="userActiveVal2">25<span class="suffix">/100</span></div>
+                        </div>
+                    </div>
+
+                    <div class="relation-row">
+                        <div class="card-mid">
+                            <div class="label">专注力</div>
+                            <div class="value" id="userFocusVal2">80<span class="suffix">/100</span></div>
+                        </div>
+
+                        <div class="card-mid">
+                            <div class="label">直球值</div>
+                            <div class="value" id="userStraightVal2">20<span class="suffix">/100</span></div>
+                        </div>
+                    </div>
+
+                    <div class="relation-row">
+                        <div class="card-mid-full">
+                            <div class="label">当前情绪</div>
+                            <div class="value" id="userEmotionVal2" style="font-size: 18px;">平静</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====== 事件页签 ====== -->
+            <div class="tab-pane" id="tab-event">
+                <div class="event-layout">
+                    <div class="event-progress">
+                        <div class="label">事件进度</div>
+                        <div class="value" id="progressVal">0<span class="suffix">/20</span></div>
+                        <div class="bar"><div class="fill" id="progressBar" style="width:0%"></div></div>
+                    </div>
+
+                    <div class="event-row">
+                        <div class="event-card">
+                            <div class="label">当前事件</div>
+                            <div class="value highlight" id="currentEvent">转校生登场</div>
+                        </div>
+                        <div class="event-card">
+                            <div class="label">下一事件</div>
+                            <div class="value" id="nextEvent">同桌第一天</div>
+                        </div>
+                    </div>
+
+                    <button class="story-toggle" id="storyToggle" onclick="toggleStory()">
+                        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                        展开故事时间线
+                    </button>
+
+                    <div class="story-drawer" id="storyDrawer">
+                        <div class="timeline" id="timeline">
+                            <!-- 由 JavaScript 动态渲染 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====== 作者页签 ====== -->
+            <div class="tab-pane" id="tab-author">
+                <div class="author-container">
+                    <div class="author-card">
+                        <div class="author-avatar" onclick="openImageOverlay(this.querySelector('img').src)">
+                            <img src="https://cdn.jsdelivr.net/gh/sanshui19516/CG@main/%E5%A4%B4%E5%83%8F.png" alt="三年的水" />
+                        </div>
+                        <div class="author-name">三年的水</div>
+                        <a href="#" target="_blank" class="author-link">
+                            <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                            点击原帖链接
+                        </a>
+                        <a href="https://discord.com/channels/1134557553011998840/1516980193195987075/1516980193195987075" target="_blank" class="author-link">
+                            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                            作品集锦
+                        </a>
+                        <a href="https://discord.com/channels/1134557553011998840/1516980193195987075/1516980470871621794" target="_blank" class="author-link">
+                            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                            关注作者
+                        </a>
+                        <div class="author-footer">请多多关注原创者，期待下一个故事</div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /tab-content -->
+    </div><!-- /status-container -->
+
+    <script>
+        /* ==========================================
+           图片配置
+           ========================================== */
+        var IMAGES = {
+            /* 阶段头像（5张）→ 内心话头像（保留切换能力） */
+            stageAvatar: {
+                '疏离': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E5%85%B3%E7%B3%BB%E9%98%B6%E6%AE%B5-%E7%96%8F%E7%A6%BB.jpg',
+                '察觉': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E5%85%B3%E7%B3%BB%E9%98%B6%E6%AE%B5-%E5%AF%9F%E8%A7%89.jpg',
+                '暧昧': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E5%85%B3%E7%B3%BB%E9%98%B6%E6%AE%B5-%E6%9A%A7%E6%98%A7.jpg',
+                '交往': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E5%85%B3%E7%B3%BB%E9%98%B6%E6%AE%B5-%E4%BA%A4%E5%BE%80.jpg',
+                '稳定': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E5%85%B3%E7%B3%BB%E9%98%B6%E6%AE%B5-%E7%A8%B3%E5%AE%9A.jpg'
+            },
+
+            /* 情绪头像（11张）→ 情绪卡片 */
+            emotionAvatar: {
+                '平静': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E6%83%85%E7%BB%AA%E5%A4%B4%E5%83%8F-%E5%B9%B3%E9%9D%99.jpg',
+                '别扭': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E6%83%85%E7%BB%AA%E5%A4%B4%E5%83%8F-%E5%88%AB%E6%89%AD.jpg',
+                '害羞': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E6%83%85%E7%BB%AA%E5%A4%B4%E5%83%8F-%E5%AE%B3%E7%BE%9E.jpg',
+                '吃醋': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E6%83%85%E7%BB%AA%E5%A4%B4%E5%83%8F-%E5%90%83%E9%86%8B.jpg',
+                '生气': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E6%83%85%E7%BB%AA%E5%A4%B4%E5%83%8F-%E7%94%9F%E6%B0%94.jpg',
+                '期待': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E6%83%85%E7%BB%AA%E5%A4%B4%E5%83%8F-%E6%9C%9F%E5%BE%85.jpg',
+                '紧张': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E6%83%85%E7%BB%AA%E5%A4%B4%E5%83%8F-%E7%B4%A7%E5%BC%A0.jpg',
+                '安心': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E6%83%85%E7%BB%AA%E5%A4%B4%E5%83%8F-%E5%AE%89%E5%BF%83.jpg',
+                '柔软': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E6%83%85%E7%BB%AA%E5%A4%B4%E5%83%8F-%E6%9F%94%E8%BD%AF.jpg',
+                '开心': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E6%83%85%E7%BB%AA%E5%A4%B4%E5%83%8F-%E5%BC%80%E5%BF%83.jpg',
+                '失落': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E6%83%85%E7%BB%AA%E5%A4%B4%E5%83%8F-%E5%A4%B1%E8%90%BD.jpg'
+            },
+
+            /* 场景配图 */
+            sceneImage: {
+                '教室': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E5%9C%BA%E6%99%AF%E9%85%8D%E5%9B%BE-%E6%95%99%E5%AE%A4.jpg',
+                '公寓客厅': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E5%9C%BA%E6%99%AF%E9%85%8D%E5%9B%BE-%E5%AE%B6%E9%87%8C%E8%A2%AB%E7%82%89.jpg',
+                '被炉': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E5%9C%BA%E6%99%AF%E9%85%8D%E5%9B%BE-%E5%AE%B6%E9%87%8C%E8%A2%AB%E7%82%89.jpg',
+                '小公园': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E5%9C%BA%E6%99%AF%E9%85%8D%E5%9B%BE-%E6%88%B7%E5%A4%96%E8%A1%97%E9%81%93.jpg',
+                '海边': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E5%9C%BA%E6%99%AF%E9%85%8D%E5%9B%BE-%E6%B5%B7%E8%BE%B9.jpg',
+                '回家路上': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E5%9C%BA%E6%99%AF%E9%85%8D%E5%9B%BE-%E6%88%B7%E5%A4%96%E8%A1%97%E9%81%93.jpg',
+                '深夜街道': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E5%9C%BA%E6%99%AF%E9%85%8D%E5%9B%BE-%E6%88%B7%E5%A4%96%E8%A1%97%E9%81%93.jpg',
+                '樱花小路': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E5%9C%BA%E6%99%AF%E9%85%8D%E5%9B%BE-%E6%88%B7%E5%A4%96%E8%A1%97%E9%81%93.jpg',
+                '天台': 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E5%9C%BA%E6%99%AF%E9%85%8D%E5%9B%BE-%E6%88%B7%E5%A4%96%E8%A1%97%E9%81%93.jpg'
+            },
+
+            /* 事件缩略图（沿用原有配置，仅用于时间线） */
+            eventThumb: {
+                1: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E8%BD%AC%E6%A0%A1%E7%94%9F%E7%99%BB%E5%9C%BA.jpg',
+                2: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E5%90%8C%E6%A1%8C%E7%AC%AC%E4%B8%80%E5%A4%A9.jpg',
+                3: '',
+                4: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E4%B8%80%E8%B5%B7%E5%86%99%E4%BD%9C%E4%B8%9A.jpg',
+                5: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E8%A2%AB%E7%82%89%E4%B8%8B%E7%A2%B0%E6%89%8B.jpg',
+                6: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E6%83%85%E4%B9%A6%E8%AF%AF%E4%BC%9A.jpg',
+                7: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E6%98%9F%E5%AE%AB%E5%86%B7%E6%88%98.jpg',
+                8: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E5%B0%8F%E5%85%AC%E5%9B%AD%E5%AF%B9%E8%B4%A8.jpg',
+                9: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E4%BA%92%E7%9B%B8%E5%91%8A%E7%99%BD.jpg',
+                10: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E7%AC%AC%E4%B8%80%E6%AC%A1%E7%89%B5%E6%89%8B.jpg',
+                11: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8E%A5%E5%90%BB.jpg',
+                12: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E5%AE%9A%E4%BA%B2%E5%9D%A6%E7%99%BD.jpg',
+                13: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E5%9B%9E%E5%AE%B6%E7%A1%AE%E8%AE%A4%E5%AE%9A%E4%BA%B2.jpg',
+                14: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E7%AC%AC%E4%B8%80%E6%AC%A1%E4%BA%B2%E5%AF%86.jpg',
+                15: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E4%BA%8B%E5%90%8E%E4%BE%9D%E9%9D%A0.jpg',
+                16: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E5%85%AC%E5%BC%80%E6%97%A5%E5%B8%B8.jpg',
+                17: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E6%AD%A3%E5%BC%8F%E6%8F%90%E5%8F%8A%E6%9C%AA%E6%9D%A5.jpg',
+                18: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E8%AE%A2%E5%A9%9A.jpg',
+                19: 'https://testingcf.jsdelivr.net/gh/sanshui19516/CG@main/%E8%BD%AC%E6%A0%A1%E7%94%9F/%E4%BA%8B%E4%BB%B6%E7%BC%A9%E7%95%A5%E5%9B%BE-%E6%B5%B7%E8%BE%B9%E6%97%85%E8%A1%8C.jpg'
+            }
+        };
+
+        /* ==========================================
+           事件列表（用于进度计算和时间线）
+           ========================================== */
+        var eventKeyList = [
+            '转校生登场',
+            '同桌第一天',
+            '身份认出',
+            '一起写作业',
+            '被炉下碰手',
+            '情书误会',
+            '星宫冷战',
+            '小公园对质',
+            '互相告白',
+            '第一次牵手',
+            '第一次接吻',
+            '定亲坦白',
+            '回家确认定亲',
+            '第一次亲密',
+            '事后依靠',
+            '公开日常',
+            '小吃醋求和',
+            '正式提及未来',
+            '订婚',
+            '海边旅行'
+        ];
+
+        var eventDisplayMap = {
+            '转校生登场': '转校生登场',
+            '同桌第一天': '同桌第一天',
+            '身份认出': '身份认出',
+            '一起写作业': '一起写作业',
+            '被炉下碰手': '被炉下碰手',
+            '情书误会': '情书误会',
+            '星宫冷战': '星宫冷战',
+            '小公园对质': '小公园对质',
+            '互相告白': '互相告白',
+            '第一次牵手': '第一次牵手',
+            '第一次接吻': '第一次接吻',
+            '定亲坦白': '定亲坦白',
+            '回家确认定亲': '回家确认定亲',
+            '第一次亲密': '第一次亲密',
+            '事后依靠': '事后依靠',
+            '公开日常': '公开日常',
+            '小吃醋求和': '小吃醋求和',
+            '正式提及未来': '正式提及未来',
+            '订婚': '订婚',
+            '海边旅行': '海边旅行'
+        };
+
+        /* ==========================================
+           MVU 数据拉取
+           ========================================== */
+        var state = {
+            scene: undefined,
+            time: undefined,
+            affection: undefined,
+            stage: undefined,
+            emotion: undefined,
+            trust: undefined,
+            innerVoice: undefined,
+            intimacy: undefined,
+            synergy: undefined,
+            jealous: undefined,
+            approach: undefined,
+            callout: undefined,
+            progress: 0,
+            total: 20,
+            currentEvent: '转校生登场',
+            nextEvent: '同桌第一天',
+            relationStatus: '未确认',
+            userEmotionCognition: 15,
+            userHesitation: 30,
+            userOblivious: 60,
+            userActive: 25,
+            userFocus: 80,
+            userStraight: 20,
+            userEmotion: '平静'
+        };
+
+        function fetchStateFromMVU() {
+            try {
+                var allVars = typeof getAllVariables === 'function' ? getAllVariables() : {};
+                var data = allVars.stat_data;
+                if (!data) return;
+
+                /* 世界 */
+                state.scene = _.get(data, '世界.当前场景', '公寓客厅');
+                state.time = _.get(data, '世界.时段', '上午');
+
+                /* 星宫 */
+                state.affection = _.get(data, '星宫.好感度', 25);
+                state.stage = _.get(data, '星宫.关系阶段', '疏离');
+                state.emotion = _.get(data, '星宫.当前情绪', '平静');
+                state.trust = _.get(data, '星宫.依赖度', 20);
+                state.innerVoice = _.get(data, '星宫.内心话', '……傻子');
+                state.jealous = _.get(data, '星宫.吃醋值', 20);
+
+                /* 关系 */
+                state.intimacy = _.get(data, '关系.亲密度', 15);
+                state.synergy = _.get(data, '关系.默契值', 10);
+                state.approach = _.get(data, '关系.靠近次数', 0);
+                state.relationStatus = _.get(data, '关系.状态', '未确认');
+
+                /* user */
+                var userName = _.get(data, 'user.姓名', '{{user}}');
+                state.callout = userName;
+                state.userEmotionCognition = _.get(data, 'user.情感认知度', 15);
+                state.userHesitation = _.get(data, 'user.犹豫值', 30);
+                state.userOblivious = _.get(data, 'user.迟钝值', 60);
+                state.userActive = _.get(data, 'user.主动值', 25);
+                state.userFocus = _.get(data, 'user.专注力', 80);
+                state.userStraight = _.get(data, 'user.直球值', 20);
+                state.userEmotion = _.get(data, 'user.当前情绪', '平静');
+
+                /* 事件进度计算 */
+                var events = _.get(data, '事件', {});
+                var doneCount = 0;
+                for (var i = 0; i < eventKeyList.length; i++) {
+                    var key = eventKeyList[i];
+                    var val = events[key];
+                    /* 情书误会特殊处理：'已发生' 或 true 都算完成 */
+                    if (key === '情书误会') {
+                        if (val === '已发生' || val === true) {
+                            doneCount++;
+                        }
+                    } else {
+                        if (val === true) {
+                            doneCount++;
+                        }
+                    }
+                }
+                state.progress = doneCount;
+
+                /* 计算当前事件和下一事件 */
+                var currentIdx = -1;
+                var nextIdx = -1;
+                for (var j = 0; j < eventKeyList.length; j++) {
+                    var k = eventKeyList[j];
+                    var v = events[k];
+                    var isDone = false;
+                    if (k === '情书误会') {
+                        isDone = (v === '已发生' || v === true);
+                    } else {
+                        isDone = (v === true);
+                    }
+                    if (isDone) {
+                        currentIdx = j;
+                    } else if (nextIdx === -1) {
+                        nextIdx = j;
+                    }
+                }
+                if (currentIdx !== -1) {
+                    state.currentEvent = eventDisplayMap[eventKeyList[currentIdx]] || eventKeyList[currentIdx];
+                } else {
+                    state.currentEvent = '未开始';
+                }
+                if (nextIdx !== -1) {
+                    state.nextEvent = eventDisplayMap[eventKeyList[nextIdx]] || eventKeyList[nextIdx];
+                } else {
+                    state.nextEvent = '已完成全部';
+                }
+            } catch (e) {
+                /* 静默失败，保留默认值 */
+            }
+        }
+
+        /* ==========================================
+           DOM 引用
+           ========================================== */
+        function getEl(id) { return document.getElementById(id); }
+
+        var els = {
+            scene: getEl('sceneDisplay'),
+            time: getEl('timeDisplay'),
+            innerVoiceContent: getEl('innerTextContent'),
+            affectionVal: getEl('affectionVal'),
+            affectionBar: getEl('affectionBar'),
+            stageVal: getEl('stageVal'),
+            emotionText: getEl('emotionText'),
+            emotionAvatarImg: getEl('emotionAvatarImg'),
+            emotionSub: getEl('emotionSub'),
+            trustVal: getEl('trustVal'),
+            innerSummary: getEl('innerSummary'),
+            intimacyVal: getEl('intimacyVal'),
+            intimacyBar: getEl('intimacyBar'),
+            calloutVal: getEl('calloutVal'),
+            synergyVal: getEl('synergyVal'),
+            jealousVal: getEl('jealousVal'),
+            approachVal: getEl('approachVal'),
+            progressVal: getEl('progressVal'),
+            progressBar: getEl('progressBar'),
+            currentEvent: getEl('currentEvent'),
+            nextEvent: getEl('nextEvent'),
+            timelineContainer: getEl('timeline'),
+            sceneBannerImg: getEl('sceneBannerImg'),
+            sceneBannerPlaceholder: getEl('sceneBannerPlaceholder'),
+            storyDrawer: getEl('storyDrawer'),
+            storyToggle: getEl('storyToggle'),
+            app: getEl('app'),
+            overlay: getEl('imageOverlay'),
+            overlayImg: getEl('overlayImage'),
+            // 关系页签内的user元素（电脑端使用）
+            userEmotionCognitionVal: getEl('userEmotionCognitionVal'),
+            userHesitationVal: getEl('userHesitationVal'),
+            userObliviousVal: getEl('userObliviousVal'),
+            userActiveVal: getEl('userActiveVal'),
+            userFocusVal: getEl('userFocusVal'),
+            userStraightVal: getEl('userStraightVal'),
+            userEmotionVal: getEl('userEmotionVal'),
+            // 用户状态页签内的user元素（手机端使用）
+            userEmotionCognitionVal2: getEl('userEmotionCognitionVal2'),
+            userHesitationVal2: getEl('userHesitationVal2'),
+            userObliviousVal2: getEl('userObliviousVal2'),
+            userActiveVal2: getEl('userActiveVal2'),
+            userFocusVal2: getEl('userFocusVal2'),
+            userStraightVal2: getEl('userStraightVal2'),
+            userEmotionVal2: getEl('userEmotionVal2')
+        };
+
+        /* ==========================================
+           场景配图更新
+           ========================================== */
+        function updateSceneBanner() {
+            var url = IMAGES.sceneImage[state.scene];
+            if (url) {
+                els.sceneBannerImg.src = url;
+                els.sceneBannerImg.style.display = 'block';
+                els.sceneBannerPlaceholder.style.display = 'none';
+            } else {
+                els.sceneBannerImg.style.display = 'none';
+                els.sceneBannerPlaceholder.style.display = 'flex';
+            }
+        }
+
+        /* ==========================================
+           时间线构建（事件页签抽屉）
+           ========================================== */
+        function buildTimelineItems() {
+            var html = '';
+            for (var i = 0; i < eventKeyList.length; i++) {
+                var key = eventKeyList[i];
+                var displayName = eventDisplayMap[key] || key;
+                var id = i + 1;
+                var thumbSrc = IMAGES.eventThumb[id] || '';
+                var imgHtml;
+                if (thumbSrc) {
+                    imgHtml = '<img src="' + thumbSrc + '" alt="' + displayName + '" onclick="openImageOverlay(\'' +
+                        thumbSrc + '\', \'' + displayName + '\')" />';
+                } else {
+                    imgHtml = '<div class="placeholder">📷</div>';
+                }
+                var desc = '事件 #' + id;
+                html += '<div class="timeline-item" id="event-item-' + id + '" data-id="' + id + '">' +
+                    '<div class="thumb" onclick="' + (thumbSrc ? 'openImageOverlay(\'' + thumbSrc + '\', \'' +
+                        displayName + '\')' : '') + '">' +
+                    imgHtml +
+                    '</div>' +
+                    '<div class="content">' +
+                    '<div class="title"><span class="num">#' + id + '</span>' + displayName + '</div>' +
+                    '<div class="desc">' + desc + '</div>' +
+                    '</div>' +
+                    '</div>';
+            }
+            return html;
+        }
+
+        function updateTimelineStatus() {
+            var progress = state.progress || 0;
+            for (var i = 1; i <= eventKeyList.length; i++) {
+                var el = document.getElementById('event-item-' + i);
+                if (!el) continue;
+                var isActive = (i === progress);
+                var isDone = (i < progress);
+                el.classList.remove('active', 'done');
+                if (isActive) { el.classList.add('active'); } else if (isDone) { el.classList.add('done'); }
+            }
+        }
+
+        /* ==========================================
+           渲染函数
+           ========================================== */
+        function render() {
+            /* 顶部栏 */
+            els.scene.textContent = state.scene || '公寓客厅';
+            els.time.textContent = state.time || '上午';
+
+            /* 内心话 */
+            els.innerVoiceContent.textContent = state.innerVoice || '……傻子';
+
+            /* 状态页签 */
+            var aff = state.affection !== undefined ? state.affection : 0;
+            var affPercent = Math.min((aff / 500) * 100, 100);
+            els.affectionVal.innerHTML = aff + '<span class="suffix">/500</span>';
+            els.affectionBar.style.width = affPercent + '%';
+
+            els.stageVal.textContent = state.stage || '疏离';
+
+            var emotion = state.emotion || '平静';
+            els.emotionText.textContent = emotion;
+            var emotionImg = IMAGES.emotionAvatar[emotion] || IMAGES.emotionAvatar['平静'];
+            els.emotionAvatarImg.src = emotionImg;
+            els.emotionSub.textContent = '· ' + (state.emotion || '平静');
+
+            var trust = state.trust !== undefined ? state.trust : 0;
+            var trustPercent = Math.min((trust / 200) * 100, 100);
+            els.trustVal.innerHTML = trust + '<span class="suffix">/200</span>';
+
+            els.innerSummary.textContent = '*……' + (state.innerVoice || '……傻子') + '*';
+
+            /* 关系页签 */
+            var intimacy = state.intimacy !== undefined ? state.intimacy : 0;
+            els.intimacyVal.innerHTML = intimacy + '<span class="suffix">/100</span>';
+            els.intimacyBar.style.width = intimacy + '%';
+
+            els.calloutVal.textContent = state.callout || '{{user}}';
+
+            var synergy = state.synergy !== undefined ? state.synergy : 0;
+            els.synergyVal.innerHTML = synergy + '<span class="suffix">/100</span>';
+
+            var jealous = state.jealous !== undefined ? state.jealous : 0;
+            els.jealousVal.innerHTML = jealous + '<span class="suffix">/100</span>';
+
+            els.approachVal.textContent = state.approach !== undefined ? state.approach : 0;
+
+            /* user 数值 - 关系页签内（电脑端显示） */
+            var userEmotionCognition = state.userEmotionCognition !== undefined ? state.userEmotionCognition : 15;
+            els.userEmotionCognitionVal.innerHTML = userEmotionCognition + '<span class="suffix">/100</span>';
+
+            var userHesitation = state.userHesitation !== undefined ? state.userHesitation : 30;
+            els.userHesitationVal.innerHTML = userHesitation + '<span class="suffix">/100</span>';
+
+            var userOblivious = state.userOblivious !== undefined ? state.userOblivious : 60;
+            els.userObliviousVal.innerHTML = userOblivious + '<span class="suffix">/100</span>';
+
+            var userActive = state.userActive !== undefined ? state.userActive : 25;
+            els.userActiveVal.innerHTML = userActive + '<span class="suffix">/100</span>';
+
+            var userFocus = state.userFocus !== undefined ? state.userFocus : 80;
+            els.userFocusVal.innerHTML = userFocus + '<span class="suffix">/100</span>';
+
+            var userStraight = state.userStraight !== undefined ? state.userStraight : 20;
+            els.userStraightVal.innerHTML = userStraight + '<span class="suffix">/100</span>';
+
+            var userEmotion = state.userEmotion || '平静';
+            els.userEmotionVal.textContent = userEmotion;
+
+            /* user 数值 - 用户状态页签内（手机端显示） */
+            els.userEmotionCognitionVal2.innerHTML = userEmotionCognition + '<span class="suffix">/100</span>';
+            els.userHesitationVal2.innerHTML = userHesitation + '<span class="suffix">/100</span>';
+            els.userObliviousVal2.innerHTML = userOblivious + '<span class="suffix">/100</span>';
+            els.userActiveVal2.innerHTML = userActive + '<span class="suffix">/100</span>';
+            els.userFocusVal2.innerHTML = userFocus + '<span class="suffix">/100</span>';
+            els.userStraightVal2.innerHTML = userStraight + '<span class="suffix">/100</span>';
+            els.userEmotionVal2.textContent = userEmotion;
+
+            /* 事件页签 */
+            var progress = state.progress || 0;
+            var total = state.total || 20;
+            els.progressVal.innerHTML = progress + '<span class="suffix">/' + total + '</span>';
+            els.progressBar.style.width = (progress / total * 100) + '%';
+
+            els.currentEvent.textContent = state.currentEvent || '未开始';
+            els.nextEvent.textContent = state.nextEvent || '已完成全部';
+
+            /* 场景配图 */
+            updateSceneBanner();
+
+            /* 时间线（仅首次构建） */
+            if (els.timelineContainer && els.timelineContainer.children.length === 0) {
+                els.timelineContainer.innerHTML = buildTimelineItems();
+            }
+            updateTimelineStatus();
+        }
+
+        /* ==========================================
+           图片放大（全局）
+           ========================================== */
+        function openImageOverlay(imgSrc, title) {
+            if (!imgSrc) return;
+            els.overlayImg.src = imgSrc;
+            els.overlay.classList.add('active');
+        }
+
+        function closeImageOverlay() {
+            els.overlay.classList.remove('active');
+            setTimeout(function() {
+                els.overlayImg.src = '';
+            }, 400);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeImageOverlay();
+        });
+
+        window.openImageOverlay = openImageOverlay;
+        window.closeImageOverlay = closeImageOverlay;
+
+        /* ==========================================
+           页签切换
+           ========================================== */
+        document.querySelectorAll('.tab-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+                this.classList.add('active');
+                document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
+                var target = document.getElementById('tab-' + this.dataset.tab);
+                if (target) target.classList.add('active');
+            });
+        });
+
+        /* ==========================================
+           折叠 & 故事抽屉
+           ========================================== */
+        function toggleFold() {
+            els.app.classList.toggle('collapsed');
+            var isCollapsed = els.app.classList.contains('collapsed');
+            try {
+                localStorage.setItem('statusBarCollapsed', isCollapsed ? 'true' : 'false');
+            } catch (e) {
+                // localStorage不可用则静默忽略
+            }
+        }
+
+        function toggleStory() {
+            var drawer = els.storyDrawer;
+            var toggle = els.storyToggle;
+            drawer.classList.toggle('open');
+            toggle.classList.toggle('open');
+            toggle.innerHTML = drawer.classList.contains('open') ?
+                '<svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg> 收起故事时间线' :
+                '<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg> 展开故事时间线';
+        }
+
+        window.toggleFold = toggleFold;
+        window.toggleStory = toggleStory;
+
+        /* ==========================================
+           初始化
+           ========================================== */
+        function init() {
+            /* 恢复折叠状态 */
+            try {
+                var saved = localStorage.getItem('statusBarCollapsed');
+                if (saved === 'true') {
+                    els.app.classList.add('collapsed');
+                } else {
+                    els.app.classList.remove('collapsed');
+                }
+            } catch (e) {
+                // localStorage不可用则默认展开
+            }
+
+            if (typeof waitGlobalInitialized === 'function') {
+                waitGlobalInitialized('Mvu').then(function() {
+                    fetchStateFromMVU();
+                    render();
+                })['catch'](function() {
+                    fetchStateFromMVU();
+                    render();
+                });
+            } else {
+                fetchStateFromMVU();
+                render();
+            }
+
+            /* 轮询更新（1500ms） */
+            setInterval(function() {
+                fetchStateFromMVU();
+                render();
+            }, 1500);
+
+            /* 可选：监听 MVU 事件 */
+            if (typeof Mvu !== 'undefined' && Mvu.events) {
+                try {
+                    eventOn(Mvu.events.VARIABLE_UPDATE_ENDED, function() {
+                        fetchStateFromMVU();
+                        render();
+                    });
+                } catch (e) { /* 静默 */ }
+            }
+        }
+
+        if (typeof errorCatched === 'function') {
+            $(errorCatched(init));
+        } else {
+            $(init);
+        }
+
+        console.log('🌟 星宫 · 状态栏已加载（MVU 改造版）');
+        console.log('📊 数据源：getAllVariables().stat_data');
+        console.log('📌 映射字段：世界 / 星宫 / 关系 / 事件 / user');
+        console.log('🔄 轮询更新：每 1500ms');
+        console.log('💾 折叠状态已记忆：' + (localStorage.getItem('statusBarCollapsed') === 'true' ? '折叠' : '展开'));
+        console.log('📱 手机端显示「用户状态」页签，电脑端隐藏');
+        console.log('📐 电脑端user数据区块已增加上下间距（呼吸感）');
+        console.log('📐 手机端用户状态页签已改为双列网格布局');
+    </script>
+
+</body>
+</html>
