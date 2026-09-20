@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>选项栏</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+[data-theme="A"] {
+  --primary-h: 35; --primary-s: 65%; --primary-l: 55%;
+  --accent-h: 42; --accent-s: 75%; --accent-l: 72%;
+  --bg-h: 30; --bg-s: 15%; --bg-l: 10%;
+  --text-h: 35; --text-s: 20%; --text-l: 90%;
+}
+[data-theme="B"] {
+  --primary-h: 340; --primary-s: 60%; --primary-l: 72%;
+  --accent-h: 35; --accent-s: 65%; --accent-l: 70%;
+  --bg-h: 340; --bg-s: 12%; --bg-l: 12%;
+  --text-h: 340; --text-s: 20%; --text-l: 92%;
+}
+[data-theme="C"] {
+  --primary-h: 210; --primary-s: 40%; --primary-l: 55%;
+  --accent-h: 35; --accent-s: 60%; --accent-l: 65%;
+  --bg-h: 220; --bg-s: 15%; --bg-l: 12%;
+  --text-h: 210; --text-s: 20%; --text-l: 90%;
+}
+[data-theme="D"] {
+  --primary-h: 150; --primary-s: 40%; --primary-l: 55%;
+  --accent-h: 160; --accent-s: 50%; --accent-l: 70%;
+  --bg-h: 150; --bg-s: 15%; --bg-l: 12%;
+  --text-h: 150; --text-s: 18%; --text-l: 90%;
+}
+[data-theme="E"] {
+  --primary-h: 25; --primary-s: 70%; --primary-l: 55%;
+  --accent-h: 35; --accent-s: 80%; --accent-l: 70%;
+  --bg-h: 25; --bg-s: 15%; --bg-l: 12%;
+  --text-h: 25; --text-s: 20%; --text-l: 90%;
+}
+
+body {
+  background: transparent;
+  padding: 8px 0;
+  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: auto;
+}
+
+.options-module {
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto;
+  border-radius: 20px;
+  padding: 14px 16px 16px;
+  position: relative;
+  overflow: hidden;
+  background: hsla(var(--bg-h), var(--bg-s), var(--bg-l), 0.85);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.18);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4),
+              0 0 0 1px hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.05) inset;
+  color: hsl(var(--text-h), var(--text-s), var(--text-l));
+  transition: background 0.8s ease, border-color 0.8s ease, color 0.8s ease;
+  animation: optFadeIn 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes optFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.options-module::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 20%,
+    hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.06),
+    transparent 60%);
+  pointer-events: none;
+  animation: optShimmer 10s ease-in-out infinite alternate;
+}
+
+@keyframes optShimmer {
+  0% { transform: translate(-3%, -3%) scale(1); opacity: 0.5; }
+  100% { transform: translate(3%, 3%) scale(1.1); opacity: 1; }
+}
+
+.options-module > * { position: relative; z-index: 1; }
+
+.options-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.12);
+  margin-bottom: 12px;
+}
+
+.options-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.options-title svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.options-hint {
+  font-size: 10px;
+  color: hsla(var(--text-h), var(--text-s), var(--text-l), 0.4);
+  letter-spacing: 0.5px;
+}
+
+.options-inner {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.opt-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.06);
+  border: 1px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.15);
+  border-radius: 14px;
+  color: hsl(var(--text-h), var(--text-s), var(--text-l));
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(6px);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.opt-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+    hsla(var(--primary-h), var(--primary-s), calc(var(--primary-l) + 20%), 0),
+    hsla(var(--primary-h), var(--primary-s), calc(var(--primary-l) + 20%), 0.15));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.opt-btn:hover {
+  background: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.12);
+  border-color: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3),
+              0 0 24px hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.15);
+}
+
+.opt-btn:hover::before { opacity: 1; }
+
+.opt-btn:active {
+  transform: translateY(-1px) scale(0.98);
+  transition-duration: 0.08s;
+}
+
+.opt-btn.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  transform: none;
+}
+
+.opt-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.15);
+  color: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.3);
+  transition: all 0.3s ease;
+}
+
+.opt-btn:hover .opt-badge {
+  background: hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.25);
+  box-shadow: 0 0 12px hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.4);
+}
+
+.opt-text {
+  word-break: break-word;
+  transition: color 0.3s ease;
+}
+
+.opt-btn:hover .opt-text {
+  color: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+}
+
+.options-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 20px 0;
+  color: hsla(var(--text-h), var(--text-s), var(--text-l), 0.3);
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 520px) {
+  .options-inner { grid-template-columns: 1fr; gap: 6px; }
+  .opt-btn {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .opt-text { text-align: left; }
+  .options-module { padding: 12px 12px 14px; border-radius: 16px; }
+  .options-title { font-size: 12px; }
+}
+
+@media (max-width: 480px) {
+  .options-module { max-width: 100%; margin: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- ⚠️ 外链模式的关键：隐藏数据容器 -->
+<div id="options-data" style="display:none;">$1</div>
+
+<div class="options-module" id="options-root" data-theme="A">
+  <div class="options-header">
+    <div class="options-title">
+      <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      选择你的行动
+    </div>
+    <div class="options-hint">点击触发</div>
+  </div>
+  <div class="options-inner" id="options-list"></div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  /* ============================================================
+     外链模式：从 #options-data 容器读取
+     内联模式：直接读 $1 字面量
+     ============================================================ */
+  var dataContainer = document.getElementById('options-data');
+  var raw = dataContainer
+    ? dataContainer.textContent.trim()
+    : ('$1' || '').trim();
+
+  raw = raw.replace(/^<options>/, '').replace(/<\/options>$/, '').trim();
+
+  var container = document.getElementById('options-list');
+  if (!container) return;
+
+  /* ============================================================
+     阶段 → 配色映射（与状态栏完全一致）
+     ============================================================ */
+  var STAGE_THEME_MAP = {
+    '普通的日常': 'A',
+    '细微破防': 'C',
+    '明确的触动': 'B',
+    '确认与沉沦': 'D',
+    '走向未来': 'E'
+  };
+
+  /* ============================================================
+     直接从 MVU 变量读关系阶段 → 推导配色
+     ============================================================ */
+  function getMVUData() {
+    try {
+      var all = typeof getAllVariables === 'function' ? getAllVariables() : {};
+      return all.stat_data || {};
+    } catch (e) { return {}; }
+  }
+
+  function syncThemeFromMVU() {
+    try {
+      var data = getMVUData();
+      if (!data || Object.keys(data).length === 0) return;
+
+      var stage = null;
+      if (typeof _ !== 'undefined') {
+        stage = _.get(data, '彩叶.关系阶段');
+      } else {
+        stage = data && data.彩叶 && data.彩叶.关系阶段;
+      }
+
+      if (!stage) return;
+
+      var theme = STAGE_THEME_MAP[stage];
+      if (!theme) return;
+
+      var root = document.getElementById('options-root');
+      if (root && root.getAttribute('data-theme') !== theme) {
+        root.setAttribute('data-theme', theme);
+      }
+    } catch (e) {}
+  }
+
+  /* 立即执行一次 */
+  syncThemeFromMVU();
+
+  /* ============================================================
+     等待 MVU 就绪 + 事件监听 + 轮询
+     ============================================================ */
+  function initMvuSync() {
+    if (typeof waitGlobalInitialized === 'function') {
+      waitGlobalInitialized('Mvu').then(function() {
+        syncThemeFromMVU();
+      })['catch'](function() {
+        syncThemeFromMVU();
+      });
+    }
+
+    /* 轮询 */
+    setInterval(syncThemeFromMVU, 2000);
+
+    /* MVU 事件监听 */
+    try {
+      if (typeof eventOn === 'function' && typeof Mvu !== 'undefined' &&
+          Mvu.events && Mvu.events.VARIABLE_UPDATE_ENDED) {
+        eventOn(Mvu.events.VARIABLE_UPDATE_ENDED, function() {
+          syncThemeFromMVU();
+        });
+      }
+    } catch (e) {}
+  }
+
+  initMvuSync();
+
+  /* ============================================================
+     发送选项到酒馆输入框
+     ============================================================ */
+  function sendOption(text) {
+    if (!text) return;
+
+    try {
+      if (typeof triggerSlash === 'function') {
+        triggerSlash('/send ' + text + ' | /trigger');
+        return;
+      }
+    } catch (e) {}
+
+    var textarea = document.querySelector('#send_textarea') ||
+      (window.parent && window.parent.document.querySelector('#send_textarea'));
+    if (textarea) {
+      textarea.value = text;
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+
+      var sendBtn = document.querySelector('#send_button') ||
+        document.querySelector('#send_btn') ||
+        (window.parent && window.parent.document.querySelector('#send_button')) ||
+        (window.parent && window.parent.document.querySelector('#send_btn'));
+
+      if (sendBtn) {
+        setTimeout(function() { sendBtn.click(); }, 80);
+      }
+    }
+  }
+
+  /* ============================================================
+     解析选项
+     ============================================================ */
+  var items = raw ? raw.split('|').map(function(s) {
+    return s.trim();
+  }).filter(function(s) {
+    return s.length > 0;
+  }) : [];
+
+  if (items.length === 0) {
+    container.innerHTML = '<div class="options-empty">✦ 等待行动选项 ✦</div>';
+    return;
+  }
+
+  var showItems = items.slice(0, 3);
+
+  /* ============================================================
+     渲染
+     ============================================================ */
+  var badges = ['①', '②', '③'];
+  var html = '';
+
+  showItems.forEach(function(opt, index) {
+    var safeText = opt
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+
+    html += '<button class="opt-btn" data-opt="' + safeText + '">';
+    html += '<span class="opt-badge">' + badges[index] + '</span>';
+    html += '<span class="opt-text">' + safeText + '</span>';
+    html += '</button>';
+  });
+
+  container.innerHTML = html;
+
+  /* ============================================================
+     点击事件
+     ============================================================ */
+  container.addEventListener('click', function(e) {
+    var btn = e.target.closest('.opt-btn');
+    if (!btn || btn.classList.contains('disabled')) return;
+
+    var text = btn.getAttribute('data-opt');
+    if (!text) return;
+
+    var allBtns = container.querySelectorAll('.opt-btn');
+    allBtns.forEach(function(b) { b.classList.add('disabled'); });
+
+    sendOption(text);
+
+    setTimeout(function() {
+      allBtns.forEach(function(b) { b.classList.remove('disabled'); });
+    }, 5000);
+  });
+
+  /* 移动端触摸反馈 */
+  container.addEventListener('touchstart', function(e) {
+    var btn = e.target.closest('.opt-btn');
+    if (!btn) return;
+    btn.style.transition = 'none';
+    btn.style.transform = 'scale(0.97)';
+    setTimeout(function() {
+      btn.style.transition = '';
+      btn.style.transform = '';
+    }, 100);
+  }, { passive: true });
+
+  console.log('🌟 选项栏已加载（外链版 · 直接读变量）');
+})();
+</script>
+
+</body>
+</html>
