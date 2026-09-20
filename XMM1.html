@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>长须川兄妹 · 状态栏</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ============================================
+   五种配色方案
+   ============================================ */
+[data-theme="A"] {
+  /* 秋叶金 · 普通的日常 */
+  --primary-h: 35; --primary-s: 65%; --primary-l: 55%;
+  --accent-h: 42; --accent-s: 75%; --accent-l: 72%;
+  --bg-h: 30; --bg-s: 15%; --bg-l: 10%;
+  --text-h: 35; --text-s: 20%; --text-l: 90%;
+}
+[data-theme="B"] {
+  /* 银白粉 · 明确的触动 */
+  --primary-h: 340; --primary-s: 60%; --primary-l: 72%;
+  --accent-h: 35; --accent-s: 65%; --accent-l: 70%;
+  --bg-h: 340; --bg-s: 12%; --bg-l: 12%;
+  --text-h: 340; --text-s: 20%; --text-l: 92%;
+}
+[data-theme="C"] {
+  /* 藤野暮色 · 细微破防 */
+  --primary-h: 210; --primary-s: 40%; --primary-l: 55%;
+  --accent-h: 35; --accent-s: 60%; --accent-l: 65%;
+  --bg-h: 220; --bg-s: 15%; --bg-l: 12%;
+  --text-h: 210; --text-s: 20%; --text-l: 90%;
+}
+[data-theme="D"] {
+  /* 叶脉银绿 · 确认与沉沦 */
+  --primary-h: 150; --primary-s: 40%; --primary-l: 55%;
+  --accent-h: 160; --accent-s: 50%; --accent-l: 70%;
+  --bg-h: 150; --bg-s: 15%; --bg-l: 12%;
+  --text-h: 150; --text-s: 18%; --text-l: 90%;
+}
+[data-theme="E"] {
+  /* 琥珀金 · 走向未来 */
+  --primary-h: 25; --primary-s: 70%; --primary-l: 55%;
+  --accent-h: 35; --accent-s: 80%; --accent-l: 70%;
+  --bg-h: 25; --bg-s: 15%; --bg-l: 12%;
+  --text-h: 25; --text-s: 20%; --text-l: 90%;
+}
+
+body {
+  min-height: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: transparent;
+  padding: 20px;
+  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+/* ============================================
+   主容器
+   ============================================ */
+.status-container {
+  width: 100%;
+  max-width: 520px;
+  border-radius: 28px;
+  border: 1px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.18);
+  background: hsla(var(--bg-h), var(--bg-s), var(--bg-l), 0.9);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  color: hsl(var(--text-h), var(--text-s), var(--text-l));
+  transition: background 0.8s ease, border-color 0.8s ease, color 0.8s ease;
+}
+
+.status-container * {
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-duration: 0.6s;
+  transition-timing-function: ease;
+}
+
+.status-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 15% 25%, hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.06), transparent 25%),
+    radial-gradient(circle at 85% 70%, hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.04), transparent 30%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.status-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 20% 15%, hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.05), transparent 50%);
+  animation: leafGlow 8s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes leafGlow {
+  0% { transform: translate(-3%, -3%) scale(1); opacity: 0.5; }
+  100% { transform: translate(3%, 3%) scale(1.15); opacity: 0.9; }
+}
+
+.status-container > * { position: relative; z-index: 1; }
+
+/* ============================================
+   顶部栏
+   ============================================ */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 12px;
+  border-bottom: 1px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.15);
+  margin-bottom: 14px;
+  gap: 10px;
+}
+
+.header-left { flex: 1; min-width: 0; }
+
+.header-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+  margin-bottom: 5px;
+}
+
+.header-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: hsla(var(--text-h), var(--text-s), var(--text-l), 0.65);
+}
+
+.header-meta span { display: flex; align-items: center; gap: 4px; }
+
+.header-meta .dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.4); }
+}
+
+.header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+/* 5 个配色切换圆点 */
+.theme-btn {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.3);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+}
+
+.theme-btn:hover { transform: scale(1.25); }
+
+.theme-btn.active {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.5), 0 0 12px hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.6);
+}
+
+.theme-btn.tA { background: hsl(35, 65%, 55%); }
+.theme-btn.tB { background: hsl(340, 60%, 72%); }
+.theme-btn.tC { background: hsl(210, 40%, 55%); }
+.theme-btn.tD { background: hsl(150, 40%, 55%); }
+.theme-btn.tE { background: hsl(25, 70%, 55%); }
+
+.fold-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: hsla(var(--text-h), var(--text-s), var(--text-l), 0.4);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.3s;
+}
+
+.fold-btn:hover { color: hsla(var(--text-h), var(--text-s), var(--text-l), 0.85); }
+
+.fold-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.3s;
+}
+
+.status-container.collapsed .fold-btn svg { transform: rotate(-90deg); }
+.status-container.collapsed .page-main,
+.status-container.collapsed .l3,
+.status-container.collapsed .page-nav { display: none; }
+
+/* ============================================
+   页面切换系统
+   ============================================ */
+.page-wrap { position: relative; overflow: hidden; }
+
+.page {
+  display: none;
+  animation: pageIn 0.35s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+
+.page.active { display: block; }
+
+@keyframes pageIn {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.page-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  color: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 12px;
+  font-family: inherit;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+}
+
+.page-back:hover { opacity: 0.7; transform: translateX(-2px); }
+
+.page-back svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.page-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+  margin-bottom: 14px;
+}
+
+/* ============================================
+   主角色卡
+   ============================================ */
+.role-hero {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg,
+    hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.08),
+    hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.04));
+  border: 1px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.18);
+  border-radius: 16px;
+  margin-bottom: 14px;
+  align-items: center;
+  backdrop-filter: blur(8px);
+}
+
+.role-hero-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.4);
+  background: hsla(var(--bg-h), var(--bg-s), calc(var(--bg-l) + 5%), 0.7);
+  box-shadow: 0 0 24px hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.role-hero-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 32px hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.3);
+}
+
+.role-hero-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.role-hero-content { flex: 1; min-width: 0; }
+
+.role-hero-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+  letter-spacing: 1px;
+  margin-bottom: 3px;
+}
+
+.role-hero-subtitle {
+  font-size: 11px;
+  color: hsla(var(--text-h), var(--text-s), var(--text-l), 0.7);
+  letter-spacing: 0.5px;
+}
+
+/* ============================================
+   内心话气泡
+   ============================================ */
+.inner-voice {
+  background: linear-gradient(135deg,
+    hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.12),
+    hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.05));
+  border-left: 3px solid hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.7;
+  color: hsla(var(--text-h), var(--text-s), var(--text-l), 0.92);
+  backdrop-filter: blur(6px);
+  position: relative;
+  min-height: 42px;
+}
+
+.inner-voice::before {
+  content: '“';
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  font-size: 24px;
+  font-family: Georgia, serif;
+  color: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.4);
+  line-height: 1;
+}
+
+.inner-voice::after {
+  content: '”';
+  position: absolute;
+  bottom: -8px;
+  right: 10px;
+  font-size: 24px;
+  font-family: Georgia, serif;
+  color: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.4);
+  line-height: 1;
+}
+
+/* ============================================
+   关系阶段阶梯
+   ============================================ */
+.stage-ladder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 12px 8px;
+  background: hsla(var(--bg-h), var(--bg-s), calc(var(--bg-l) + 3%), 0.5);
+  border-radius: 14px;
+  border: 1px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.15);
+}
+
+.stage-node {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+}
+
+.stage-node::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: hsla(var(--text-h), var(--text-s), var(--text-l), 0.15);
+  border: 2px solid hsla(var(--text-h), var(--text-s), var(--text-l), 0.2);
+  transition: all 0.4s ease;
+  z-index: 2;
+  position: relative;
+}
+
+.stage-node.done::before {
+  background: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+  border-color: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+  box-shadow: 0 0 10px hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.4);
+}
+
+.stage-node.current::before {
+  background: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+  border-color: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+  transform: scale(1.4);
+  box-shadow: 0 0 16px hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.6);
+  animation: pulseNode 2s ease-in-out infinite;
+}
+
+@keyframes pulseNode {
+  0%, 100% { box-shadow: 0 0 12px hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.5); }
+  50% { box-shadow: 0 0 24px hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.9); }
+}
+
+.stage-node .stage-label {
+  font-size: 9px;
+  color: hsla(var(--text-h), var(--text-s), var(--text-l), 0.5);
+  letter-spacing: 0.3px;
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.stage-node.current .stage-label {
+  color: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+  font-weight: 700;
+}
+
+.stage-node.done .stage-label {
+  color: hsla(var(--text-h), var(--text-s), var(--text-l), 0.8);
+}
+
+.stage-line {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 2px;
+  background: hsla(var(--text-h), var(--text-s), var(--text-l), 0.12);
+  margin-bottom: 17px;
+  border-radius: 2px;
+}
+
+.stage-line.done {
+  background: linear-gradient(90deg,
+    hsl(var(--accent-h), var(--accent-s), var(--accent-l)),
+    hsl(var(--primary-h), var(--primary-s), var(--primary-l)));
+  box-shadow: 0 0 8px hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.4);
+}
+
+/* ============================================
+   三数值 · 玻璃三角叶片
+   ============================================ */
+.values-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.leaf-value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 6px 14px;
+  background: hsla(var(--bg-h), var(--bg-s), calc(var(--bg-l) + 4%), 0.4);
+  border-radius: 16px;
+  border: 1px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.15);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.leaf-value:hover {
+  border-color: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.4);
+  transform: translateY(-2px);
+}
+
+.leaf-shape {
+  position: relative;
+  width: 68px;
+  height: 90px;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  background: linear-gradient(180deg,
+    hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.06) 0%,
+    hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.15) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.leaf-shape::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    hsla(0, 0%, 100%, 0.15) 0%,
+    transparent 40%,
+    transparent 70%,
+    hsla(0, 0%, 100%, 0.05) 100%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.leaf-shape::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg,
+    transparent 49%,
+    hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.15) 49%,
+    hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.15) 51%,
+    transparent 51%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.leaf-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transition: height 1s cubic-bezier(0.34, 1.2, 0.64, 1);
+  z-index: 1;
+}
+
+.leaf-fill::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -20%;
+  width: 140%;
+  height: 8px;
+  border-radius: 50%;
+  filter: blur(2px);
+  animation: wave 3s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-20%); }
+}
+
+.leaf-value[data-type="favor"] .leaf-fill {
+  background: linear-gradient(180deg, hsla(340, 70%, 75%, 0.85) 0%, hsla(340, 65%, 60%, 0.95) 100%);
+  box-shadow: 0 0 20px hsla(340, 65%, 60%, 0.5);
+}
+.leaf-value[data-type="favor"] .leaf-fill::before { background: hsla(340, 75%, 85%, 0.6); }
+
+.leaf-value[data-type="heart"] .leaf-fill {
+  background: linear-gradient(180deg, hsla(0, 75%, 75%, 0.85) 0%, hsla(0, 65%, 60%, 0.95) 100%);
+  box-shadow: 0 0 20px hsla(0, 65%, 60%, 0.5);
+}
+.leaf-value[data-type="heart"] .leaf-fill::before { background: hsla(0, 80%, 85%, 0.6); }
+
+.leaf-value[data-type="tsun"] .leaf-fill {
+  background: linear-gradient(180deg, hsla(200, 60%, 75%, 0.85) 0%, hsla(200, 55%, 60%, 0.95) 100%);
+  box-shadow: 0 0 20px hsla(200, 55%, 60%, 0.5);
+}
+.leaf-value[data-type="tsun"] .leaf-fill::before { background: hsla(200, 65%, 85%, 0.6); }
+
+.leaf-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.leaf-num {
+  font-size: 18px;
+  font-weight: 800;
+  color: hsla(var(--text-h), var(--text-s), var(--text-l), 0.95);
+  font-family: "DIN", "Consolas", monospace;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  line-height: 1;
+}
+
+.leaf-num .unit {
+  font-size: 9px;
+  font-weight: 400;
+  opacity: 0.4;
+  margin-left: 1px;
+}
+
+.leaf-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: hsla(var(--text-h), var(--text-s), var(--text-l), 0.65);
+}
+
+/* ============================================
+   状态徽章
+   ============================================ */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.badge {
+  font-size: 10px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border: 1px solid;
+}
+
+.badge.emotion {
+  background: hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.12);
+  color: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+  border-color: hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.3);
+}
+
+.badge.tsun {
+  background: hsla(200, 50%, 55%, 0.12);
+  color: hsl(200, 60%, 70%);
+  border-color: hsla(200, 50%, 55%, 0.3);
+}
+
+.badge.game {
+  background: hsla(280, 50%, 60%, 0.12);
+  color: hsl(280, 60%, 75%);
+  border-color: hsla(280, 50%, 60%, 0.3);
+}
+
+.badge.period {
+  background: hsla(340, 60%, 60%, 0.15);
+  color: hsl(340, 70%, 80%);
+  border-color: hsla(340, 60%, 60%, 0.35);
+  animation: periodPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes periodPulse {
+  0%, 100% { box-shadow: 0 0 0 hsla(340, 60%, 60%, 0); }
+  50% { box-shadow: 0 0 12px hsla(340, 60%, 60%, 0.4); }
+}
+
+.badge.preg {
+  background: hsla(42, 70%, 60%, 0.15);
+  color: hsl(42, 75%, 75%);
+  border-color: hsla(42, 70%, 60%, 0.35);
+  animation: pregPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes pregPulse {
+  0%, 100% { box-shadow: 0 0 0 hsla(42, 70%, 60%, 0); }
+  50% { box-shadow: 0 0 12px hsla(42, 70%, 60%, 0.4); }
+}
+
+/* ============================================
+   页面导航按钮
+   ============================================ */
+.page-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.nav-btn {
+  padding: 11px 8px;
+  background: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.08);
+  border: 1px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.15);
+  border-radius: 12px;
+  color: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.nav-btn:hover {
+  background: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.16);
+  border-color: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.4);
+  transform: translateY(-1px);
+}
+
+.nav-btn svg {
+  width: 13px;
+  height: 13px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ============================================
+   详情页内容
+   ============================================ */
+.info-block {
+  background: hsla(var(--bg-h), var(--bg-s), calc(var(--bg-l) + 4%), 0.55);
+  border: 1px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.15);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  backdrop-filter: blur(6px);
+}
+
+.info-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.info-label svg {
+  width: 13px;
+  height: 13px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.info-content {
+  font-size: 12px;
+  line-height: 1.7;
+  color: hsla(var(--text-h), var(--text-s), var(--text-l), 0.85);
+}
+
+.event-progress {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.event-progress .count {
+  font-size: 22px;
+  font-weight: 800;
+  color: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+  font-family: "DIN", "Consolas", monospace;
+}
+
+.event-progress .count .suffix {
+  font-size: 13px;
+  font-weight: 400;
+  opacity: 0.4;
+  margin-left: 2px;
+}
+
+.event-bar {
+  height: 6px;
+  background: hsla(var(--text-h), var(--text-s), var(--text-l), 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.event-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg,
+    hsl(var(--primary-h), var(--primary-s), var(--primary-l)),
+    hsl(var(--accent-h), var(--accent-s), var(--accent-l)));
+  border-radius: 3px;
+  transition: width 1s cubic-bezier(0.34, 1.2, 0.64, 1);
+  box-shadow: 0 0 12px hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.5);
+}
+
+.period-status {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.period-cell {
+  background: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.15);
+}
+
+.period-cell .label {
+  font-size: 9px;
+  color: hsla(var(--text-h), var(--text-s), var(--text-l), 0.55);
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+
+.period-cell .value {
+  font-size: 13px;
+  font-weight: 700;
+  color: hsla(var(--text-h), var(--text-s), var(--text-l), 0.95);
+}
+
+/* ============================================
+   头像遮罩放大
+   ============================================ */
+.avatar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999999;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  cursor: pointer;
+}
+
+.avatar-overlay.open {
+  display: flex;
+  opacity: 1;
+}
+
+.avatar-overlay-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 22px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  line-height: 1;
+}
+
+.avatar-overlay-close:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+.avatar-overlay-img {
+  width: 280px;
+  height: 280px;
+  border-radius: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 120px;
+  background: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.15);
+  border: 2px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.4);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 60px hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.3);
+  transform: scale(0.9);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+}
+
+.avatar-overlay.open .avatar-overlay-img { transform: scale(1); }
+
+.avatar-overlay-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+@media (max-width: 460px) {
+  .status-container { padding: 14px; border-radius: 22px; }
+  .header-title { font-size: 13px; }
+  .header-meta { font-size: 10px; gap: 6px; }
+  .leaf-shape { width: 56px; height: 76px; }
+  .leaf-num { font-size: 15px; }
+  .leaf-label { font-size: 9px; }
+  .values-grid { gap: 8px; }
+  .stage-node .stage-label { font-size: 8px; }
+  .stage-line { width: 12px; }
+  .role-hero-avatar { width: 54px; height: 54px; font-size: 24px; }
+  .avatar-overlay-img { width: 220px; height: 220px; font-size: 90px; }
+  .theme-btn { width: 14px; height: 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="status-container" id="app" data-theme="A">
+
+  <!-- 顶部栏 -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-title" id="headerTitle">长须川兄妹 · 普通的日常</div>
+      <div class="header-meta">
+        <span id="hTime">9月1日 · 上午</span>
+        <span class="dot"></span>
+        <span id="hPlace">客厅</span>
+        <span>·</span>
+        <span id="hSeasonWeather">秋 · 晴</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="theme-btn tA active" onclick="setTheme('A')" title="秋叶金"></button>
+      <button class="theme-btn tB" onclick="setTheme('B')" title="银白粉"></button>
+      <button class="theme-btn tC" onclick="setTheme('C')" title="藤野暮色"></button>
+      <button class="theme-btn tD" onclick="setTheme('D')" title="叶脉银绿"></button>
+      <button class="theme-btn tE" onclick="setTheme('E')" title="琥珀金"></button>
+      <button class="fold-btn" onclick="toggleFold()" aria-label="折叠">
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 页面容器 -->
+  <div class="page-wrap">
+
+    <!-- 主页 -->
+    <div class="page page-main active" id="page-main">
+
+      <div class="role-hero">
+        <!-- ⚠️ 头像已填入 -->
+        <div class="role-hero-avatar" id="roleHeroAvatar" onclick="openAvatarOverlay()">
+          <img src="https://testingcf.jsdelivr.net/gh/sanshui19516/Hot-Update-World-Book-Illustrations@main/%E3%82%AB%E3%83%A9%E3%83%95%E3%83%AB%E3%81%AA%E8%91%89%EF%BC%9A%E5%8F%AA%E6%98%AF%E5%85%84%E5%A6%B9%E7%9A%84%E6%97%A5%E5%B8%B8/%E6%9D%82/%E5%9B%BE%E7%89%87/%E7%8A%B6%E6%80%81%E6%A0%8F%E5%A4%B4%E5%83%8F.jpg" alt="长须川彩叶" />
+        </div>
+        <div class="role-hero-content">
+          <div class="role-hero-name" id="roleHeroName">长须川彩叶</div>
+          <div class="role-hero-subtitle" id="roleHeroSubtitle">16岁 · 妹妹 · 高一学生</div>
+        </div>
+      </div>
+
+      <div class="inner-voice" id="innerVoice">那家伙今天又起这么早，也不叫我。</div>
+
+      <div class="stage-ladder" id="stageLadder">
+        <div class="stage-node" data-stage="普通的日常"><span class="stage-label">日常</span></div>
+        <div class="stage-line"></div>
+        <div class="stage-node" data-stage="细微破防"><span class="stage-label">破防</span></div>
+        <div class="stage-line"></div>
+        <div class="stage-node" data-stage="明确的触动"><span class="stage-label">触动</span></div>
+        <div class="stage-line"></div>
+        <div class="stage-node" data-stage="确认与沉沦"><span class="stage-label">确认</span></div>
+        <div class="stage-line"></div>
+        <div class="stage-node" data-stage="走向未来"><span class="stage-label">未来</span></div>
+      </div>
+
+      <div class="values-grid">
+        <div class="leaf-value" data-type="favor">
+          <div class="leaf-shape"><div class="leaf-fill" id="fillFavor" style="height: 0%"></div></div>
+          <div class="leaf-info">
+            <div class="leaf-num"><span id="valFavor">0</span><span class="unit">/500</span></div>
+            <div class="leaf-label">好感度</div>
+          </div>
+        </div>
+        <div class="leaf-value" data-type="heart">
+          <div class="leaf-shape"><div class="leaf-fill" id="fillHeart" style="height: 0%"></div></div>
+          <div class="leaf-info">
+            <div class="leaf-num"><span id="valHeart">0</span><span class="unit">/500</span></div>
+            <div class="leaf-label">心动值</div>
+          </div>
+        </div>
+        <div class="leaf-value" data-type="tsun">
+          <div class="leaf-shape"><div class="leaf-fill" id="fillTsun" style="height: 0%"></div></div>
+          <div class="leaf-info">
+            <div class="leaf-num"><span id="valTsun">0</span><span class="unit">/500</span></div>
+            <div class="leaf-label">傲娇值</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="badges" id="badges"></div>
+
+      <div class="page-nav">
+        <button class="nav-btn" onclick="goPage('detail')">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          完整详情
+        </button>
+        <button class="nav-btn" onclick="goPage('status')">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          身体状态
+        </button>
+      </div>
+    </div>
+
+    <!-- 详情页 -->
+    <div class="page" id="page-detail">
+      <button class="page-back" onclick="goPage('main')">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        返回主页
+      </button>
+      <div class="page-title">彩叶 · 完整详情</div>
+
+      <div class="info-block">
+        <div class="info-label">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          对哥哥的看法
+        </div>
+        <div class="info-content" id="viewContent">加载中...</div>
+      </div>
+
+      <div class="info-block">
+        <div class="info-label">
+          <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          事件进度
+        </div>
+        <div class="event-progress">
+          <div class="count"><span id="eventCount">0</span><span class="suffix">/ 34</span></div>
+        </div>
+        <div class="event-bar"><div class="event-bar-fill" id="eventBarFill" style="width: 0%"></div></div>
+      </div>
+
+      <div class="info-block">
+        <div class="info-label">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          此刻情绪
+        </div>
+        <div class="info-content" id="emotionContent">加载中...</div>
+      </div>
+
+      <div class="info-block">
+        <div class="info-label">
+          <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/></svg>
+          游戏状态
+        </div>
+        <div class="info-content" id="gameContent">加载中...</div>
+      </div>
+    </div>
+
+    <!-- 身体状态页 -->
+    <div class="page" id="page-status">
+      <button class="page-back" onclick="goPage('main')">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        返回主页
+      </button>
+      <div class="page-title">彩叶 · 身体状态</div>
+
+      <div class="info-block">
+        <div class="info-label">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8 8 6 12 6 15a6 6 0 0 0 12 0c0-3-2-7-6-13z"/></svg>
+          生理期
+        </div>
+        <div class="period-status">
+          <div class="period-cell">
+            <div class="label">当前状态</div>
+            <div class="value" id="periodStatus">正常</div>
+          </div>
+          <div class="period-cell">
+            <div class="label">距下次</div>
+            <div class="value" id="periodDays">15 天</div>
+          </div>
+        </div>
+        <div class="info-content" id="periodBody" style="margin-top: 10px; font-size: 11px;">加载中...</div>
+      </div>
+
+      <div class="info-block" id="pregBlock" style="display: none;">
+        <div class="info-label">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+          怀孕状态
+        </div>
+        <div class="period-status">
+          <div class="period-cell">
+            <div class="label">月份</div>
+            <div class="value" id="pregMonth">1</div>
+          </div>
+          <div class="period-cell">
+            <div class="label">已告知</div>
+            <div class="value" id="pregTold">否</div>
+          </div>
+        </div>
+        <div class="info-content" id="pregBody" style="margin-top: 10px; font-size: 11px;">加载中...</div>
+      </div>
+
+      <div class="info-block" id="pregPlaceholder">
+        <div class="info-content" style="text-align: center; opacity: 0.5; font-size: 11px;">
+          尚未进入该阶段
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- 头像遮罩放大 -->
+<div class="avatar-overlay" id="avatarOverlay" onclick="closeAvatarOverlay(event)">
+  <button class="avatar-overlay-close" onclick="closeAvatarOverlay(event)">×</button>
+  <div class="avatar-overlay-img" id="avatarOverlayImg" onclick="event.stopPropagation()">
+    <img src="https://testingcf.jsdelivr.net/gh/sanshui19516/Hot-Update-World-Book-Illustrations@main/%E3%82%AB%E3%83%A9%E3%83%95%E3%83%AB%E3%81%AA%E8%91%89%EF%BC%9A%E5%8F%AA%E6%98%AF%E5%85%84%E5%A6%B9%E7%9A%84%E6%97%A5%E5%B8%B8/%E6%9D%82/%E5%9B%BE%E7%89%87/%E7%8A%B6%E6%80%81%E6%A0%8F%E5%A4%B4%E5%83%8F.jpg" alt="长须川彩叶" />
+  </div>
+</div>
+
+<script>
+/* ============================================
+   配置
+   ============================================ */
+var FOLD_KEY = 'changxu_story_status_collapsed';
+var THEME_KEY = 'changxu_story_status_theme';
+var AUTO_STAGE_KEY = 'changxu_story_last_auto_stage';
+
+/* 阶段 → 配色映射（方案乙） */
+var STAGE_THEME_MAP = {
+  '普通的日常': 'A',
+  '细微破防': 'C',
+  '明确的触动': 'B',
+  '确认与沉沦': 'D',
+  '走向未来': 'E'
+};
+
+var EVENT_LIST = [
+  '开场早晨', '校服与早餐', '一起出门', '教室日常', '放学游戏', '热饮默契', '睡前检查',
+  '镜中对视', '感冒摸额头', '停电夜晚', '旧卫衣', '靠肩睡着', '毛巾包头', '游戏超时', '生气锁门',
+  '洗衣事件', '童年的梦', '哥哥的疲惫', '浴袍意外', '摔倒接住', '班上的女生', '有人追彩叶', '像一对', '母亲视频',
+  '情绪顶点', '称呼改变', '名字习惯化', '第一次牵手', '第一次接吻', '身体关系', '沉沦日常',
+  '讨论未来', '考虑结婚', '结局氛围'
+];
+
+var STAGE_LIST = ['普通的日常', '细微破防', '明确的触动', '确认与沉沦', '走向未来'];
+
+var state = {
+  month: 9, day: 1,
+  season: '秋', weather: '晴', timePeriod: '上午',
+  scene: '客厅',
+  favor: 0, heart: 0, tsun: 0,
+  stage: '普通的日常',
+  emotion: '平静', tsunState: '日常嫌弃', gameState: '没在打',
+  innerVoice: '——',
+  viewOfBrother: '——',
+  periodStatus: '正常', periodDays: 15, periodBody: '',
+  pregStatus: '未怀孕', pregMonth: 0, pregTold: false, pregBody: '',
+  eventDone: 0
+};
+
+var _lastAutoStage = '';
+
+/* ============================================
+   数据读取
+   ============================================ */
+function getMVUData() {
+  try {
+    var all = typeof getAllVariables === 'function' ? getAllVariables() : {};
+    return all.stat_data || {};
+  } catch (e) { return {}; }
+}
+
+function fetchStateFromMVU() {
+  var data = getMVUData();
+  if (!data || Object.keys(data).length === 0) return;
+
+  state.month = _.get(data, '世界.月', 9);
+  state.day = _.get(data, '世界.日', 1);
+  state.season = _.get(data, '世界.季节', '秋');
+  state.weather = _.get(data, '世界.天气', '晴');
+  state.timePeriod = _.get(data, '世界.时段', '上午');
+  state.scene = _.get(data, '世界.当前场景', '客厅');
+
+  state.favor = _.get(data, '彩叶.好感度', 0);
+  state.heart = _.get(data, '彩叶.心动值', 0);
+  state.tsun = _.get(data, '彩叶.傲娇值', 0);
+  state.stage = _.get(data, '彩叶.关系阶段', '普通的日常');
+  state.emotion = _.get(data, '彩叶.当前情绪', '平静');
+  state.tsunState = _.get(data, '彩叶.傲娇状态', '日常嫌弃');
+  state.gameState = _.get(data, '彩叶.游戏状态', '没在打');
+  state.innerVoice = _.get(data, '彩叶.内心话', '——');
+  state.viewOfBrother = _.get(data, '彩叶.对哥哥的看法', '——');
+
+  state.periodStatus = _.get(data, '生理期.状态', '正常');
+  state.periodDays = _.get(data, '生理期.距下次天数', 15);
+  state.periodBody = _.get(data, '生理期.身体反应', '');
+
+  state.pregStatus = _.get(data, '怀孕.状态', '未怀孕');
+  state.pregMonth = _.get(data, '怀孕.月份', 0);
+  state.pregTold = _.get(data, '怀孕.是否已告知', false);
+  state.pregBody = _.get(data, '怀孕.身体反应', '');
+
+  var events = _.get(data, '事件', {});
+  var done = 0;
+  for (var i = 0; i < EVENT_LIST.length; i++) {
+    if (events[EVENT_LIST[i]] === true) done++;
+  }
+  state.eventDone = done;
+}
+
+/* ============================================
+   自动配色切换（方案 Z）
+   ============================================ */
+function checkAutoTheme() {
+  if (!state.stage) return;
+  if (state.stage === _lastAutoStage) return;
+
+  _lastAutoStage = state.stage;
+  var newTheme = STAGE_THEME_MAP[state.stage];
+  if (!newTheme) return;
+
+  applyTheme(newTheme);
+  try { localStorage.setItem(AUTO_STAGE_KEY, state.stage); } catch (e) {}
+}
+
+/* ============================================
+   主题切换
+   ============================================ */
+function applyTheme(t) {
+  var app = document.getElementById('app');
+  if (!app) return;
+  if (app.getAttribute('data-theme') === t) return;
+  app.setAttribute('data-theme', t);
+  try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+  document.querySelectorAll('.theme-btn').forEach(function(b) {
+    b.classList.remove('active');
+  });
+  var btn = document.querySelector('.theme-btn.t' + t);
+  if (btn) btn.classList.add('active');
+}
+
+function setTheme(t) {
+  applyTheme(t);
+}
+
+/* ============================================
+   渲染
+   ============================================ */
+function render() {
+  var title = document.getElementById('headerTitle');
+  if (title) title.textContent = '长须川兄妹 · ' + state.stage;
+
+  var hTime = document.getElementById('hTime');
+  if (hTime) hTime.textContent = state.month + '月' + state.day + '日 · ' + state.timePeriod;
+
+  var hPlace = document.getElementById('hPlace');
+  if (hPlace) hPlace.textContent = state.scene;
+
+  var hSW = document.getElementById('hSeasonWeather');
+  if (hSW) hSW.textContent = state.season + ' · ' + state.weather;
+
+  var iv = document.getElementById('innerVoice');
+  if (iv) {
+    var text = state.innerVoice || '——';
+    text = text.replace(/^\*|\*$/g, '');
+    iv.textContent = text;
+  }
+
+  var currentIdx = STAGE_LIST.indexOf(state.stage);
+  if (currentIdx < 0) currentIdx = 0;
+  var nodes = document.querySelectorAll('.stage-node');
+  var lines = document.querySelectorAll('.stage-line');
+  nodes.forEach(function(n, i) {
+    n.classList.remove('done', 'current');
+    if (i < currentIdx) n.classList.add('done');
+    else if (i === currentIdx) n.classList.add('current');
+  });
+  lines.forEach(function(l, i) {
+    l.classList.remove('done');
+    if (i < currentIdx) l.classList.add('done');
+  });
+
+  var vFavor = document.getElementById('valFavor');
+  if (vFavor) vFavor.textContent = state.favor;
+  var vHeart = document.getElementById('valHeart');
+  if (vHeart) vHeart.textContent = state.heart;
+  var vTsun = document.getElementById('valTsun');
+  if (vTsun) vTsun.textContent = state.tsun;
+
+  var fFavor = document.getElementById('fillFavor');
+  if (fFavor) fFavor.style.height = Math.min(Math.max(state.favor / 500 * 100, 0), 100) + '%';
+  var fHeart = document.getElementById('fillHeart');
+  if (fHeart) fHeart.style.height = Math.min(Math.max(state.heart / 500 * 100, 0), 100) + '%';
+  var fTsun = document.getElementById('fillTsun');
+  if (fTsun) fTsun.style.height = Math.min(Math.max(state.tsun / 500 * 100, 0), 100) + '%';
+
+  var badges = '';
+  badges += '<div class="badge emotion">' + state.emotion + '</div>';
+  badges += '<div class="badge tsun">' + state.tsunState + '</div>';
+  badges += '<div class="badge game">' + state.gameState + '</div>';
+  if (state.periodStatus === '进行中') {
+    badges += '<div class="badge period">生理期进行中</div>';
+  } else if (state.periodStatus === '临近') {
+    badges += '<div class="badge period">生理期临近</div>';
+  }
+  if (state.pregStatus === '已怀孕') {
+    badges += '<div class="badge preg">已怀孕 · ' + state.pregMonth + ' 个月</div>';
+  }
+  var bd = document.getElementById('badges');
+  if (bd) bd.innerHTML = badges;
+
+  var vc = document.getElementById('viewContent');
+  if (vc) vc.textContent = state.viewOfBrother || '——';
+
+  var ec = document.getElementById('eventCount');
+  if (ec) ec.textContent = state.eventDone;
+  var eb = document.getElementById('eventBarFill');
+  if (eb) eb.style.width = (state.eventDone / 34 * 100) + '%';
+
+  var emc = document.getElementById('emotionContent');
+  if (emc) emc.textContent = state.emotion || '——';
+
+  var gc = document.getElementById('gameContent');
+  if (gc) gc.textContent = state.gameState || '——';
+
+  var ps = document.getElementById('periodStatus');
+  if (ps) ps.textContent = state.periodStatus;
+  var pd = document.getElementById('periodDays');
+  if (pd) pd.textContent = state.periodDays + ' 天';
+  var pb = document.getElementById('periodBody');
+  if (pb) pb.textContent = state.periodBody || '无特殊反应';
+
+  var pregBlock = document.getElementById('pregBlock');
+  var pregPlaceholder = document.getElementById('pregPlaceholder');
+  if (state.pregStatus === '已怀孕') {
+    if (pregBlock) pregBlock.style.display = 'block';
+    if (pregPlaceholder) pregPlaceholder.style.display = 'none';
+    var pm = document.getElementById('pregMonth');
+    if (pm) pm.textContent = state.pregMonth + ' 个月';
+    var pt = document.getElementById('pregTold');
+    if (pt) pt.textContent = state.pregTold ? '已告知' : '未告知';
+    var pbody = document.getElementById('pregBody');
+    if (pbody) pbody.textContent = state.pregBody || '无特殊反应';
+  } else {
+    if (pregBlock) pregBlock.style.display = 'none';
+    if (pregPlaceholder) pregPlaceholder.style.display = 'block';
+  }
+
+  /* 自动配色检查 */
+  checkAutoTheme();
+}
+
+/* ============================================
+   交互
+   ============================================ */
+function toggleFold() {
+  var app = document.getElementById('app');
+  if (!app) return;
+  app.classList.toggle('collapsed');
+  try {
+    localStorage.setItem(FOLD_KEY, app.classList.contains('collapsed') ? 'true' : 'false');
+  } catch (e) {}
+}
+
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(function(p) {
+    p.classList.remove('active');
+  });
+  var target = document.getElementById('page-' + name);
+  if (target) target.classList.add('active');
+}
+
+/* 头像遮罩放大 */
+function openAvatarOverlay() {
+  var overlay = document.getElementById('avatarOverlay');
+  var overlayImg = document.getElementById('avatarOverlayImg');
+  var avatar = document.getElementById('roleHeroAvatar');
+
+  /* 复制头像内容到遮罩层 */
+  if (overlayImg && avatar) {
+    var innerImg = avatar.querySelector('img');
+    if (innerImg) {
+      overlayImg.innerHTML = '<img src="' + innerImg.src + '" alt="avatar" />';
+    } else {
+      overlayImg.innerHTML = avatar.textContent || '🌿';
+    }
+  }
+
+  if (overlay) overlay.classList.add('open');
+}
+
+function closeAvatarOverlay(e) {
+  var overlay = document.getElementById('avatarOverlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+window.toggleFold = toggleFold;
+window.setTheme = setTheme;
+window.goPage = goPage;
+window.openAvatarOverlay = openAvatarOverlay;
+window.closeAvatarOverlay = closeAvatarOverlay;
+
+/* ============================================
+   初始化
+   ============================================ */
+function init() {
+  /* 恢复折叠 */
+  try {
+    var saved = localStorage.getItem(FOLD_KEY);
+    if (saved === 'true') {
+      var app = document.getElementById('app');
+      if (app) app.classList.add('collapsed');
+    }
+  } catch (e) {}
+
+  /* 恢复上次自动切换的阶段 */
+  try {
+    var lastAutoStage = localStorage.getItem(AUTO_STAGE_KEY);
+    if (lastAutoStage) _lastAutoStage = lastAutoStage;
+  } catch (e) {}
+
+  if (typeof waitGlobalInitialized === 'function') {
+    waitGlobalInitialized('Mvu').then(function() {
+      fetchStateFromMVU();
+      render();
+    })['catch'](function() {
+      fetchStateFromMVU();
+      render();
+    });
+  } else {
+    fetchStateFromMVU();
+    render();
+  }
+
+  setInterval(function() {
+    fetchStateFromMVU();
+    render();
+  }, 2000);
+
+  try {
+    if (typeof eventOn === 'function' && typeof Mvu !== 'undefined' && Mvu.events && Mvu.events.VARIABLE_UPDATE_ENDED) {
+      eventOn(Mvu.events.VARIABLE_UPDATE_ENDED, function() {
+        fetchStateFromMVU();
+        render();
+      });
+    }
+  } catch (e) {}
+
+  /* ESC 关闭头像遮罩 */
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeAvatarOverlay();
+  });
+}
+
+if (typeof errorCatched === 'function') {
+  $(errorCatched(init));
+} else {
+  $(init);
+}
+</script>
+
+</body>
+</html>
